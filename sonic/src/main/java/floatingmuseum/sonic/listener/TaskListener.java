@@ -7,7 +7,12 @@ import floatingmuseum.sonic.entity.TaskInfo;
  */
 
 public interface TaskListener {
+
+    void onPause(TaskInfo taskInfo);
+
     void onProgress(TaskInfo taskInfo);
-    void onError(TaskInfo taskInfo,Throwable e);
+
+    void onError(TaskInfo taskInfo, Throwable e);
+
     void onFinish(TaskInfo taskInfo);
 }

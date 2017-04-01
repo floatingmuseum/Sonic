@@ -20,9 +20,9 @@ import floatingmuseum.sonic.utils.FileUtil;
 
 public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHolder> {
 
-    private List<String> data;
+    private List<AppInfo> data;
 
-    public TasksAdapter(List<String> data) {
+    public TasksAdapter(List<AppInfo> data) {
         this.data = data;
     }
 
@@ -39,8 +39,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
     @Override
     public void onBindViewHolder(TaskViewHolder holder, int position) {
-        String url = data.get(position);
-        String fileName = FileUtil.getUrlFileName(url);
+        AppInfo appInfo = data.get(position);
+        String fileName = FileUtil.getUrlFileName(appInfo.getName());
         holder.tvName.setText(fileName);
     }
 
@@ -58,13 +58,13 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
             btTaskStop = (Button) itemView.findViewById(R.id.bt_task_stop);
 
             btTaskStart.setOnClickListener(this);
-            btTaskStart.setOnClickListener(this);
+            btTaskStop.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
             if (listener != null) {
-                listener.onChildClick(v.getId(),getAdapterPosition());
+                listener.onChildClick(v.getId(), getAdapterPosition());
             }
         }
     }
@@ -76,6 +76,6 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     }
 
     public interface OnItemChildClickListener {
-        void onChildClick(int viewId,int position);
+        void onChildClick(int viewId, int position);
     }
 }

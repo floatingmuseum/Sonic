@@ -1,4 +1,4 @@
-package floatingmuseum.sonic;
+package floatingmuseum.sonic.threads;
 
 import android.util.Log;
 
@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.IllegalFormatCodePointException;
 
 import floatingmuseum.sonic.db.DBManager;
 import floatingmuseum.sonic.entity.ThreadInfo;
@@ -28,13 +29,13 @@ public class DownloadThread extends Thread {
     private String fileName;
     private ThreadInfo threadInfo;
     private DBManager dbManager;
-    private ThreadListener callback;
+    private ThreadListener listener;
 
-    public DownloadThread(ThreadInfo threadInfo, String dirPath, String fileName, DBManager dbManager, ThreadListener callback) {
+    public DownloadThread(ThreadInfo threadInfo, String dirPath, String fileName, DBManager dbManager, ThreadListener listener) {
         this.threadInfo = threadInfo;
         this.dirPath = dirPath;
         this.fileName = fileName;
-        this.callback = callback;
+        this.listener = listener;
         this.dbManager = dbManager;
     }
 
@@ -58,7 +59,9 @@ public class DownloadThread extends Thread {
             connection.setRequestProperty("Range", "bytes=" + threadInfo.getCurrentPosition() + "-" + threadInfo.getEndPosition());
 
             long contentLength = -1;
-            if (connection.getResponseCode() == 200 || connection.getResponseCode() == 206) {
+            int responseCode = connection.getResponseCode();
+            Log.i(TAG, "DownloadThread...Response code:" + responseCode);
+            if (responseCode == 200 || responseCode == 206) {
                 contentLength = connection.getContentLength();
                 Log.i(TAG, "获取文件长度...区块长度:" + contentLength);
                 if (contentLength <= 0) {
@@ -78,11 +81,14 @@ public class DownloadThread extends Thread {
                     randomAccessFile.write(buffer, 0, len);
                     currentPosition += len;
                     threadInfo.setCurrentPosition(currentPosition);
-                    callback.onProgress(threadInfo);
+
+                        listener.onProgress(threadInfo);
+
                     if (stopThread) {
                         //更新数据库,停止循环
-                        dbManager.updateThreadInfo(threadInfo);
                         Log.i(TAG, threadInfo.getId() + "号线程暂停工作");
+                        dbManager.updateThreadInfo(threadInfo);
+                        listener.onPause(threadInfo);
                         return;
                     }
                     if (currentPosition > threadInfo.getEndPosition()) {
@@ -91,11 +97,13 @@ public class DownloadThread extends Thread {
                 }
                 //当前区块下载完成
                 Log.i(TAG, threadInfo.getId() + "号线程完成工作");
-                callback.onFinished(threadInfo.getId());
+                listener.onFinished(threadInfo.getId());
             }
         } catch (Exception e) {
-            Log.i(TAG, threadInfo.getId() + "号线程出现异常");
             e.printStackTrace();
+            Log.i(TAG, threadInfo.getId() + "号线程出现异常");
+            dbManager.updateThreadInfo(threadInfo);
+            listener.onError(threadInfo, e);
         } finally {
             try {
                 if (connection != null) {

@@ -2,6 +2,7 @@ package floatingmuseum.sonic;
 
 import android.content.Context;
 import android.os.Environment;
+import android.os.Message;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.Map;
 
 import floatingmuseum.sonic.db.DBManager;
 import floatingmuseum.sonic.entity.TaskInfo;
+import floatingmuseum.sonic.entity.UIListenerMessage;
 import floatingmuseum.sonic.listener.DownloadListener;
 import floatingmuseum.sonic.listener.TaskListener;
 import floatingmuseum.sonic.utils.FileUtil;
@@ -25,29 +27,33 @@ public class Sonic implements TaskListener {
 
     private static final String TAG = Sonic.class.getName();
 
-    private static final int STATE_NONE = 0;
-    private static final int STATE_WAITING = 1;
-    private static final int STATE_PAUSE = 2;
-    private static final int STATE_DOWNLOADING = 3;
-    private static final int STATE_ERROR = 4;
-    private static final int STATE_FINISH = 5;
+    public static final int STATE_NONE = 0;
+    public static final int STATE_WAITING = 1;
+    public static final int STATE_PAUSE = 2;
+    public static final int STATE_DOWNLOADING = 3;
+    public static final int STATE_ERROR = 4;
+    public static final int STATE_FINISH = 5;
 
 
+    private UIHandler uiHandler;
     private static Context context;
     private static Sonic sonic;
     private int maxThreads = 3;
     private int activeTaskNumber = 3;
     private String dirPath;
+    private int progressResponseTime = 500;
+    private DownloadListener listener;
+
     private Map<String, TaskInfo> allTaskInfo;
     private Map<String, DownloadTask> activeTasks;
     private List<DownloadTask> waitingTasks;
-    private DownloadListener listener;
     private DBManager dbManager;
 
     private Sonic() {
         dirPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
         Log.i(TAG, "Default save dir path:" + dirPath);
         dbManager = new DBManager(context);
+        uiHandler = new UIHandler();
         List<TaskInfo> allTask = dbManager.getAllDownloadTask();
         allTaskInfo = new HashMap<>();
         activeTasks = new HashMap<>();
@@ -81,16 +87,34 @@ public class Sonic implements TaskListener {
         return sonic;
     }
 
+    /**
+     * How many thread working for a task.
+     */
     public Sonic setMaxThreads(int maxThreads) {
         this.maxThreads = maxThreads;
         return this;
     }
 
+    /**
+     * How many task can running at the same time.
+     */
     public Sonic setActiveTaskNumber(int activeTaskNumber) {
         this.activeTaskNumber = activeTaskNumber;
         return this;
     }
 
+    /**
+     * DownloadListener onProgress() method will be call at defined interval.
+     * The default for the interval is 500 milliseconds.
+     */
+    public Sonic setProgressResponseTime(int milliseconds) {
+        progressResponseTime = milliseconds;
+        return this;
+    }
+
+    /**
+     * storage dir path
+     */
     public Sonic setDirPath(String dirPath) {
         this.dirPath = dirPath;
         return this;
@@ -98,7 +122,7 @@ public class Sonic implements TaskListener {
 
 
     public Sonic registerDownloadListener(DownloadListener listener) {
-        this.listener = listener;
+        uiHandler.setListener(listener);
         return this;
     }
 
@@ -121,15 +145,28 @@ public class Sonic implements TaskListener {
         }
     }
 
+    public void addTask(TaskInfo taskInfo) {
+
+    }
+
+    public TaskInfo getTaskInfo(String tag) {
+        return allTaskInfo.get(tag);
+    }
+
+    public Map<String, TaskInfo> getAllTaskInfo() {
+        return allTaskInfo;
+    }
+
     private void initDownload(TaskInfo taskInfo, boolean isExist) {
         if (!isExist) {
             dbManager.insertTaskInfo(taskInfo);
             allTaskInfo.put(taskInfo.getTag(), taskInfo);
         }
 
-        DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, maxThreads, this);
+        DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, maxThreads, progressResponseTime, this);
         if (activeTasks.size() == activeTaskNumber) {
             waitingTasks.add(downloadTask);
+            sendMessage(taskInfo, STATE_WAITING, null);
         } else {
             activeTasks.put(taskInfo.getTag(), downloadTask);
             downloadTask.start();
@@ -145,17 +182,27 @@ public class Sonic implements TaskListener {
     }
 
     @Override
-    public void onProgress(TaskInfo taskInfo) {
+    public void onPause(TaskInfo taskInfo) {
+        dbManager.updateTaskInfo(taskInfo);
+        sendMessage(taskInfo, STATE_PAUSE, null);
+    }
 
+    @Override
+    public void onProgress(TaskInfo taskInfo) {
+        sendMessage(taskInfo, STATE_DOWNLOADING, null);
+        Log.i(TAG, "下载进度...onProgress...CurrentSize:" + taskInfo.getCurrentSize() + "...TotalSize:" + taskInfo.getTotalSize() + "...Progress:" + taskInfo.getProgress());
     }
 
     @Override
     public void onError(TaskInfo taskInfo, Throwable e) {
-
+        dbManager.updateTaskInfo(taskInfo);
+        sendMessage(taskInfo, STATE_ERROR, e);
     }
 
     @Override
     public void onFinish(TaskInfo taskInfo) {
+        dbManager.delete(DBManager.TASKS_TABLE_NAME, taskInfo.getDownloadUrl());
+        sendMessage(taskInfo, STATE_FINISH, null);
         activeTasks.remove(taskInfo.getTag());
         if (waitingTasks.size() > 0) {
             DownloadTask downloadTask = waitingTasks.get(0);
@@ -163,5 +210,17 @@ public class Sonic implements TaskListener {
             activeTasks.put(downloadTask.getTaskInfo().getTag(), downloadTask);
             downloadTask.start();
         }
+    }
+
+    private void sendMessage(TaskInfo taskInfo, int downloadState, Throwable throwable) {
+        UIListenerMessage taskMessage;
+        if (downloadState == STATE_ERROR) {
+            taskMessage = new UIListenerMessage(taskInfo, downloadState, throwable);
+        } else {
+            taskMessage = new UIListenerMessage(taskInfo, downloadState, null);
+        }
+        Message message = uiHandler.obtainMessage();
+        message.obj = taskMessage;
+        uiHandler.sendMessage(message);
     }
 }

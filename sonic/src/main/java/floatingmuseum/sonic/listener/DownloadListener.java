@@ -8,6 +8,10 @@ import floatingmuseum.sonic.entity.TaskInfo;
 
 public interface DownloadListener {
 
+    void onWaiting(TaskInfo taskInfo);
+
+    void onPause(TaskInfo taskInfo);
+
     void onProgress(TaskInfo taskInfo);
 
     void onFinish(TaskInfo taskInfo);

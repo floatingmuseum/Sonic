@@ -8,7 +8,11 @@ import floatingmuseum.sonic.entity.ThreadInfo;
 
 public interface ThreadListener {
 
+    void onPause(ThreadInfo threadInfo);
+
     void onProgress(ThreadInfo threadInfo);
+
+    void onError(ThreadInfo threadInfo,Throwable e);
 
     void onFinished(int threadId);
 }
