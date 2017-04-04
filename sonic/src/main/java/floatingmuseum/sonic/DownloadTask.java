@@ -29,7 +29,6 @@ public class DownloadTask implements InitListener, ThreadListener {
     private DBManager dbManager;
     private int maxThreads;
     private TaskListener taskListener;
-    private Map<Integer, Long> blocksSize;
     private List<DownloadThread> threads;
     private List<ThreadInfo> threadInfoList;
     private int alreadyStopThreads;
@@ -43,7 +42,6 @@ public class DownloadTask implements InitListener, ThreadListener {
         this.taskListener = taskListener;
         this.progressResponseTime = progressResponseTime;
         threads = new ArrayList<>();
-        blocksSize = new HashMap<>();
         FileUtil.initDir(taskInfo.getDirPath());
     }
 
@@ -58,7 +56,7 @@ public class DownloadTask implements InitListener, ThreadListener {
             Log.i(TAG, "start()...第一次下载此任务.");
             new InitThread(taskInfo.getDownloadUrl(), this).start();
         } else {
-            Log.d(TAG, "start()...继续下载此任务");
+            Log.i(TAG, "start()...继续下载此任务");
             initDownloadThread(threadInfoList);
             for (DownloadThread thread : threads) {
                 thread.start();
@@ -74,24 +72,27 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     private void initDownloadThread(List<ThreadInfo> threadInfoList) {
         Log.i(TAG, "initDownloadThreadInfo:" + threadInfoList.size());
-        long currentSize = 0;
+        Log.i(TAG, "TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize());
         for (ThreadInfo info : threadInfoList) {
-            taskInfo.setTotalSize(info.getFileSize());
-            // TODO: 2017/3/16 如果有线程执行完了，有的没执行完，这里就拿不到正确的size，据估计
-            currentSize += (info.getCurrentPosition() - info.getStartPosition());
-            blocksSize.put(info.getId(), info.getCurrentPosition() - info.getStartPosition());
             Log.i(TAG, "initDownloadThreadInfo线程" + info.getId() + "号...初始位置:" + info.getStartPosition() + "...当前位置:" + info.getCurrentPosition() + "...末尾位置:" + info.getEndPosition());
-            DownloadThread thread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, this);
-            threads.add(thread);
+            if (info.isFinished() == DownloadThread.THREAD_UNFINISHED) {//只初始化还没完成的线程
+                Log.i(TAG, info.getId() + "号继续工作");
+                DownloadThread thread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, this);
+                threads.add(thread);
+            } else {
+                Log.i(TAG, info.getId() + "号已完成工作，休息");
+                maxThreads--;
+            }
         }
-        taskInfo.setCurrentSize(currentSize);
+        Log.i(TAG, "TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize());
         Log.i(TAG, "任务开始前任务大小:" + taskInfo.getCurrentSize());
-        taskInfo.setProgress(getProgress(currentSize, taskInfo.getTotalSize()));
+        taskInfo.setProgress(getProgress(taskInfo.getCurrentSize(), taskInfo.getTotalSize()));
     }
 
     @Override
     public void onGetContentLength(long contentLength) {
         Log.i(TAG, "onGetContentLength总文件大小:" + contentLength + "..." + FileUtil.bytesToMb(contentLength) + "mb");
+        taskInfo.setTotalSize(contentLength);
         threadInfoList = new ArrayList<>();
         long blockLength = contentLength / maxThreads;
 
@@ -99,7 +100,7 @@ public class DownloadTask implements InitListener, ThreadListener {
             long start = x == 1 ? 0 : blockLength * (x - 1) + 1;
             long end = x == maxThreads ? contentLength : blockLength * x;
             long current = start;
-            ThreadInfo threadInfo = new ThreadInfo(x, taskInfo.getDownloadUrl(), start, end, current, contentLength);
+            ThreadInfo threadInfo = new ThreadInfo(x, taskInfo.getDownloadUrl(), start, end, current, contentLength, DownloadThread.THREAD_UNFINISHED);
             threadInfoList.add(threadInfo);
             dbManager.insertThreadInfo(threadInfo);//第一次初始化，存储线程信息到数据库
         }
@@ -165,6 +166,19 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onFinished(int threadId) {
+        for (ThreadInfo threadInfo : threadInfoList) {
+            if (threadInfo.getId() == threadId) {
+                Log.i(TAG, threadInfo.getId() + "号线程完成工作");
+                Log.i(TAG, "更新前的ThreadInfo:" + threadInfo.getId() + "..." + threadInfo.isFinished());
+                threadInfo.setFinished(DownloadThread.THREAD_FINISHED);
+                // TODO: 2017/4/4 更新失败
+                dbManager.updateThreadInfo(threadInfo);
+                Log.i(TAG, "更新前的ThreadInfo:" + threadInfo.getId() + "..." + threadInfo.isFinished());
+                ThreadInfo info = dbManager.queryThreadInfo(threadInfo.getId(), threadInfo.getUrl());
+                Log.i(TAG, "更新后的ThreadInfo:" + info.getId() + "..." + info.isFinished());
+                break;
+            }
+        }
         maxThreads--;
         if (maxThreads == 0) {
             Log.i(TAG, "下载进度...onFinished...CurrentSize:" + taskInfo.getCurrentSize() + "...TotalSize:" + taskInfo.getTotalSize());

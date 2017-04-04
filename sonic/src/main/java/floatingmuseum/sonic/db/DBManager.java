@@ -41,14 +41,14 @@ public class DBManager {
     }
 
     public synchronized void updateThreadInfo(ThreadInfo info) {
-        String updateSql = "update thread_info set current_position = ? where thread_id = ? and url=?";
+        String updateSql = "update thread_info set current_position=?,is_finished=? where thread_id=? and url=?";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.execSQL(updateSql, new Object[]{info.getCurrentPosition(), info.getId(), info.getUrl()});
+        db.execSQL(updateSql, new Object[]{info.getCurrentPosition(), info.isFinished(), info.getId(), info.getUrl()});
         db.close();
     }
 
     public synchronized void updateTaskInfo(TaskInfo task) {
-        String updateSql = "update task_info set current_size = ?,state = ? where tag = ?";
+        String updateSql = "update task_info set current_size=?,state=? where tag=?";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL(updateSql, new Object[]{task.getCurrentSize(), task.getState(), task.getTag()});
         db.close();

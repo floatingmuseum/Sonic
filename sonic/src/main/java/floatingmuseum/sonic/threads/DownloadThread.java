@@ -21,6 +21,8 @@ import floatingmuseum.sonic.listener.ThreadListener;
 public class DownloadThread extends Thread {
 
     private static final String TAG = DownloadThread.class.getName();
+    public static final int THREAD_FINISHED = 1;
+    public static final int THREAD_UNFINISHED = 0;
 
     private boolean stopThread = false;
 
@@ -56,11 +58,12 @@ public class DownloadThread extends Thread {
             long currentPosition = threadInfo.getCurrentPosition();
 
             //起始位置是线程所下载区块的初始位置+已完成大小
+            Log.i(TAG, "DownloadThread:" + threadInfo.getId() + " ...下载范围:" + threadInfo.getCurrentPosition() + "..." + threadInfo.getEndPosition());
             connection.setRequestProperty("Range", "bytes=" + threadInfo.getCurrentPosition() + "-" + threadInfo.getEndPosition());
 
             long contentLength = -1;
             int responseCode = connection.getResponseCode();
-            Log.i(TAG, "DownloadThread...Response code:" + responseCode);
+            Log.i(TAG, "DownloadThread:" + threadInfo.getId() + "...Response code:" + responseCode);
             if (responseCode == 200 || responseCode == 206) {
                 contentLength = connection.getContentLength();
                 Log.i(TAG, "获取文件长度...区块长度:" + contentLength);
@@ -82,7 +85,7 @@ public class DownloadThread extends Thread {
                     currentPosition += len;
                     threadInfo.setCurrentPosition(currentPosition);
 
-                        listener.onProgress(threadInfo);
+                    listener.onProgress(threadInfo);
 
                     if (stopThread) {
                         //更新数据库,停止循环
