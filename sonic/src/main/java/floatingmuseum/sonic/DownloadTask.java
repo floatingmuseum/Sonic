@@ -71,11 +71,10 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     private void initDownloadThread(List<ThreadInfo> threadInfoList) {
-        Log.i(TAG, "initDownloadThreadInfo:" + threadInfoList.size());
         Log.i(TAG, "TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize());
         for (ThreadInfo info : threadInfoList) {
             Log.i(TAG, "initDownloadThreadInfo线程" + info.getId() + "号...初始位置:" + info.getStartPosition() + "...当前位置:" + info.getCurrentPosition() + "...末尾位置:" + info.getEndPosition());
-            if (info.isFinished() == DownloadThread.THREAD_UNFINISHED) {//只初始化还没完成的线程
+            if (info.getCurrentPosition() < info.getEndPosition()) {//只初始化还没完成的线程
                 Log.i(TAG, info.getId() + "号继续工作");
                 DownloadThread thread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, this);
                 threads.add(thread);
@@ -85,14 +84,14 @@ public class DownloadTask implements InitListener, ThreadListener {
             }
         }
         Log.i(TAG, "TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize());
-        Log.i(TAG, "任务开始前任务大小:" + taskInfo.getCurrentSize());
-        taskInfo.setProgress(getProgress(taskInfo.getCurrentSize(), taskInfo.getTotalSize()));
+        taskInfo.setProgress(getProgress());
     }
 
     @Override
     public void onGetContentLength(long contentLength) {
         Log.i(TAG, "onGetContentLength总文件大小:" + contentLength + "..." + FileUtil.bytesToMb(contentLength) + "mb");
         taskInfo.setTotalSize(contentLength);
+        dbManager.updateTaskInfo(taskInfo);
         threadInfoList = new ArrayList<>();
         long blockLength = contentLength / maxThreads;
 
@@ -100,7 +99,7 @@ public class DownloadTask implements InitListener, ThreadListener {
             long start = x == 1 ? 0 : blockLength * (x - 1) + 1;
             long end = x == maxThreads ? contentLength : blockLength * x;
             long current = start;
-            ThreadInfo threadInfo = new ThreadInfo(x, taskInfo.getDownloadUrl(), start, end, current, contentLength, DownloadThread.THREAD_UNFINISHED);
+            ThreadInfo threadInfo = new ThreadInfo(x, taskInfo.getDownloadUrl(), start, end, current, contentLength);
             threadInfoList.add(threadInfo);
             dbManager.insertThreadInfo(threadInfo);//第一次初始化，存储线程信息到数据库
         }
@@ -110,18 +109,9 @@ public class DownloadTask implements InitListener, ThreadListener {
         }
     }
 
-    private int getProgress(long currentLength, long totalLength) {
-        // TODO: 2017/3/16 不准
-        return (int) ((double) currentLength / (double) totalLength);
-    }
-
-    private void updateProgress() {
-        taskInfo.setState(Sonic.STATE_DOWNLOADING);
-        long currentSize = getCurrentSize();
-        int progress = (int) (((float) currentSize / (float) taskInfo.getTotalSize()) * 100);
-        taskInfo.setProgress(progress);
-        taskInfo.setCurrentSize(currentSize);
-        taskListener.onProgress(taskInfo);
+    private int getProgress() {
+        int progress = (int) (((float) taskInfo.getCurrentSize() / (float) taskInfo.getTotalSize()) * 100);
+        return progress;
     }
 
     private long getCurrentSize() {
@@ -130,6 +120,13 @@ public class DownloadTask implements InitListener, ThreadListener {
             currentSize += (info.getCurrentPosition() - info.getStartPosition());
         }
         return currentSize;
+    }
+
+    private void updateProgress() {
+        taskInfo.setState(Sonic.STATE_DOWNLOADING);
+        taskInfo.setProgress(getProgress());
+        taskInfo.setCurrentSize(getCurrentSize());
+        taskListener.onProgress(taskInfo);
     }
 
     @Override
@@ -152,8 +149,6 @@ public class DownloadTask implements InitListener, ThreadListener {
             lastUpdateTime = nowTime;
             updateProgress();
         }
-//        Log.i(TAG, "下载进度...onProgress...CurrentSize:" + taskInfo.getCurrentSize() + "...TotalSize:" + taskInfo.getTotalSize());
-//        Log.i(TAG, "进度更新...Thread:" + threadInfo.getId() + "...StartPos:" + threadInfo.getStartPosition() + "...CurrentPos:" + threadInfo.getCurrentPosition() + "...EndPosition:" + threadInfo.getEndPosition());
     }
 
     @Override
@@ -166,19 +161,6 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onFinished(int threadId) {
-        for (ThreadInfo threadInfo : threadInfoList) {
-            if (threadInfo.getId() == threadId) {
-                Log.i(TAG, threadInfo.getId() + "号线程完成工作");
-                Log.i(TAG, "更新前的ThreadInfo:" + threadInfo.getId() + "..." + threadInfo.isFinished());
-                threadInfo.setFinished(DownloadThread.THREAD_FINISHED);
-                // TODO: 2017/4/4 更新失败
-                dbManager.updateThreadInfo(threadInfo);
-                Log.i(TAG, "更新前的ThreadInfo:" + threadInfo.getId() + "..." + threadInfo.isFinished());
-                ThreadInfo info = dbManager.queryThreadInfo(threadInfo.getId(), threadInfo.getUrl());
-                Log.i(TAG, "更新后的ThreadInfo:" + info.getId() + "..." + info.isFinished());
-                break;
-            }
-        }
         maxThreads--;
         if (maxThreads == 0) {
             Log.i(TAG, "下载进度...onFinished...CurrentSize:" + taskInfo.getCurrentSize() + "...TotalSize:" + taskInfo.getTotalSize());

@@ -16,7 +16,7 @@ public class DBHelper extends SQLiteOpenHelper{
 
     //创建线程表
     private static final String SQL_THREADS_TABLE_CREATE = "create table thread_info(_id integer primary key autoincrement," +
-            "thread_id integer,url text,start_position long,end_position long,current_position long,file_size long,is_finished integer)";
+            "thread_id integer,url text,start_position long,end_position long,current_position long,file_size long)";
 
     //创建任务表
     private static final String SQL_TASKS_TABLE_CREATE = "create table task_info(_id integer primary key autoincrement," +

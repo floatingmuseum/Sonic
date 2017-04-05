@@ -15,19 +15,17 @@ public class ThreadInfo {
     //当前位置
     private long currentPosition;
     private long fileSize;
-    private int isFinished;
 
     public ThreadInfo() {
     }
 
-    public ThreadInfo(int id, String url, long startPosition, long endPosition, long currentPosition, long fileSize,int isFinished) {
+    public ThreadInfo(int id, String url, long startPosition, long endPosition, long currentPosition, long fileSize) {
         this.id = id;
         this.url = url;
         this.startPosition = startPosition;
         this.endPosition = endPosition;
         this.currentPosition = currentPosition;
         this.fileSize = fileSize;
-        this.isFinished = isFinished;
     }
 
     public int getId() {
@@ -76,14 +74,6 @@ public class ThreadInfo {
 
     public void setFileSize(long fileSize) {
         this.fileSize = fileSize;
-    }
-
-    public int isFinished() {
-        return isFinished;
-    }
-
-    public void setFinished(int finished) {
-        isFinished = finished;
     }
 
     @Override

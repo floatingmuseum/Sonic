@@ -21,8 +21,6 @@ import floatingmuseum.sonic.listener.ThreadListener;
 public class DownloadThread extends Thread {
 
     private static final String TAG = DownloadThread.class.getName();
-    public static final int THREAD_FINISHED = 1;
-    public static final int THREAD_UNFINISHED = 0;
 
     private boolean stopThread = false;
 
@@ -89,7 +87,6 @@ public class DownloadThread extends Thread {
 
                     if (stopThread) {
                         //更新数据库,停止循环
-                        Log.i(TAG, threadInfo.getId() + "号线程暂停工作");
                         dbManager.updateThreadInfo(threadInfo);
                         listener.onPause(threadInfo);
                         return;
@@ -100,6 +97,7 @@ public class DownloadThread extends Thread {
                 }
                 //当前区块下载完成
                 Log.i(TAG, threadInfo.getId() + "号线程完成工作");
+                dbManager.updateThreadInfo(threadInfo);
                 listener.onFinished(threadInfo.getId());
             }
         } catch (Exception e) {
