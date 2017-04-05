@@ -9,9 +9,11 @@ import floatingmuseum.sonic.entity.TaskInfo;
 public class AppInfo {
     private String url;
     private String name;
-    private TaskInfo taskInfo;
+    private long currentSize;
+    private long TotalSize;
+    private int progress;
 
-    public AppInfo(String url, String name,TaskInfo taskInfo) {
+    public AppInfo(String url, String name) {
         this.url = url;
         this.name = name;
     }
@@ -32,11 +34,27 @@ public class AppInfo {
         this.name = name;
     }
 
-    public TaskInfo getTaskInfo() {
-        return taskInfo;
+    public long getCurrentSize() {
+        return currentSize;
     }
 
-    public void setTaskInfo(TaskInfo taskInfo) {
-        this.taskInfo = taskInfo;
+    public void setCurrentSize(long currentSize) {
+        this.currentSize = currentSize;
+    }
+
+    public long getTotalSize() {
+        return TotalSize;
+    }
+
+    public void setTotalSize(long totalSize) {
+        TotalSize = totalSize;
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public void setProgress(int progress) {
+        this.progress = progress;
     }
 }

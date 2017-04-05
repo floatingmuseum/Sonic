@@ -7,6 +7,7 @@ import floatingmuseum.sonic.entity.TaskInfo;
  */
 
 public interface DownloadListener {
+    void onStart(TaskInfo taskInfo);
 
     void onWaiting(TaskInfo taskInfo);
 

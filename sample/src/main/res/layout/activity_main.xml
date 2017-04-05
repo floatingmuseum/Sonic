@@ -8,55 +8,62 @@
     android:padding="10dp"
     tools:context="floatingmuseum.sample.sonic.MainActivity">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="单任务"
-        android:textSize="18sp" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="下厨房" />
-
-    <TextView
-        android:id="@+id/tv_single_task_size"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Size:" />
-
-    <ProgressBar
-        android:id="@+id/pb_single_task"
-        style="@android:style/Widget.ProgressBar.Horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="5dp" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:visibility="gone">
 
-        <Button
-            android:id="@+id/bt_single_task_start"
-            android:layout_width="0dp"
+        <TextView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="start" />
+            android:gravity="center"
+            android:text="单任务"
+            android:textSize="18sp" />
 
-        <Button
-            android:id="@+id/bt_single_task_stop"
-            android:layout_width="0dp"
+        <TextView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="stop" />
+            android:text="下厨房" />
+
+        <TextView
+            android:id="@+id/tv_single_task_size"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Size:" />
+
+        <ProgressBar
+            android:id="@+id/pb_single_task"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="5dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/bt_single_task_start"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="start" />
+
+            <Button
+                android:id="@+id/bt_single_task_stop"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="stop" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_margin="5dp"
+            android:background="@android:color/black" />
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_margin="5dp"
-        android:background="@android:color/black" />
 
     <TextView
         android:layout_width="match_parent"

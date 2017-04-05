@@ -28,6 +28,7 @@ public class Sonic implements TaskListener {
     private static final String TAG = Sonic.class.getName();
 
     public static final int STATE_NONE = 0;
+    public static final int STATE_START = 6;
     public static final int STATE_WAITING = 1;
     public static final int STATE_PAUSE = 2;
     public static final int STATE_DOWNLOADING = 3;
@@ -42,7 +43,6 @@ public class Sonic implements TaskListener {
     private int activeTaskNumber = 3;
     private String dirPath;
     private int progressResponseTime = 500;
-    private DownloadListener listener;
 
     private Map<String, TaskInfo> allTaskInfo;
     private Map<String, DownloadTask> activeTasks;
@@ -120,6 +120,11 @@ public class Sonic implements TaskListener {
         return this;
     }
 
+    public Sonic setStopServiceAfterAllTaskFinished(boolean stopServiceAfterAllTaskFinished) {
+//        this.stopServiceAfterAllTaskFinished = stopServiceAfterAllTaskFinished;
+        return this;
+    }
+
 
     public Sonic registerDownloadListener(DownloadListener listener) {
         uiHandler.setListener(listener);
@@ -171,6 +176,7 @@ public class Sonic implements TaskListener {
             activeTasks.put(taskInfo.getTag(), downloadTask);
             downloadTask.start();
         }
+        Log.i(TAG, "initDownload()...最大同时下载任务数:" + activeTaskNumber + "...当前任务数:" + activeTasks.size() + "...等待任务数:" + waitingTasks.size());
     }
 
     public void stopTask(String tag) {
@@ -182,9 +188,14 @@ public class Sonic implements TaskListener {
     }
 
     @Override
+    public void onStart(TaskInfo taskInfo) {
+        sendMessage(taskInfo, STATE_START, null);
+    }
+
+    @Override
     public void onPause(TaskInfo taskInfo) {
-        dbManager.updateTaskInfo(taskInfo);
         sendMessage(taskInfo, STATE_PAUSE, null);
+        checkWaitingTasks(taskInfo);
     }
 
     @Override
@@ -197,12 +208,20 @@ public class Sonic implements TaskListener {
     public void onError(TaskInfo taskInfo, Throwable e) {
         dbManager.updateTaskInfo(taskInfo);
         sendMessage(taskInfo, STATE_ERROR, e);
+        checkWaitingTasks(taskInfo);
     }
 
     @Override
     public void onFinish(TaskInfo taskInfo) {
-        dbManager.delete(DBManager.TASKS_TABLE_NAME, taskInfo.getDownloadUrl());
         sendMessage(taskInfo, STATE_FINISH, null);
+        allTaskInfo.remove(taskInfo.getTag());
+        checkWaitingTasks(taskInfo);
+    }
+
+    /**
+     * 查看等待列表中是否有任务
+     */
+    private void checkWaitingTasks(TaskInfo taskInfo) {
         activeTasks.remove(taskInfo.getTag());
         if (waitingTasks.size() > 0) {
             DownloadTask downloadTask = waitingTasks.get(0);
@@ -210,6 +229,7 @@ public class Sonic implements TaskListener {
             activeTasks.put(downloadTask.getTaskInfo().getTag(), downloadTask);
             downloadTask.start();
         }
+        Log.i(TAG, "onFinish()...最大同时下载任务数:" + activeTaskNumber + "...当前任务数:" + activeTasks.size() + "...等待任务数:" + waitingTasks.size());
     }
 
     private void sendMessage(TaskInfo taskInfo, int downloadState, Throwable throwable) {

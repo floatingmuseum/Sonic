@@ -15,6 +15,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.IllegalFormatCodePointException;
 import java.util.List;
 import java.util.Map;
 
@@ -46,27 +47,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initPermission();
     }
 
+    private void initSonic() {
+        sonic = Sonic.getInstance()
+                .setMaxThreads(5)
+                .setActiveTaskNumber(2)
+                .registerDownloadListener(this);
+    }
+
     private void initData() {
         downloadList = new ArrayList<>();
-        AppInfo appInfo1 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_23/10/com.tencent.mtt_105815.apk", "QQ浏览器", null);
+        AppInfo appInfo1 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_16/20/com.sina.weibog3_080004.apk", "微博");
         downloadList.add(appInfo1);
-        AppInfo appInfo2 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_16/20/com.sina.weibog3_080004.apk", "微博", null);
+        AppInfo appInfo2 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_23/10/com.tencent.mtt_105815.apk", "QQ浏览器");
         downloadList.add(appInfo2);
-        AppInfo appInfo3 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2016/12_2/15/com.lbe.security_035225.apk", "LBE安全大师", null);
+        AppInfo appInfo3 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2016/12_2/15/com.lbe.security_035225.apk", "LBE安全大师");
         downloadList.add(appInfo3);
-        AppInfo appInfo4 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_29/12/com.qiyi.video_124106.apk", "爱奇艺", null);
+        AppInfo appInfo4 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_29/12/com.qiyi.video_124106.apk", "爱奇艺");
         downloadList.add(appInfo4);
-        AppInfo appInfo5 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_8/20/com.kugou.android_080305.apk", "酷狗", null);
+        AppInfo appInfo5 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_8/20/com.kugou.android_080305.apk", "酷狗");
         downloadList.add(appInfo5);
-        AppInfo appInfo6 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_17/17/com.xiachufang_054408.apk", "下厨房", null);
+        AppInfo appInfo6 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_17/17/com.xiachufang_054408.apk", "下厨房");
         downloadList.add(appInfo6);
-        AppInfo appInfo7 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_30/17/com.netease.mail_051233.apk.apk", "网易邮箱大师", null);
+        AppInfo appInfo7 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_30/17/com.netease.mail_051233.apk.apk", "网易邮箱大师");
         downloadList.add(appInfo7);
-        AppInfo appInfo8 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_24/14/com.ss.android.article.news_024007.apk", "今日头条", null);
+        AppInfo appInfo8 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_24/14/com.ss.android.article.news_024007.apk", "今日头条");
         downloadList.add(appInfo8);
-        AppInfo appInfo9 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_31/17/com.duokan.reader_050812.apk", "多看阅读", null);
+        AppInfo appInfo9 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_24/12/com.tencent.qqpim_121006.apk", "QQ同步助手");
         downloadList.add(appInfo9);
-        AppInfo appInfo10 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_24/12/com.tencent.qqpim_121006.apk", "QQ同步助手", null);
+        AppInfo appInfo10 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_31/17/com.duokan.reader_050812.apk", "多看阅读");
         downloadList.add(appInfo10);
         checkTasks();
     }
@@ -75,7 +83,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Map<String, TaskInfo> allTasks = sonic.getAllTaskInfo();
         for (AppInfo appInfo : downloadList) {
             if (allTasks.containsKey(appInfo.getUrl())) {
-                appInfo.setTaskInfo(allTasks.get(appInfo.getUrl()));
+                TaskInfo taskInfo = allTasks.get(appInfo.getUrl());
+                appInfo.setCurrentSize(taskInfo.getCurrentSize());
+                appInfo.setTotalSize(taskInfo.getTotalSize());
+                appInfo.setProgress(taskInfo.getProgress());
             }
         }
     }
@@ -97,9 +108,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 switch (viewId) {
                     case R.id.bt_task_start:
                         Log.i(TAG, "点击Start:...位置:" + position);
+                        sonic.addTask(downloadList.get(position).getUrl());
                         break;
                     case R.id.bt_task_stop:
                         Log.i(TAG, "点击Stop:...位置:" + position);
+                        sonic.stopTask(downloadList.get(position).getUrl());
                         break;
                 }
             }
@@ -120,13 +133,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, request_permission_code);
             }
         }
-    }
-
-    private void initSonic() {
-        sonic = Sonic.getInstance()
-                .setMaxThreads(5)
-                .setActiveTaskNumber(2)
-                .registerDownloadListener(this);
     }
 
     @Override
@@ -157,28 +163,75 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public void onStart(TaskInfo taskInfo) {
+        Log.i(TAG, "任务开始...onStart:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize());
+//        for (AppInfo appInfo : downloadList) {
+//            if (appInfo.getTaskInfo() == null && appInfo.getUrl().equals(taskInfo.getTag())) {
+//                appInfo.setTaskInfo(taskInfo);
+//            }
+//        }
+    }
+
+    @Override
     public void onWaiting(TaskInfo taskInfo) {
         Log.i(TAG, "任务等待...onWaiting:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize());
     }
 
     @Override
     public void onPause(TaskInfo taskInfo) {
+        updateAppInfo(taskInfo);
         Log.i(TAG, "任务暂停...onPause:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize());
     }
 
     @Override
     public void onProgress(TaskInfo taskInfo) {
-        tvSingleTaskSize.setText("Size:" + taskInfo.getCurrentSize() + "/" + taskInfo.getTotalSize());
-        pbSingleTask.setProgress(taskInfo.getProgress());
+//        tvSingleTaskSize.setText("Size:" + taskInfo.getCurrentSize() + "/" + taskInfo.getTotalSize());
+//        pbSingleTask.setProgress(taskInfo.getProgress());
+        updateProgress(taskInfo);
     }
 
     @Override
     public void onFinish(TaskInfo taskInfo) {
-        Log.i(TAG, "任务完成...onFinish:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize());
+        updateAppInfo(taskInfo);
+//        adapter.notifyDataSetChanged();
+        Log.i(TAG, "任务完成...onFinish:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getProgress());
     }
 
     @Override
     public void onError(TaskInfo taskInfo, Throwable e) {
+        updateAppInfo(taskInfo);
+//        adapter.notifyDataSetChanged();
         Log.i(TAG, "任务异常...onError:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize());
+    }
+
+    private void updateAppInfo(TaskInfo taskInfo) {
+        for (AppInfo appInfo : downloadList) {
+            if (appInfo.getUrl().equals(taskInfo.getTag())) {
+                appInfo.setCurrentSize(taskInfo.getCurrentSize());
+                appInfo.setTotalSize(taskInfo.getTotalSize());
+                appInfo.setProgress(taskInfo.getProgress());
+                return;
+            }
+        }
+    }
+
+    private void updateProgress(TaskInfo taskInfo) {
+        for (int i = 0; i < downloadList.size(); i++) {
+            AppInfo appInfo = downloadList.get(i);
+            if (taskInfo.getDownloadUrl().equals(appInfo.getUrl())) {
+                updateAppInfo(taskInfo);
+                int firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition();
+                int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
+                if (i >= firstVisibleItemPosition && i <= lastVisibleItemPosition) {
+
+                    Log.i(TAG, "刷新:" + appInfo.getName() + "..." + taskInfo.getCurrentSize() + "..." + taskInfo.getTotalSize() + "..." + taskInfo.getProgress());
+                    TasksAdapter.TaskViewHolder holder = (TasksAdapter.TaskViewHolder) rvTasks.findViewHolderForAdapterPosition(i);
+                    if (holder.tag != null && holder.tag.equals(taskInfo.getTag())) {
+                        holder.pbTask.setProgress(taskInfo.getProgress());
+                        holder.tvSize.setText("Size:" + taskInfo.getCurrentSize() + "/" + taskInfo.getTotalSize());
+                    }
+                }
+            }
+        }
     }
 }

@@ -4,9 +4,7 @@ package floatingmuseum.sonic;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import floatingmuseum.sonic.db.DBManager;
 import floatingmuseum.sonic.entity.TaskInfo;
@@ -92,6 +90,7 @@ public class DownloadTask implements InitListener, ThreadListener {
         Log.i(TAG, "onGetContentLength总文件大小:" + contentLength + "..." + FileUtil.bytesToMb(contentLength) + "mb");
         taskInfo.setTotalSize(contentLength);
         dbManager.updateTaskInfo(taskInfo);
+        taskListener.onStart(taskInfo);
         threadInfoList = new ArrayList<>();
         long blockLength = contentLength / maxThreads;
 
@@ -124,8 +123,8 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     private void updateProgress() {
         taskInfo.setState(Sonic.STATE_DOWNLOADING);
-        taskInfo.setProgress(getProgress());
         taskInfo.setCurrentSize(getCurrentSize());
+        taskInfo.setProgress(getProgress());
         taskListener.onProgress(taskInfo);
     }
 
@@ -163,11 +162,17 @@ public class DownloadTask implements InitListener, ThreadListener {
     public void onFinished(int threadId) {
         maxThreads--;
         if (maxThreads == 0) {
-            Log.i(TAG, "下载进度...onFinished...CurrentSize:" + taskInfo.getCurrentSize() + "...TotalSize:" + taskInfo.getTotalSize());
+//            Log.i(TAG, "下载进度...onFinished...CurrentSize:" + taskInfo.getCurrentSize() + "...TotalSize:" + taskInfo.getTotalSize());
             //删除所有记录
             dbManager.delete(DBManager.THREADS_TABLE_NAME, taskInfo.getDownloadUrl());
+            TaskInfo info1 = dbManager.queryDownloadTask(taskInfo.getDownloadUrl());
+            Log.i(TAG, "onFinished...下载结束:"+info1);
             dbManager.delete(DBManager.TASKS_TABLE_NAME, taskInfo.getDownloadUrl());
-            Log.d(TAG, "onFinished...下载结束");
+            TaskInfo info2 = dbManager.queryDownloadTask(taskInfo.getDownloadUrl());
+            Log.i(TAG, "onFinished...下载结束:"+info2);
+            if (info2!=null) {
+                Log.i(TAG, "onFinished...下载结束:"+info2);
+            }
             updateProgress();
             taskListener.onFinish(taskInfo);
         }
@@ -175,6 +180,6 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onInitError(Throwable e) {
-
+        taskListener.onError(taskInfo, e);
     }
 }

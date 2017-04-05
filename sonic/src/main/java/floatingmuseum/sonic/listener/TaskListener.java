@@ -8,6 +8,8 @@ import floatingmuseum.sonic.entity.TaskInfo;
 
 public interface TaskListener {
 
+    void onStart(TaskInfo taskInfo);
+
     void onPause(TaskInfo taskInfo);
 
     void onProgress(TaskInfo taskInfo);

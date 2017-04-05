@@ -1,6 +1,7 @@
 package floatingmuseum.sample.sonic;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import floatingmuseum.sonic.utils.FileUtil;
 
 public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHolder> {
 
+    private static final String TAG = TasksAdapter.class.getName();
     private List<AppInfo> data;
 
     public TasksAdapter(List<AppInfo> data) {
@@ -42,17 +44,31 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         AppInfo appInfo = data.get(position);
         String fileName = FileUtil.getUrlFileName(appInfo.getName());
         holder.tvName.setText(fileName);
+        if (holder.tag == null) {
+            holder.bind(appInfo.getUrl());
+        }
+
+        if (appInfo.getTotalSize() != 0) {
+            Log.i(TAG, "AppName:" + appInfo.getName() + "..." + appInfo.getCurrentSize() + "..." + appInfo.getProgress());
+            holder.tvSize.setText("Size:" + appInfo.getCurrentSize() + "/" + appInfo.getTotalSize());
+            holder.pbTask.setProgress(appInfo.getProgress());
+        } else {
+            holder.tvSize.setText("Size:unknown");
+        }
     }
 
     public class TaskViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView tvName;
+        TextView tvSize;
         ProgressBar pbTask;
         Button btTaskStart;
         Button btTaskStop;
+        String tag;
 
         public TaskViewHolder(View itemView) {
             super(itemView);
             tvName = (TextView) itemView.findViewById(R.id.tv_name);
+            tvSize = (TextView) itemView.findViewById(R.id.tv_size);
             pbTask = (ProgressBar) itemView.findViewById(R.id.pb_task);
             btTaskStart = (Button) itemView.findViewById(R.id.bt_task_start);
             btTaskStop = (Button) itemView.findViewById(R.id.bt_task_stop);
@@ -66,6 +82,10 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
             if (listener != null) {
                 listener.onChildClick(v.getId(), getAdapterPosition());
             }
+        }
+
+        public void bind(String tag) {
+            this.tag = tag;
         }
     }
 

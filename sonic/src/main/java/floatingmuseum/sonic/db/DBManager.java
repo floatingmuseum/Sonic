@@ -3,6 +3,7 @@ package floatingmuseum.sonic.db;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ import floatingmuseum.sonic.entity.ThreadInfo;
 public class DBManager {
 
     private DBHelper dbHelper;
+    private static final String TAG = DBManager.class.getName();
     public static final String THREADS_TABLE_NAME = "thread_info";
     public static final String TASKS_TABLE_NAME = "task_info";
 
@@ -48,9 +50,10 @@ public class DBManager {
     }
 
     public synchronized void updateTaskInfo(TaskInfo task) {
-        String updateSql = "update task_info set current_size=?,state=? where tag=?";
+        Log.i(TAG, "updateTaskInfo()..." + task.getCurrentSize() + "..." + task.getState() + "..." + task.getProgress());
+        String updateSql = "update task_info set current_size=?,state=?,download_progress=? where tag=?";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.execSQL(updateSql, new Object[]{task.getCurrentSize(), task.getState(), task.getTag()});
+        db.execSQL(updateSql, new Object[]{task.getCurrentSize(), task.getState(), task.getProgress(), task.getTag()});
         db.close();
     }
 
@@ -95,6 +98,7 @@ public class DBManager {
             task.setFilePath(cursor.getString(cursor.getColumnIndex("file_path")));
             task.setCurrentSize(cursor.getLong(cursor.getColumnIndex("current_size")));
             task.setTotalSize(cursor.getLong(cursor.getColumnIndex("total_size")));
+            task.setProgress(cursor.getInt(cursor.getColumnIndex("download_progress")));
             task.setState(cursor.getInt(cursor.getColumnIndex("state")));
             cursor.close();
             db.close();
@@ -139,6 +143,7 @@ public class DBManager {
             task.setFilePath(cursor.getString(cursor.getColumnIndex("file_path")));
             task.setCurrentSize(cursor.getLong(cursor.getColumnIndex("current_size")));
             task.setTotalSize(cursor.getLong(cursor.getColumnIndex("total_size")));
+            task.setProgress(cursor.getInt(cursor.getColumnIndex("download_progress")));
             task.setState(cursor.getInt(cursor.getColumnIndex("state")));
         }
         cursor.close();

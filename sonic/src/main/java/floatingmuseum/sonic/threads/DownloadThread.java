@@ -99,6 +99,8 @@ public class DownloadThread extends Thread {
                 Log.i(TAG, threadInfo.getId() + "号线程完成工作");
                 dbManager.updateThreadInfo(threadInfo);
                 listener.onFinished(threadInfo.getId());
+            } else {
+                listener.onError(threadInfo,new IllegalStateException("DownloadThread Request failed with response code:" + responseCode));
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -56,7 +56,7 @@ public class InitThread extends Thread {
                 listener.onGetContentLength(contentLength);
                 return;
             } else {
-                listener.onInitError(new IllegalStateException("Request failed with response code:" + responseCode));
+                listener.onInitError(new IllegalStateException("InitThread Request failed with response code:" + responseCode));
             }
         } catch (Exception e) {
             e.printStackTrace();

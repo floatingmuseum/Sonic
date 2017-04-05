@@ -21,6 +21,9 @@ public class UIHandler extends Handler {
             UIListenerMessage message = (UIListenerMessage) msg.obj;
             TaskInfo taskInfo = message.getTaskInfo();
             switch (message.getState()) {
+                case Sonic.STATE_START:
+                    listener.onStart(taskInfo);
+                    break;
                 case Sonic.STATE_NONE:
                     break;
                 case Sonic.STATE_DOWNLOADING:
