@@ -222,7 +222,6 @@ public class Sonic implements TaskListener {
 
     @Override
     public void onError(TaskInfo taskInfo, Throwable e) {
-        dbManager.updateTaskInfo(taskInfo);
         sendMessage(taskInfo, STATE_ERROR, e);
         checkWaitingTasks(taskInfo);
     }

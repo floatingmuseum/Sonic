@@ -107,6 +107,7 @@ public class DownloadThread extends Thread {
             e.printStackTrace();
             Log.i(TAG, threadInfo.getId() + "号线程出现异常" + "..." + fileName);
             dbManager.updateThreadInfo(threadInfo);
+            // TODO: 2017/4/6 出现异常时，此任务其他线程还在下载，通知onError的逻辑需要思考 
             listener.onError(threadInfo, e);
         } finally {
             try {
