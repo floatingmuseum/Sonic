@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import floatingmuseum.sonic.Sonic;
 import floatingmuseum.sonic.entity.TaskInfo;
 import floatingmuseum.sonic.utils.FileUtil;
 
@@ -44,16 +45,35 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         AppInfo appInfo = data.get(position);
         String fileName = FileUtil.getUrlFileName(appInfo.getName());
         holder.tvName.setText(fileName);
-        if (holder.tag == null) {
-            holder.bind(appInfo.getUrl());
-        }
-
+//        Log.i(TAG, "AppName:" + appInfo.getName() + "..." + appInfo.getCurrentSize() + "..." + appInfo.getProgress());
         if (appInfo.getTotalSize() != 0) {
-            Log.i(TAG, "AppName:" + appInfo.getName() + "..." + appInfo.getCurrentSize() + "..." + appInfo.getProgress());
             holder.tvSize.setText("Size:" + appInfo.getCurrentSize() + "/" + appInfo.getTotalSize());
             holder.pbTask.setProgress(appInfo.getProgress());
         } else {
             holder.tvSize.setText("Size:unknown");
+            holder.pbTask.setProgress(0);
+        }
+        switch (appInfo.getState()) {
+            case Sonic.STATE_NONE:
+                holder.btTaskState.setText("下载");
+                break;
+            case Sonic.STATE_START:
+                break;
+            case Sonic.STATE_WAITING:
+                holder.btTaskState.setText("等待");
+                break;
+            case Sonic.STATE_PAUSE:
+                holder.btTaskState.setText("下载");
+                break;
+            case Sonic.STATE_DOWNLOADING:
+                holder.btTaskState.setText("暂停");
+                break;
+            case Sonic.STATE_FINISH:
+                holder.btTaskState.setText("完成");
+                break;
+            case Sonic.STATE_ERROR:
+                holder.btTaskState.setText("错误");
+                break;
         }
     }
 
@@ -61,20 +81,16 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         TextView tvName;
         TextView tvSize;
         ProgressBar pbTask;
-        Button btTaskStart;
-        Button btTaskStop;
-        String tag;
+        Button btTaskState;
 
         public TaskViewHolder(View itemView) {
             super(itemView);
             tvName = (TextView) itemView.findViewById(R.id.tv_name);
             tvSize = (TextView) itemView.findViewById(R.id.tv_size);
             pbTask = (ProgressBar) itemView.findViewById(R.id.pb_task);
-            btTaskStart = (Button) itemView.findViewById(R.id.bt_task_start);
-            btTaskStop = (Button) itemView.findViewById(R.id.bt_task_stop);
+            btTaskState = (Button) itemView.findViewById(R.id.bt_task_state);
 
-            btTaskStart.setOnClickListener(this);
-            btTaskStop.setOnClickListener(this);
+            btTaskState.setOnClickListener(this);
         }
 
         @Override
@@ -82,10 +98,6 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
             if (listener != null) {
                 listener.onChildClick(v.getId(), getAdapterPosition());
             }
-        }
-
-        public void bind(String tag) {
-            this.tag = tag;
         }
     }
 

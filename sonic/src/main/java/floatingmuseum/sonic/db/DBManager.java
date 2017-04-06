@@ -28,14 +28,14 @@ public class DBManager {
         dbHelper = DBHelper.getInstance(context);
     }
 
-    public void insertThreadInfo(ThreadInfo info) {
+    public synchronized void insertThreadInfo(ThreadInfo info) {
         String insertSql = "insert into thread_info(thread_id,url,start_position,end_position,current_position,file_size) values(?,?,?,?,?,?)";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL(insertSql, new Object[]{info.getId(), info.getUrl(), info.getStartPosition(), info.getEndPosition(), info.getCurrentPosition(), info.getFileSize()});
         db.close();
     }
 
-    public void insertTaskInfo(TaskInfo task) {
+    public synchronized void insertTaskInfo(TaskInfo task) {
         String insertSql = "insert into task_info(url,tag,dir_path,file_path,name,current_size,total_size,state) values(?,?,?,?,?,?,?,?)";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL(insertSql, new Object[]{task.getDownloadUrl(), task.getTag(), task.getDirPath(), task.getFilePath(), task.getName(), task.getCurrentSize(), task.getTotalSize(), task.getState()});

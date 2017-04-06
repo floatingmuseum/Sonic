@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 appInfo.setCurrentSize(taskInfo.getCurrentSize());
                 appInfo.setTotalSize(taskInfo.getTotalSize());
                 appInfo.setProgress(taskInfo.getProgress());
+                appInfo.setState(taskInfo.getState());
             }
         }
     }
@@ -106,13 +107,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onChildClick(int viewId, int position) {
                 switch (viewId) {
-                    case R.id.bt_task_start:
-                        Log.i(TAG, "点击Start:...位置:" + position);
-                        sonic.addTask(downloadList.get(position).getUrl());
-                        break;
-                    case R.id.bt_task_stop:
-                        Log.i(TAG, "点击Stop:...位置:" + position);
-                        sonic.stopTask(downloadList.get(position).getUrl());
+                    case R.id.bt_task_state:
+                        Log.i(TAG, "点击State:...位置:" + position);
+                        executeCommand(downloadList.get(position));
+//                        sonic.addTask(downloadList.get(position).getUrl());
                         break;
                 }
             }
@@ -123,6 +121,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (taskInfo != null) {
             pbSingleTask.setProgress(taskInfo.getProgress());
             tvSingleTaskSize.setText("Size:" + taskInfo.getCurrentSize() + "/" + taskInfo.getTotalSize());
+        }
+    }
+
+    private void executeCommand(AppInfo appInfo) {
+        Log.i(TAG, "点击State:...状态:" + appInfo.getState());
+        switch (appInfo.getState()) {
+            case Sonic.STATE_NONE:
+            case Sonic.STATE_START:
+            case Sonic.STATE_PAUSE:
+            case Sonic.STATE_ERROR:
+                sonic.addTask(appInfo.getUrl());
+                break;
+            case Sonic.STATE_WAITING:
+            case Sonic.STATE_DOWNLOADING:
+                sonic.stopTask(appInfo.getUrl());
+                break;
+            case Sonic.STATE_FINISH:
+                sonic.addTask(appInfo.getUrl());
+                break;
         }
     }
 
@@ -164,74 +181,99 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onStart(TaskInfo taskInfo) {
-        Log.i(TAG, "任务开始...onStart:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize());
-//        for (AppInfo appInfo : downloadList) {
-//            if (appInfo.getTaskInfo() == null && appInfo.getUrl().equals(taskInfo.getTag())) {
-//                appInfo.setTaskInfo(taskInfo);
-//            }
-//        }
+        updateAppInfo(taskInfo);
+        Log.i(TAG, "任务开始...onStart:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName());
     }
 
     @Override
     public void onWaiting(TaskInfo taskInfo) {
-        Log.i(TAG, "任务等待...onWaiting:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize());
+        updateAppInfo(taskInfo);
+//        adapter.notifyDataSetChanged();
+        Log.i(TAG, "任务等待...onWaiting:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName());
     }
 
     @Override
     public void onPause(TaskInfo taskInfo) {
         updateAppInfo(taskInfo);
-        Log.i(TAG, "任务暂停...onPause:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize());
+//        adapter.notifyDataSetChanged();
+        Log.i(TAG, "任务暂停...onPause:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName());
     }
 
     @Override
     public void onProgress(TaskInfo taskInfo) {
 //        tvSingleTaskSize.setText("Size:" + taskInfo.getCurrentSize() + "/" + taskInfo.getTotalSize());
 //        pbSingleTask.setProgress(taskInfo.getProgress());
-        updateProgress(taskInfo);
+        updateAppInfo(taskInfo);
     }
 
     @Override
     public void onFinish(TaskInfo taskInfo) {
         updateAppInfo(taskInfo);
-//        adapter.notifyDataSetChanged();
-        Log.i(TAG, "任务完成...onFinish:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getProgress());
+        adapter.notifyDataSetChanged();
+        Log.i(TAG, "任务完成...onFinish:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getName());
     }
 
     @Override
     public void onError(TaskInfo taskInfo, Throwable e) {
         updateAppInfo(taskInfo);
-//        adapter.notifyDataSetChanged();
-        Log.i(TAG, "任务异常...onError:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize());
+        adapter.notifyDataSetChanged();
+        Log.i(TAG, "任务异常...onError:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName());
     }
 
     private void updateAppInfo(TaskInfo taskInfo) {
-        for (AppInfo appInfo : downloadList) {
-            if (appInfo.getUrl().equals(taskInfo.getTag())) {
+        for (int i = 0; i < downloadList.size(); i++) {
+            AppInfo appInfo = downloadList.get(i);
+            if (taskInfo.getDownloadUrl().equals(appInfo.getUrl())) {
+                Log.i(TAG, "刷新AppInfo:" + taskInfo.getName() + "..." + taskInfo.getCurrentSize() + "..." + taskInfo.getTotalSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
                 appInfo.setCurrentSize(taskInfo.getCurrentSize());
                 appInfo.setTotalSize(taskInfo.getTotalSize());
                 appInfo.setProgress(taskInfo.getProgress());
+                appInfo.setState(taskInfo.getState());
+                updateUI(appInfo, i);
                 return;
             }
         }
     }
 
-    private void updateProgress(TaskInfo taskInfo) {
-        for (int i = 0; i < downloadList.size(); i++) {
-            AppInfo appInfo = downloadList.get(i);
-            if (taskInfo.getDownloadUrl().equals(appInfo.getUrl())) {
-                updateAppInfo(taskInfo);
-                int firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition();
-                int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
-                if (i >= firstVisibleItemPosition && i <= lastVisibleItemPosition) {
-
-                    Log.i(TAG, "刷新:" + appInfo.getName() + "..." + taskInfo.getCurrentSize() + "..." + taskInfo.getTotalSize() + "..." + taskInfo.getProgress());
-                    TasksAdapter.TaskViewHolder holder = (TasksAdapter.TaskViewHolder) rvTasks.findViewHolderForAdapterPosition(i);
-                    if (holder.tag != null && holder.tag.equals(taskInfo.getTag())) {
-                        holder.pbTask.setProgress(taskInfo.getProgress());
-                        holder.tvSize.setText("Size:" + taskInfo.getCurrentSize() + "/" + taskInfo.getTotalSize());
-                    }
-                }
+    private void updateUI(AppInfo appInfo, int position) {
+        int firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition();
+        int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
+        if (position >= firstVisibleItemPosition && position <= lastVisibleItemPosition) {
+            TasksAdapter.TaskViewHolder holder = (TasksAdapter.TaskViewHolder) rvTasks.findViewHolderForAdapterPosition(position);
+            Log.i(TAG, "刷新UI:" + appInfo.getName() + "..." + appInfo.getCurrentSize() + "..." + appInfo.getTotalSize() + "..." + appInfo.getProgress() + "..." + appInfo.getState() + "..." + holder);
+            if (holder == null) {
+                /**
+                 * if notifyDataSetChanged() has been called but the new layout has not been calculated yet,
+                 * this method will return null since the new positions of views are unknown until the layout
+                 * is calculated
+                 */
+                return;
             }
+            switch (appInfo.getState()) {
+                case Sonic.STATE_NONE:
+                    holder.btTaskState.setText("下载");
+                    break;
+                case Sonic.STATE_START:
+                    holder.btTaskState.setText("暂停");
+                    break;
+                case Sonic.STATE_WAITING:
+                    holder.btTaskState.setText("等待");
+                    break;
+                case Sonic.STATE_PAUSE:
+                    holder.btTaskState.setText("下载");
+                    break;
+                case Sonic.STATE_DOWNLOADING:
+                    holder.btTaskState.setText("暂停");
+                    break;
+                case Sonic.STATE_FINISH:
+                    holder.btTaskState.setText("完成");
+                    break;
+                case Sonic.STATE_ERROR:
+                    holder.btTaskState.setText("错误");
+                    break;
+            }
+            holder.pbTask.setProgress(appInfo.getProgress());
+            holder.tvSize.setText("Size:" + appInfo.getCurrentSize() + "/" + appInfo.getTotalSize());
         }
     }
 }

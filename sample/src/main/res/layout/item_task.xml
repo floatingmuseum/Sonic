@@ -16,29 +16,25 @@
         android:layout_height="wrap_content"
         android:text="Size:" />
 
-    <ProgressBar
-        android:id="@+id/pb_task"
-        style="@android:style/Widget.ProgressBar.Horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="5dp" />
-
     <LinearLayout
+        android:gravity="center_vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/bt_task_start"
+        <ProgressBar
+            android:id="@+id/pb_task"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_weight="8"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Start" />
+            android:layout_height="5dp" />
 
         <Button
-            android:id="@+id/bt_task_stop"
+            android:id="@+id/bt_task_state"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Stop" />
+            android:layout_weight="2"
+            android:text="Start" />
+
     </LinearLayout>
 </LinearLayout>

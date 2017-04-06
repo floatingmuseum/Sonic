@@ -168,11 +168,14 @@ public class Sonic implements TaskListener {
             allTaskInfo.put(taskInfo.getTag(), taskInfo);
         }
 
-        DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, maxThreads, progressResponseTime, this);
         if (activeTasks.size() == activeTaskNumber) {
+            taskInfo.setState(Sonic.STATE_WAITING);
+            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, maxThreads, progressResponseTime, this);
             waitingTasks.add(downloadTask);
             sendMessage(taskInfo, STATE_WAITING, null);
         } else {
+            Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "进入下载队列");
+            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, maxThreads, progressResponseTime, this);
             activeTasks.put(taskInfo.getTag(), downloadTask);
             downloadTask.start();
         }
@@ -181,8 +184,21 @@ public class Sonic implements TaskListener {
 
     public void stopTask(String tag) {
         if (activeTasks.containsKey(tag)) {
+            Log.i(TAG, "stopTask()...activeTasks:" + activeTasks.size() + "..." + tag);
             activeTasks.get(tag).stop();
         } else {
+            Log.i(TAG, "stopTask()...waitingTasks:" + waitingTasks.size() + "..." + tag);
+            for (DownloadTask waitingTask : waitingTasks) {
+                TaskInfo taskInfo = waitingTask.getTaskInfo();
+                Log.i(TAG, "stopTask()...waitingTasks:" + taskInfo.getName());
+                if (taskInfo.getTag().equals(tag)) {
+                    Log.i(TAG, "stopTask()...waitingTasks:" + taskInfo.getName());
+                    taskInfo.setState(STATE_PAUSE);
+                    sendMessage(taskInfo, STATE_PAUSE, null);
+                    waitingTasks.remove(waitingTask);
+                    return;
+                }
+            }
             Log.i(TAG, "Which task that you want removed,doesn't exist.");
         }
     }
@@ -201,7 +217,7 @@ public class Sonic implements TaskListener {
     @Override
     public void onProgress(TaskInfo taskInfo) {
         sendMessage(taskInfo, STATE_DOWNLOADING, null);
-        Log.i(TAG, "下载进度...onProgress...CurrentSize:" + taskInfo.getCurrentSize() + "...TotalSize:" + taskInfo.getTotalSize() + "...Progress:" + taskInfo.getProgress());
+//        Log.i(TAG, "下载进度...onProgress...CurrentSize:" + taskInfo.getCurrentSize() + "...TotalSize:" + taskInfo.getTotalSize() + "...Progress:" + taskInfo.getProgress());
     }
 
     @Override
@@ -222,6 +238,7 @@ public class Sonic implements TaskListener {
      * 查看等待列表中是否有任务
      */
     private void checkWaitingTasks(TaskInfo taskInfo) {
+        // TODO: 2017/4/6 有时会有超过 activeTaskNumber 的任务在执行
         activeTasks.remove(taskInfo.getTag());
         if (waitingTasks.size() > 0) {
             DownloadTask downloadTask = waitingTasks.get(0);

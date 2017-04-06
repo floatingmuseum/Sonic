@@ -41,7 +41,7 @@ public class DownloadThread extends Thread {
 
     @Override
     public void run() {
-        Log.i(TAG, threadInfo.getId() + "号线程开始工作");
+        Log.i(TAG, threadInfo.getId() + "号线程开始工作" + "..." + fileName);
         HttpURLConnection connection = null;
         RandomAccessFile randomAccessFile = null;
         InputStream inputStream = null;
@@ -51,20 +51,21 @@ public class DownloadThread extends Thread {
             connection = (HttpURLConnection) url.openConnection();
 
             connection.setConnectTimeout(3000);
+            connection.setReadTimeout(4000);
             connection.setRequestMethod("GET");
-            long startPosition = threadInfo.getCurrentPosition();
+
             long currentPosition = threadInfo.getCurrentPosition();
 
             //起始位置是线程所下载区块的初始位置+已完成大小
-            Log.i(TAG, "DownloadThread:" + threadInfo.getId() + " ...下载范围:" + threadInfo.getCurrentPosition() + "..." + threadInfo.getEndPosition());
+            Log.i(TAG, "DownloadThread:" + threadInfo.getId() + " ...下载范围:" + threadInfo.getCurrentPosition() + "..." + threadInfo.getEndPosition() + "..." + fileName);
             connection.setRequestProperty("Range", "bytes=" + threadInfo.getCurrentPosition() + "-" + threadInfo.getEndPosition());
 
             long contentLength = -1;
             int responseCode = connection.getResponseCode();
-            Log.i(TAG, "DownloadThread:" + threadInfo.getId() + "...Response code:" + responseCode);
+            Log.i(TAG, "DownloadThread:" + threadInfo.getId() + "...Response code:" + responseCode + "..." + fileName);
             if (responseCode == 200 || responseCode == 206) {
                 contentLength = connection.getContentLength();
-                Log.i(TAG, "获取文件长度...区块长度:" + contentLength);
+                Log.i(TAG, "获取文件长度...区块长度:" + contentLength + "..." + fileName);
                 if (contentLength <= 0) {
                     return;
                 }
@@ -96,15 +97,15 @@ public class DownloadThread extends Thread {
                     }
                 }
                 //当前区块下载完成
-                Log.i(TAG, threadInfo.getId() + "号线程完成工作");
+                Log.i(TAG, threadInfo.getId() + "号线程完成工作" + "..." + fileName);
                 dbManager.updateThreadInfo(threadInfo);
                 listener.onFinished(threadInfo.getId());
             } else {
-                listener.onError(threadInfo,new IllegalStateException("DownloadThread Request failed with response code:" + responseCode));
+                listener.onError(threadInfo, new IllegalStateException("DownloadThread Request failed with response code:" + responseCode));
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.i(TAG, threadInfo.getId() + "号线程出现异常");
+            Log.i(TAG, threadInfo.getId() + "号线程出现异常" + "..." + fileName);
             dbManager.updateThreadInfo(threadInfo);
             listener.onError(threadInfo, e);
         } finally {

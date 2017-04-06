@@ -12,6 +12,7 @@ public class AppInfo {
     private long currentSize;
     private long TotalSize;
     private int progress;
+    private int state;
 
     public AppInfo(String url, String name) {
         this.url = url;
@@ -56,5 +57,13 @@ public class AppInfo {
 
     public void setProgress(int progress) {
         this.progress = progress;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setState(int state) {
+        this.state = state;
     }
 }
