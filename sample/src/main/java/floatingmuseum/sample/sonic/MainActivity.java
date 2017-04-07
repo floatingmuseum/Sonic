@@ -4,18 +4,25 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
+import android.support.v4.util.SimpleArrayMap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.ArrayMap;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.IllegalFormatCodePointException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +48,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        String extensionFromUrl = MimeTypeMap.getFileExtensionFromUrl("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_16/20/com.sina.weibog3_080004.apk");
+        Log.i(TAG, "ExtensionFromUrl:" + extensionFromUrl);
+        LoaderManager loaderManager = getSupportLoaderManager();
+        Loader loader = loaderManager.getLoader(0);
+
         initSonic();
         initData();
         initView();
@@ -56,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void initData() {
         downloadList = new ArrayList<>();
+        new DividerItemDecoration(this, DividerItemDecoration.HORIZONTAL);
         AppInfo appInfo1 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_16/20/com.sina.weibog3_080004.apk", "微博");
         downloadList.add(appInfo1);
         AppInfo appInfo2 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_23/10/com.tencent.mtt_105815.apk", "QQ浏览器");

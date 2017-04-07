@@ -203,6 +203,10 @@ public class Sonic implements TaskListener {
         }
     }
 
+    public void cancelTask(String tag){
+
+    }
+
     @Override
     public void onStart(TaskInfo taskInfo) {
         sendMessage(taskInfo, STATE_START, null);

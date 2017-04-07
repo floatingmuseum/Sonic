@@ -1,7 +1,9 @@
 package floatingmuseum.sonic;
 
 
+import android.graphics.drawable.StateListDrawable;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,13 +72,17 @@ public class DownloadTask implements InitListener, ThreadListener {
          * 等于0说明，是第一次下载，且处于获取任务长度的阶段,如果此时暂停，没有效果。获取长度后会继续下载
          * 所以设置一个变量来控制，当长度获取完毕后，检查变量，可以获知用户是否在获取长度阶段点击了暂停
          */
-        Log.i(TAG, "stop()...停止下载线程:" + threads.size() + taskInfo.getName() + "..." + stopAfterInitThreadDone);
+        Log.i(TAG, "stop()...停止下载线程:" + threads.size() + taskInfo.getName() + "..." + stopAfterInitThreadDone + "..." + alreadyStopThreads);
         if (threads.size() == 0) {
             stopAfterInitThreadDone = true;
         } else {
-            for (DownloadThread thread : threads) {
-                thread.stopThread();
-            }
+            stopAllThreads();
+        }
+    }
+
+    private void stopAllThreads(){
+        for (DownloadThread thread : threads) {
+            thread.stopThread();
         }
     }
 
@@ -150,11 +156,18 @@ public class DownloadTask implements InitListener, ThreadListener {
     public void onPause(ThreadInfo threadInfo) {
         alreadyStopThreads++;
         //已停止线程数达到运行线程数，回调onPause
+        Log.i(TAG, "线程暂停...线程：" + threadInfo.getId() + "..." + alreadyStopThreads + "..." + maxThreads);
         if (alreadyStopThreads == maxThreads) {
             updateProgress();
-            updateTaskInfo(Sonic.STATE_PAUSE);
-            Log.i(TAG, "线程暂停...已完成大小：" + taskInfo.getCurrentSize() + "..." + taskInfo.getName());
-            taskListener.onPause(taskInfo);
+            if (stopByError) {//因为异常而停止
+                updateTaskInfo(Sonic.STATE_ERROR);
+                Log.i(TAG, "线程因异常暂停...已完成大小：" + taskInfo.getCurrentSize() + "..." + taskInfo.getName());
+                taskListener.onError(taskInfo, throwable);
+            } else {//因为用户点击暂停而停止
+                updateTaskInfo(Sonic.STATE_PAUSE);
+                Log.i(TAG, "线程因用户点击暂停...已完成大小：" + taskInfo.getCurrentSize() + "..." + taskInfo.getName());
+                taskListener.onPause(taskInfo);
+            }
         }
     }
 
@@ -167,11 +180,18 @@ public class DownloadTask implements InitListener, ThreadListener {
         }
     }
 
+    private boolean stopByError = false;
+    private Throwable throwable;
+
     @Override
     public void onError(ThreadInfo threadInfo, Throwable e) {
-        updateProgress();
-        updateTaskInfo(Sonic.STATE_ERROR);
-        taskListener.onError(taskInfo, e);
+//        updateProgress();
+        alreadyStopThreads++;
+        stopByError = true;
+        throwable = e;
+        stop();
+//        updateTaskInfo(Sonic.STATE_ERROR);
+//        taskListener.onError(taskInfo, e);
     }
 
     @Override
