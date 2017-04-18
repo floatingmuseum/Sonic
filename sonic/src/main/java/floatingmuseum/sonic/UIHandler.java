@@ -36,7 +36,7 @@ public class UIHandler extends Handler {
                     listener.onWaiting(taskInfo);
                     break;
                 case Sonic.STATE_ERROR:
-                    listener.onError(taskInfo, message.getError());
+                    listener.onError(taskInfo, message.getDownloadException());
                     break;
                 case Sonic.STATE_FINISH:
                     listener.onFinish(taskInfo);

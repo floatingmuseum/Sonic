@@ -1,5 +1,6 @@
 package floatingmuseum.sonic.listener;
 
+import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.entity.TaskInfo;
 
 /**
@@ -17,5 +18,5 @@ public interface DownloadListener {
 
     void onFinish(TaskInfo taskInfo);
 
-    void onError(TaskInfo taskInfo, Throwable e);
+    void onError(TaskInfo taskInfo, DownloadException downloadException);
 }

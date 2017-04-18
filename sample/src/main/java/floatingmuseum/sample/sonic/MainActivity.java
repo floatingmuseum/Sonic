@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.Sonic;
 import floatingmuseum.sonic.entity.TaskInfo;
 import floatingmuseum.sonic.listener.DownloadListener;
@@ -227,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onError(TaskInfo taskInfo, Throwable e) {
+    public void onError(TaskInfo taskInfo, DownloadException DownloadException) {
         updateAppInfo(taskInfo);
         adapter.notifyDataSetChanged();
         Log.i(TAG, "任务异常...onError:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName());

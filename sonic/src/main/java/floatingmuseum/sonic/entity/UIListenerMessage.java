@@ -1,5 +1,7 @@
 package floatingmuseum.sonic.entity;
 
+import floatingmuseum.sonic.DownloadException;
+
 /**
  * Created by Floatingmuseum on 2017/4/1.
  */
@@ -8,12 +10,12 @@ public class UIListenerMessage {
 
     private TaskInfo taskInfo;
     private int state;
-    private Throwable error;
+    private DownloadException downloadException;
 
-    public UIListenerMessage(TaskInfo taskInfo, int state, Throwable error) {
+    public UIListenerMessage(TaskInfo taskInfo, int state, DownloadException downloadException) {
         this.taskInfo = taskInfo;
         this.state = state;
-        this.error = error;
+        this.downloadException = downloadException;
     }
 
     public TaskInfo getTaskInfo() {
@@ -32,12 +34,12 @@ public class UIListenerMessage {
         this.state = state;
     }
 
-    public Throwable getError() {
-        return error;
+    public DownloadException getDownloadException() {
+        return downloadException;
     }
 
-    public void setError(Throwable error) {
-        this.error = error;
+    public void setDownloadException(DownloadException downloadException) {
+        this.downloadException = downloadException;
     }
 
 }

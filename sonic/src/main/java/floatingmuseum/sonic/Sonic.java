@@ -225,8 +225,8 @@ public class Sonic implements TaskListener {
     }
 
     @Override
-    public void onError(TaskInfo taskInfo, Throwable e) {
-        sendMessage(taskInfo, STATE_ERROR, e);
+    public void onError(TaskInfo taskInfo, DownloadException downloadException) {
+        sendMessage(taskInfo, STATE_ERROR, downloadException);
         checkWaitingTasks(taskInfo);
     }
 
@@ -252,10 +252,10 @@ public class Sonic implements TaskListener {
         Log.i(TAG, "onFinish()...最大同时下载任务数:" + activeTaskNumber + "...当前任务数:" + activeTasks.size() + "...等待任务数:" + waitingTasks.size());
     }
 
-    private void sendMessage(TaskInfo taskInfo, int downloadState, Throwable throwable) {
+    private void sendMessage(TaskInfo taskInfo, int downloadState, DownloadException downloadException) {
         UIListenerMessage taskMessage;
         if (downloadState == STATE_ERROR) {
-            taskMessage = new UIListenerMessage(taskInfo, downloadState, throwable);
+            taskMessage = new UIListenerMessage(taskInfo, downloadState, downloadException);
         } else {
             taskMessage = new UIListenerMessage(taskInfo, downloadState, null);
         }

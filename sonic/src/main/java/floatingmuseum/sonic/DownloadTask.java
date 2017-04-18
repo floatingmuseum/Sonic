@@ -80,7 +80,7 @@ public class DownloadTask implements InitListener, ThreadListener {
         }
     }
 
-    private void stopAllThreads(){
+    private void stopAllThreads() {
         for (DownloadThread thread : threads) {
             thread.stopThread();
         }
@@ -154,20 +154,19 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onPause(ThreadInfo threadInfo) {
-        alreadyStopThreads++;
-        //已停止线程数达到运行线程数，回调onPause
-        Log.i(TAG, "线程暂停...线程：" + threadInfo.getId() + "..." + alreadyStopThreads + "..." + maxThreads);
-        if (alreadyStopThreads == maxThreads) {
-            updateProgress();
-            if (stopByError) {//因为异常而停止
-                updateTaskInfo(Sonic.STATE_ERROR);
-                Log.i(TAG, "线程因异常暂停...已完成大小：" + taskInfo.getCurrentSize() + "..." + taskInfo.getName());
-                taskListener.onError(taskInfo, throwable);
-            } else {//因为用户点击暂停而停止
-                updateTaskInfo(Sonic.STATE_PAUSE);
-                Log.i(TAG, "线程因用户点击暂停...已完成大小：" + taskInfo.getCurrentSize() + "..." + taskInfo.getName());
-                taskListener.onPause(taskInfo);
+        boolean isAllPaused = false;
+        for (DownloadThread thread : threads) {
+            //线程状态处于暂停或者失败,都表明线程停止了
+            if (thread.isPaused() || thread.isFailed()) {
+                isAllPaused = true;
+            } else {
+                isAllPaused = false;
             }
+        }
+        if (isAllPaused) {
+            updateProgress();
+            updateTaskInfo(Sonic.STATE_PAUSE);
+            taskListener.onPause(taskInfo);
         }
     }
 
@@ -180,31 +179,66 @@ public class DownloadTask implements InitListener, ThreadListener {
         }
     }
 
-    private boolean stopByError = false;
-    private Throwable throwable;
-
     @Override
     public void onError(ThreadInfo threadInfo, Throwable e) {
-//        updateProgress();
-        alreadyStopThreads++;
-        stopByError = true;
-        throwable = e;
-        stop();
-//        updateTaskInfo(Sonic.STATE_ERROR);
-//        taskListener.onError(taskInfo, e);
+        boolean isAllFailed = false;
+        DownloadException downloadException = null;
+        for (DownloadThread thread : threads) {
+            //线程状态处于暂停或者失败,都表明线程停止了
+            if (thread.isFailed()) {
+                downloadException = thread.getException();
+                isAllFailed = true;
+            } else {
+                isAllFailed = false;
+            }
+        }
+        if (isAllFailed) {
+            updateProgress();
+            updateTaskInfo(Sonic.STATE_ERROR);
+            taskListener.onError(taskInfo, downloadException);
+        }
     }
 
     @Override
     public void onFinished(int threadId) {
-        maxThreads--;
-        if (maxThreads == 0) {
-//            Log.i(TAG, "下载进度...onFinished...CurrentSize:" + taskInfo.getCurrentSize() + "...TotalSize:" + taskInfo.getTotalSize());
-            //删除所有记录
+//        maxThreads--;
+//        if (maxThreads == 0) {
+////            Log.i(TAG, "下载进度...onFinished...CurrentSize:" + taskInfo.getCurrentSize() + "...TotalSize:" + taskInfo.getTotalSize());
+//            //删除所有记录
+//            dbManager.delete(DBManager.THREADS_TABLE_NAME, taskInfo.getDownloadUrl());
+//            dbManager.delete(DBManager.TASKS_TABLE_NAME, taskInfo.getDownloadUrl());
+//            updateProgress();
+//            taskInfo.setState(Sonic.STATE_FINISH);
+//            Log.i(TAG, "onFinished...下载结束" + "..." + taskInfo.getName());
+//            taskListener.onFinish(taskInfo);
+//        }
+
+        boolean isHasError = false;
+        DownloadException downloadException = null;
+        for (DownloadThread thread : threads) {
+            Log.i(TAG, "下载完成:" + threadId + "...其他线程状态:" + thread.getThreadInfo().getId() + "...isFailed:" + thread.isFailed() + "...isFinished:" + thread.isFinished());
+            //只有当所有线程处于失败或者完成状态时(俩种状态可同时存在,因为当其中一条线程出错时,其他线程继续工作,直到工作结束,再结算失败状态)
+            if (thread.isFailed() || thread.isFinished()) {
+                if (thread.isFailed()) {
+                    downloadException = thread.getException();
+                    isHasError = true;
+                }
+            } else {
+                return;
+            }
+        }
+
+
+        updateProgress();
+
+        //所有线程停止状态下含有错误,回调onError
+        if (isHasError) {
+            taskInfo.setState(Sonic.STATE_ERROR);
+            taskListener.onError(taskInfo, downloadException);
+        } else {
             dbManager.delete(DBManager.THREADS_TABLE_NAME, taskInfo.getDownloadUrl());
             dbManager.delete(DBManager.TASKS_TABLE_NAME, taskInfo.getDownloadUrl());
-            updateProgress();
             taskInfo.setState(Sonic.STATE_FINISH);
-            Log.i(TAG, "onFinished...下载结束" + "..." + taskInfo.getName());
             taskListener.onFinish(taskInfo);
         }
     }
@@ -212,7 +246,8 @@ public class DownloadTask implements InitListener, ThreadListener {
     @Override
     public void onInitError(Throwable e) {
         updateTaskInfo(Sonic.STATE_ERROR);
-        taskListener.onError(taskInfo, e);
+        // TODO: 2017/4/19 把初始线程里的异常也改成DownloadException,然后下面这里别强转
+        taskListener.onError(taskInfo, (DownloadException) e);
     }
 
     private void updateTaskInfo(int state) {

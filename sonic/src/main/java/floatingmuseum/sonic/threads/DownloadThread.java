@@ -10,6 +10,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.IllegalFormatCodePointException;
 
+import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.db.DBManager;
 import floatingmuseum.sonic.entity.ThreadInfo;
 import floatingmuseum.sonic.listener.ThreadListener;
@@ -89,6 +90,7 @@ public class DownloadThread extends Thread {
                     if (stopThread) {
                         //更新数据库,停止循环
                         dbManager.updateThreadInfo(threadInfo);
+                        isPaused = true;
                         listener.onPause(threadInfo);
                         return;
                     }
@@ -99,15 +101,19 @@ public class DownloadThread extends Thread {
                 //当前区块下载完成
                 Log.i(TAG, threadInfo.getId() + "号线程完成工作" + "..." + fileName);
                 dbManager.updateThreadInfo(threadInfo);
+                isFinished = true;
                 listener.onFinished(threadInfo.getId());
             } else {
+                isFailed = true;
+                downloadException = new DownloadException("DownloadThread failed",responseCode);
                 listener.onError(threadInfo, new IllegalStateException("DownloadThread Request failed with response code:" + responseCode));
             }
         } catch (Exception e) {
             e.printStackTrace();
             Log.i(TAG, threadInfo.getId() + "号线程出现异常" + "..." + fileName);
             dbManager.updateThreadInfo(threadInfo);
-            // TODO: 2017/4/6 出现异常时，此任务其他线程还在下载，通知onError的逻辑需要思考 
+            isFailed = true;
+            downloadException = new DownloadException("DownloadThread failed",e);
             listener.onError(threadInfo, e);
         } finally {
             try {
@@ -124,6 +130,31 @@ public class DownloadThread extends Thread {
                 e.printStackTrace();
             }
         }
+    }
+
+    private boolean isPaused = false;
+    private boolean isFailed = false;
+    private boolean isFinished = false;
+    private DownloadException downloadException;
+
+    public boolean isPaused() {
+        return isPaused;
+    }
+
+    public boolean isFailed() {
+        return isFailed;
+    }
+
+    public boolean isFinished() {
+        return isFinished;
+    }
+
+    public DownloadException getException(){
+        return downloadException;
+    }
+
+    public ThreadInfo getThreadInfo() {
+        return threadInfo;
     }
 
     public void stopThread() {
