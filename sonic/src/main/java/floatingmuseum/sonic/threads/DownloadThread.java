@@ -50,8 +50,8 @@ public class DownloadThread extends Thread {
             URL url = new URL(threadInfo.getUrl());
             connection = (HttpURLConnection) url.openConnection();
 
-            connection.setConnectTimeout(3000);
-            connection.setReadTimeout(4000);
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
             connection.setRequestMethod("GET");
 
             long currentPosition = threadInfo.getCurrentPosition();
