@@ -60,7 +60,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         sonic = Sonic.getInstance()
                 .setMaxThreads(5)
                 .setActiveTaskNumber(2)
-                .registerDownloadListener(this);
+                .registerDownloadListener(new DownloadListener() {
+                    @Override
+                    public void onStart(TaskInfo taskInfo) {
+
+                    }
+
+                    @Override
+                    public void onWaiting(TaskInfo taskInfo) {
+
+                    }
+
+                    @Override
+                    public void onPause(TaskInfo taskInfo) {
+
+                    }
+
+                    @Override
+                    public void onProgress(TaskInfo taskInfo) {
+
+                    }
+
+                    @Override
+                    public void onFinish(TaskInfo taskInfo) {
+
+                    }
+
+                    @Override
+                    public void onError(TaskInfo taskInfo, DownloadException downloadException) {
+
+                    }
+                });
     }
 
     private void initData() {
