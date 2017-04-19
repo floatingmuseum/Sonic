@@ -154,15 +154,15 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onPause(ThreadInfo threadInfo) {
-        boolean isAllPaused = false;
+        boolean isAllPaused = true;
         for (DownloadThread thread : threads) {
             //线程状态处于暂停或者失败,都表明线程停止了
-            if (thread.isPaused() || thread.isFailed()) {
-                isAllPaused = true;
-            } else {
+            Log.i(TAG, "onPause...线程状态:...当前ID:" + threadInfo.getId() + "...ID:" + thread.getThreadInfo().getId() + "...Failed:" + thread.isFailed() + "...Paused:" + thread.isPaused() + "...Finished:" + thread.isFinished());
+            if (thread.isDownloading()) {
                 isAllPaused = false;
             }
         }
+
         if (isAllPaused) {
             updateProgress();
             updateTaskInfo(Sonic.STATE_PAUSE);
@@ -181,17 +181,17 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onError(ThreadInfo threadInfo, Throwable e) {
-        boolean isAllFailed = false;
+        boolean isAllFailed = true;
         DownloadException downloadException = null;
         for (DownloadThread thread : threads) {
             //线程状态处于暂停或者失败,都表明线程停止了
-            if (thread.isFailed()) {
-                downloadException = thread.getException();
-                isAllFailed = true;
-            } else {
+            if (thread.isDownloading()) {
                 isAllFailed = false;
+            } else {
+                downloadException = thread.getException();
             }
         }
+
         if (isAllFailed) {
             updateProgress();
             updateTaskInfo(Sonic.STATE_ERROR);

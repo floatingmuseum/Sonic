@@ -43,6 +43,7 @@ public class DownloadThread extends Thread {
     @Override
     public void run() {
         Log.i(TAG, threadInfo.getId() + "号线程开始工作" + "..." + fileName);
+        isDownloading = true;
         HttpURLConnection connection = null;
         RandomAccessFile randomAccessFile = null;
         InputStream inputStream = null;
@@ -91,6 +92,7 @@ public class DownloadThread extends Thread {
                         //更新数据库,停止循环
                         dbManager.updateThreadInfo(threadInfo);
                         isPaused = true;
+                        isDownloading = false;
                         listener.onPause(threadInfo);
                         return;
                     }
@@ -102,10 +104,12 @@ public class DownloadThread extends Thread {
                 Log.i(TAG, threadInfo.getId() + "号线程完成工作" + "..." + fileName);
                 dbManager.updateThreadInfo(threadInfo);
                 isFinished = true;
+                isDownloading = false;
                 listener.onFinished(threadInfo.getId());
             } else {
                 isFailed = true;
-                downloadException = new DownloadException("DownloadThread failed",responseCode);
+                isDownloading = false;
+                downloadException = new DownloadException("DownloadThread failed", responseCode);
                 listener.onError(threadInfo, new IllegalStateException("DownloadThread Request failed with response code:" + responseCode));
             }
         } catch (Exception e) {
@@ -113,7 +117,8 @@ public class DownloadThread extends Thread {
             Log.i(TAG, threadInfo.getId() + "号线程出现异常" + "..." + fileName);
             dbManager.updateThreadInfo(threadInfo);
             isFailed = true;
-            downloadException = new DownloadException("DownloadThread failed",e);
+            isDownloading = false;
+            downloadException = new DownloadException("DownloadThread failed", e);
             listener.onError(threadInfo, e);
         } finally {
             try {
@@ -132,10 +137,15 @@ public class DownloadThread extends Thread {
         }
     }
 
+    private boolean isDownloading = false;
     private boolean isPaused = false;
     private boolean isFailed = false;
     private boolean isFinished = false;
     private DownloadException downloadException;
+
+    public boolean isDownloading() {
+        return isDownloading;
+    }
 
     public boolean isPaused() {
         return isPaused;
@@ -149,7 +159,7 @@ public class DownloadThread extends Thread {
         return isFinished;
     }
 
-    public DownloadException getException(){
+    public DownloadException getException() {
         return downloadException;
     }
 
