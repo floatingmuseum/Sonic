@@ -204,6 +204,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onWaiting(TaskInfo taskInfo) {
         updateAppInfo(taskInfo);
+        //几个回调方法不需要notifyDataSetChanged说明只需要当其处在可见范围内时刷新其状态
+        //需要notifyDataSetChanged说明可能在滑出屏幕时也会变换状态
 //        adapter.notifyDataSetChanged();
         Log.i(TAG, "任务等待...onWaiting:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName());
     }
@@ -211,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onPause(TaskInfo taskInfo) {
         updateAppInfo(taskInfo);
-//        adapter.notifyDataSetChanged();
+        adapter.notifyDataSetChanged();
         Log.i(TAG, "任务暂停...onPause:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName());
     }
 
