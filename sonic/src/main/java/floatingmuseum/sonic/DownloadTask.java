@@ -179,8 +179,17 @@ public class DownloadTask implements InitListener, ThreadListener {
         }
     }
 
+    private int retryTime;
+
     @Override
     public void onError(ThreadInfo threadInfo, Throwable e) {
+
+        if (retryTime!=0) {
+            retryTime--;
+            // TODO: 2017/4/19 还有retry可以使用时继续retry 这里可能会有多线程同步的问题?
+            return;
+        }
+
         boolean isAllFailed = true;
         DownloadException downloadException = null;
         for (DownloadThread thread : threads) {

@@ -60,37 +60,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         sonic = Sonic.getInstance()
                 .setMaxThreads(5)
                 .setActiveTaskNumber(2)
-                .registerDownloadListener(new DownloadListener() {
-                    @Override
-                    public void onStart(TaskInfo taskInfo) {
-
-                    }
-
-                    @Override
-                    public void onWaiting(TaskInfo taskInfo) {
-
-                    }
-
-                    @Override
-                    public void onPause(TaskInfo taskInfo) {
-
-                    }
-
-                    @Override
-                    public void onProgress(TaskInfo taskInfo) {
-
-                    }
-
-                    @Override
-                    public void onFinish(TaskInfo taskInfo) {
-
-                    }
-
-                    @Override
-                    public void onError(TaskInfo taskInfo, DownloadException downloadException) {
-
-                    }
-                });
+                .registerDownloadListener(this);
     }
 
     private void initData() {
@@ -328,6 +298,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // TODO: 2017/4/20 似乎不停止会有内存泄露,即使移除downloadListener也不行 
+        sonic.stopAllTask();
         sonic.unRegisterDownloadListener();
     }
 }
