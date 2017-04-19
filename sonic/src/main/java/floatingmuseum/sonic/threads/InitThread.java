@@ -44,7 +44,8 @@ public class InitThread extends Thread {
             if (responseCode == 200 || responseCode == 206) {
                 long contentLength = connection.getContentLength();
                 if (contentLength <= 0) {
-                    listener.onInitError(new IllegalStateException("Service file length exception. length:" + contentLength));
+                    // TODO: 2017/4/19 没有响应码和throwable
+                    listener.onInitError(new DownloadException("Service file length exception. length:", -1));
                     return;
                 }
                 File dir = new File(downloadDirPath);
@@ -72,7 +73,7 @@ public class InitThread extends Thread {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                listener.onInitError(e);
+                listener.onInitError(new DownloadException("InitThread Request failed", e));
             }
         }
     }

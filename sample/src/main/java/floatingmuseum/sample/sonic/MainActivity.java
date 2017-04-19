@@ -6,15 +6,12 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
-import android.support.v4.util.SimpleArrayMap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.ArrayMap;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
@@ -22,7 +19,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -111,6 +107,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvSingleTaskSize = (TextView) findViewById(R.id.tv_single_task_size);
         Button btSingleTaskStart = (Button) findViewById(R.id.bt_single_task_start);
         Button btSingleTaskStop = (Button) findViewById(R.id.bt_single_task_stop);
+        Button btPauseAll = (Button) findViewById(R.id.bt_pause_all);
         rvTasks = (RecyclerView) findViewById(R.id.rv_tasks);
         linearLayoutManager = new LinearLayoutManager(this);
         rvTasks.setLayoutManager(linearLayoutManager);
@@ -131,6 +128,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
         btSingleTaskStart.setOnClickListener(this);
         btSingleTaskStop.setOnClickListener(this);
+
+        btPauseAll.setOnClickListener(this);
         TaskInfo taskInfo = sonic.getTaskInfo(singleTaskUrl);
         if (taskInfo != null) {
             pbSingleTask.setProgress(taskInfo.getProgress());
@@ -189,6 +188,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.bt_single_task_stop:
                 sonic.stopTask(singleTaskUrl);
 //                sonic.stopTask("http://dldir1.qq.com/weixin/android/weixin6330android920.apk");
+                break;
+            case R.id.bt_pause_all:
+                sonic.stopAllTask();
                 break;
         }
     }

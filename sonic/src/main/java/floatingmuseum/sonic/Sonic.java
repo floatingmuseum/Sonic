@@ -154,6 +154,7 @@ public class Sonic implements TaskListener {
 
     }
 
+
     public TaskInfo getTaskInfo(String tag) {
         return allTaskInfo.get(tag);
     }
@@ -170,6 +171,7 @@ public class Sonic implements TaskListener {
 
         if (activeTasks.size() == activeTaskNumber) {
             taskInfo.setState(Sonic.STATE_WAITING);
+            Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "进入等待队列");
             DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, maxThreads, progressResponseTime, this);
             waitingTasks.add(downloadTask);
             sendMessage(taskInfo, STATE_WAITING, null);
@@ -203,7 +205,26 @@ public class Sonic implements TaskListener {
         }
     }
 
-    public void cancelTask(String tag){
+    public void stopAllTask() {
+        //移除等待队列的任务
+        for (DownloadTask waitingTask : waitingTasks) {
+            TaskInfo taskInfo = waitingTask.getTaskInfo();
+            taskInfo.setState(STATE_PAUSE);
+            sendMessage(taskInfo, STATE_PAUSE, null);
+//            waitingTasks.remove(waitingTask);
+        }
+        waitingTasks.clear();
+
+        //停止并清空下载列表
+        for (String key : activeTasks.keySet()) {
+            DownloadTask downloadTask = activeTasks.get(key);
+            downloadTask.stop();
+//            activeTasks.remove(key);
+        }
+        activeTasks.clear();
+    }
+
+    public void cancelTask(String tag) {
 
     }
 
