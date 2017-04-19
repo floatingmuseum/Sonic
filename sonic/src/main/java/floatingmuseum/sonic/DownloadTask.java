@@ -201,18 +201,6 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onFinished(int threadId) {
-//        maxThreads--;
-//        if (maxThreads == 0) {
-////            Log.i(TAG, "下载进度...onFinished...CurrentSize:" + taskInfo.getCurrentSize() + "...TotalSize:" + taskInfo.getTotalSize());
-//            //删除所有记录
-//            dbManager.delete(DBManager.THREADS_TABLE_NAME, taskInfo.getDownloadUrl());
-//            dbManager.delete(DBManager.TASKS_TABLE_NAME, taskInfo.getDownloadUrl());
-//            updateProgress();
-//            taskInfo.setState(Sonic.STATE_FINISH);
-//            Log.i(TAG, "onFinished...下载结束" + "..." + taskInfo.getName());
-//            taskListener.onFinish(taskInfo);
-//        }
-
         boolean isHasError = false;
         DownloadException downloadException = null;
         for (DownloadThread thread : threads) {
@@ -227,7 +215,6 @@ public class DownloadTask implements InitListener, ThreadListener {
                 return;
             }
         }
-
 
         updateProgress();
 
@@ -244,10 +231,10 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     @Override
-    public void onInitError(Throwable e) {
+    public void onInitError(DownloadException e) {
         updateTaskInfo(Sonic.STATE_ERROR);
         // TODO: 2017/4/19 把初始线程里的异常也改成DownloadException,然后下面这里别强转
-        taskListener.onError(taskInfo, (DownloadException) e);
+        taskListener.onError(taskInfo, e);
     }
 
     private void updateTaskInfo(int state) {

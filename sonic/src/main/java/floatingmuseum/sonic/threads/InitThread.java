@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
+import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.listener.InitListener;
 import floatingmuseum.sonic.utils.FileUtil;
 
@@ -56,11 +57,11 @@ public class InitThread extends Thread {
                 listener.onGetContentLength(contentLength);
                 return;
             } else {
-                listener.onInitError(new IllegalStateException("InitThread Request failed with response code:" + responseCode));
+                listener.onInitError(new DownloadException("InitThread Request failed", responseCode));
             }
         } catch (Exception e) {
             e.printStackTrace();
-            listener.onInitError(e);
+            listener.onInitError(new DownloadException("InitThread Request failed", e));
         } finally {
             try {
                 if (connection != null) {
