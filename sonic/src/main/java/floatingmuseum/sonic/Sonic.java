@@ -105,7 +105,8 @@ public class Sonic implements TaskListener {
 
     /**
      * DownloadListener onProgress() method will be call at defined interval.
-     * The default for the interval is 500 milliseconds.
+     * the milliseconds must between 0 to 1000
+     * the default for the interval is 500 milliseconds.
      */
     public Sonic setProgressResponseTime(int milliseconds) {
         progressResponseTime = milliseconds;
@@ -129,6 +130,10 @@ public class Sonic implements TaskListener {
     public Sonic registerDownloadListener(DownloadListener listener) {
         uiHandler.setListener(listener);
         return this;
+    }
+
+    public void unRegisterDownloadListener(){
+        uiHandler.removeListener();
     }
 
     public void addTask(String downloadUrl) {

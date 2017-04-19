@@ -48,4 +48,10 @@ public class UIHandler extends Handler {
     public void setListener(DownloadListener listener) {
         this.listener = listener;
     }
+
+    public void removeListener() {
+        if (listener != null) {
+            listener = null;
+        }
+    }
 }

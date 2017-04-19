@@ -294,4 +294,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             holder.tvSize.setText("Size:" + appInfo.getCurrentSize() + "/" + appInfo.getTotalSize());
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        sonic.unRegisterDownloadListener();
+    }
 }
