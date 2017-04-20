@@ -26,6 +26,13 @@ public class App extends Application {
         }
         LeakCanary.install(this);
 
-        Sonic.init(this);
+        initSonic();
+    }
+
+    private void initSonic() {
+
+        GlobeConfig globeConfig = new GlobeConfig();
+
+        Sonic.getInstance().init(this);
     }
 }

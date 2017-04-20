@@ -49,6 +49,23 @@ public class Sonic implements TaskListener {
     private DBManager dbManager;
 
     private Sonic() {
+//        dirPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+//        Log.i(TAG, "Default save dir path:" + dirPath);
+//        dbManager = new DBManager(context);
+//        uiHandler = new UIHandler();
+//        List<TaskInfo> allTask = dbManager.getAllDownloadTask();
+//        allTaskInfo = new HashMap<>();
+//        activeTasks = new HashMap<>();
+//        waitingTasks = new ArrayList<>();
+//        if (!ListUtil.isEmpty(allTask)) {
+//            for (TaskInfo downloadTask : allTask) {
+//                allTaskInfo.put(downloadTask.getTag(), downloadTask);
+//            }
+//        }
+    }
+
+    public void init(Context applicationContext) {
+        context = applicationContext;
         dirPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
         Log.i(TAG, "Default save dir path:" + dirPath);
         dbManager = new DBManager(context);
@@ -62,11 +79,6 @@ public class Sonic implements TaskListener {
                 allTaskInfo.put(downloadTask.getTag(), downloadTask);
             }
         }
-    }
-
-    public static void init(Context applicationContext) {
-        context = applicationContext;
-
     }
 
     public static Context getContext() {
