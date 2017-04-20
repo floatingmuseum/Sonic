@@ -42,6 +42,7 @@ public class DownloadTask implements InitListener, ThreadListener {
         this.maxThreads = maxThreads;
         this.taskListener = taskListener;
         this.progressResponseTime = progressResponseTime;
+        Log.i(TAG, "任务详情...名称:" + taskInfo.getName() + "...最大线程数:" + maxThreads + "...进度反馈最小时间间隔:" + progressResponseTime + "...文件存储路径:" + taskInfo.getFilePath());
         threads = new ArrayList<>();
         FileUtil.initDir(taskInfo.getDirPath());
     }
@@ -184,7 +185,7 @@ public class DownloadTask implements InitListener, ThreadListener {
     @Override
     public void onError(ThreadInfo threadInfo, Throwable e) {
 
-        if (retryTime!=0) {
+        if (retryTime != 0) {
             retryTime--;
             // TODO: 2017/4/19 还有retry可以使用时继续retry 这里可能会有多线程同步的问题?
             return;

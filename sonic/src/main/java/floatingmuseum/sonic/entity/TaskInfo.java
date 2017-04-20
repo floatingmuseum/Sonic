@@ -96,13 +96,13 @@ public class TaskInfo {
         this.progress = progress;
     }
 
-    public long getSpeed() {
-        return speed;
-    }
+//    public long getSpeed() {
+//        return speed;
+//    }
 
-    public void setSpeed(long speed) {
-        this.speed = speed;
-    }
+//    public void setSpeed(long speed) {
+//        this.speed = speed;
+//    }
 
     public int getState() {
         return state;

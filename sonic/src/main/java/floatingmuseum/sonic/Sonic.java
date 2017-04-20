@@ -88,33 +88,49 @@ public class Sonic implements TaskListener {
     }
 
     /**
-     * How many thread working for a task.
+     * How many threads working for a task.
+     * default is 3.
      */
     public Sonic setMaxThreads(int maxThreads) {
-        this.maxThreads = maxThreads;
+        if (maxThreads < 1) {
+            this.maxThreads = 1;
+        } else {
+            this.maxThreads = maxThreads;
+        }
         return this;
     }
 
     /**
-     * How many task can running at the same time.
+     * How many tasks can running at the same time.
+     * default is 3.
      */
     public Sonic setActiveTaskNumber(int activeTaskNumber) {
-        this.activeTaskNumber = activeTaskNumber;
+        if (activeTaskNumber < 1) {
+            this.activeTaskNumber = 1;
+        } else {
+            this.activeTaskNumber = activeTaskNumber;
+        }
         return this;
     }
 
     /**
      * DownloadListener onProgress() method will be call at defined interval.
-     * the milliseconds must between 0 to 1000
+     * the milliseconds must between 0 to 1000.
      * the default for the interval is 500 milliseconds.
      */
     public Sonic setProgressResponseTime(int milliseconds) {
-        progressResponseTime = milliseconds;
+        if (milliseconds < 0) {
+            progressResponseTime = 0;
+        } else if (milliseconds > 1000) {
+            progressResponseTime = 1000;
+        } else {
+            progressResponseTime = milliseconds;
+        }
         return this;
     }
 
     /**
-     * storage dir path
+     * Storage dir path
      */
     public Sonic setDirPath(String dirPath) {
         this.dirPath = dirPath;
@@ -132,7 +148,7 @@ public class Sonic implements TaskListener {
         return this;
     }
 
-    public void unRegisterDownloadListener(){
+    public void unRegisterDownloadListener() {
         uiHandler.removeListener();
     }
 

@@ -109,6 +109,7 @@ public class DownloadThread extends Thread {
             } else {
                 isFailed = true;
                 isDownloading = false;
+                Log.i(TAG, threadInfo.getId() + "号线程出现异常" + "..." + fileName + "..." + responseCode);
                 downloadException = new DownloadException("DownloadThread failed", responseCode);
                 listener.onError(threadInfo, new IllegalStateException("DownloadThread Request failed with response code:" + responseCode));
             }
