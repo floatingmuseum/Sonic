@@ -35,7 +35,6 @@ public class Sonic implements TaskListener {
     public static final int STATE_ERROR = 4;
     public static final int STATE_FINISH = 5;
 
-
     private UIHandler uiHandler;
     private static Context context;
     private static Sonic sonic;
@@ -67,6 +66,7 @@ public class Sonic implements TaskListener {
 
     public static void init(Context applicationContext) {
         context = applicationContext;
+
     }
 
     public static Context getContext() {
@@ -77,6 +77,7 @@ public class Sonic implements TaskListener {
     }
 
     public static Sonic getInstance() {
+        Log.i(TAG, "Sonic...Instance:" + sonic);
         if (sonic == null) {
             synchronized (Sonic.class) {
                 if (sonic == null) {
@@ -144,6 +145,7 @@ public class Sonic implements TaskListener {
 
 
     public Sonic registerDownloadListener(DownloadListener listener) {
+        Log.i(TAG, "DownloadListener:" + listener);
         uiHandler.setListener(listener);
         return this;
     }

@@ -24,6 +24,7 @@ import java.util.Map;
 
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.Sonic;
+import floatingmuseum.sonic.Tails;
 import floatingmuseum.sonic.entity.TaskInfo;
 import floatingmuseum.sonic.listener.DownloadListener;
 
@@ -49,6 +50,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.i(TAG, "ExtensionFromUrl:" + extensionFromUrl);
         LoaderManager loaderManager = getSupportLoaderManager();
         Loader loader = loaderManager.getLoader(0);
+
+//        Tails.getSonic();
 
         initSonic();
         initData();
@@ -298,9 +301,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-        // TODO: 2017/4/20 似乎不停止会有内存泄露,即使移除downloadListener也不行 
+        // TODO: 2017/4/20 内存泄漏
         sonic.stopAllTask();
         sonic.unRegisterDownloadListener();
+        super.onDestroy();
     }
 }
