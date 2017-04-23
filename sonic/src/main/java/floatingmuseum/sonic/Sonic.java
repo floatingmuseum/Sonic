@@ -5,6 +5,7 @@ import android.os.Environment;
 import android.os.Message;
 import android.util.Log;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,36 +39,22 @@ public class Sonic implements TaskListener {
     private UIHandler uiHandler;
     private static Context context;
     private static Sonic sonic;
-    private int maxThreads = 3;
+
     private int activeTaskNumber = 3;
-    private String dirPath;
-    private int progressResponseTime = 500;
 
     private Map<String, TaskInfo> allTaskInfo;
     private Map<String, DownloadTask> activeTasks;
     private List<DownloadTask> waitingTasks;
     private DBManager dbManager;
+    private TaskConfig taskConfig = new TaskConfig();
 
     private Sonic() {
-//        dirPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-//        Log.i(TAG, "Default save dir path:" + dirPath);
-//        dbManager = new DBManager(context);
-//        uiHandler = new UIHandler();
-//        List<TaskInfo> allTask = dbManager.getAllDownloadTask();
-//        allTaskInfo = new HashMap<>();
-//        activeTasks = new HashMap<>();
-//        waitingTasks = new ArrayList<>();
-//        if (!ListUtil.isEmpty(allTask)) {
-//            for (TaskInfo downloadTask : allTask) {
-//                allTaskInfo.put(downloadTask.getTag(), downloadTask);
-//            }
-//        }
     }
 
     public void init(Context applicationContext) {
+
         context = applicationContext;
-        dirPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-        Log.i(TAG, "Default save dir path:" + dirPath);
+        Log.i(TAG, "Download dir path:" + taskConfig.getDirPath());
         dbManager = new DBManager(context);
         uiHandler = new UIHandler();
         List<TaskInfo> allTask = dbManager.getAllDownloadTask();
@@ -106,9 +93,9 @@ public class Sonic implements TaskListener {
      */
     public Sonic setMaxThreads(int maxThreads) {
         if (maxThreads < 1) {
-            this.maxThreads = 1;
+            taskConfig.setMaxThreads(1);
         } else {
-            this.maxThreads = maxThreads;
+            taskConfig.setMaxThreads(maxThreads);
         }
         return this;
     }
@@ -131,22 +118,59 @@ public class Sonic implements TaskListener {
      * the milliseconds must between 0 to 1000.
      * the default for the interval is 500 milliseconds.
      */
-    public Sonic setProgressResponseTime(int milliseconds) {
-        if (milliseconds < 0) {
-            progressResponseTime = 0;
-        } else if (milliseconds > 1000) {
-            progressResponseTime = 1000;
+    public Sonic setProgressResponseInterval(int progressResponseInterval) {
+        if (progressResponseInterval < 0) {
+            taskConfig.setProgressResponseInterval(0);
+        } else if (progressResponseInterval > 1000) {
+            taskConfig.setProgressResponseInterval(1000);
         } else {
-            progressResponseTime = milliseconds;
+            taskConfig.setProgressResponseInterval(progressResponseInterval);
         }
         return this;
     }
 
     /**
-     * Storage dir path
+     * default is 5;
+     */
+    public Sonic setRetryTime(int retryTime) {
+        if (retryTime >= 0) {
+            taskConfig.setRetryTime(retryTime);
+        }
+        return this;
+    }
+
+    /**
+     * default is 5000 milliseconds.
+     */
+    public Sonic setReadTimeout(int readTimeout) {
+        if (readTimeout > 0) {
+            taskConfig.setReadTimeout(readTimeout);
+        }
+        return this;
+    }
+
+    /**
+     * default is 5000 milliseconds.
+     */
+    public Sonic setConnectTimeout(int connectTimeout) {
+        if (connectTimeout > 0) {
+            taskConfig.setConnectTimeout(connectTimeout);
+        }
+        return this;
+    }
+
+    /**
+     * Storage dir path.
+     * default is sdcard/downloads
      */
     public Sonic setDirPath(String dirPath) {
-        this.dirPath = dirPath;
+        if (dirPath != null && dirPath != "") {
+            File dir = new File(dirPath);
+            if (!dir.exists()) {
+                dir.mkdir();
+            }
+            taskConfig.setDirPath(dirPath);
+        }
         return this;
     }
 
@@ -166,29 +190,24 @@ public class Sonic implements TaskListener {
         uiHandler.removeListener();
     }
 
-    public void addTask(String downloadUrl) {
-        addTask(downloadUrl, downloadUrl, FileUtil.getUrlFileName(downloadUrl));
+    public void addTask(String downloadUrl, TaskConfig singleTaskConfig) {
+        addTask(downloadUrl, downloadUrl, FileUtil.getUrlFileName(downloadUrl), singleTaskConfig);
     }
 
-    public void addTask(String downloadUrl, String tag) {
-        addTask(downloadUrl, tag, FileUtil.getUrlFileName(downloadUrl));
+    public void addTask(String downloadUrl, String tag, TaskConfig singleTaskConfig) {
+        addTask(downloadUrl, tag, FileUtil.getUrlFileName(downloadUrl), singleTaskConfig);
     }
 
-    public void addTask(String downloadUrl, String tag, String fileName) {
+    public void addTask(String downloadUrl, String tag, String fileName, TaskConfig singleTaskConfig) {
         //check is this task inside database
         if (allTaskInfo.containsKey(tag)) {
             TaskInfo taskInfo = allTaskInfo.get(tag);
-            initDownload(taskInfo, true);
+            initDownload(taskInfo, true, null);
         } else {
-            TaskInfo taskInfo = new TaskInfo(downloadUrl, tag, fileName, dirPath, dirPath + fileName, 0, 0, 0, 0, 0);
-            initDownload(taskInfo, false);
+            TaskInfo taskInfo = new TaskInfo(downloadUrl, tag, fileName, taskConfig.getDirPath(), taskConfig.getDirPath() + fileName, 0, 0, 0, 0, 0);
+            initDownload(taskInfo, false, singleTaskConfig);
         }
     }
-
-    public void addTask(TaskInfo taskInfo) {
-
-    }
-
 
     public TaskInfo getTaskInfo(String tag) {
         return allTaskInfo.get(tag);
@@ -198,7 +217,8 @@ public class Sonic implements TaskListener {
         return allTaskInfo;
     }
 
-    private void initDownload(TaskInfo taskInfo, boolean isExist) {
+    private void initDownload(TaskInfo taskInfo, boolean isExist, TaskConfig singleTaskConfig) {
+        TaskConfig finalTaskConfig = singleTaskConfig == null ? taskConfig : singleTaskConfig;
         if (!isExist) {
             dbManager.insertTaskInfo(taskInfo);
             allTaskInfo.put(taskInfo.getTag(), taskInfo);
@@ -207,12 +227,12 @@ public class Sonic implements TaskListener {
         if (activeTasks.size() == activeTaskNumber) {
             taskInfo.setState(Sonic.STATE_WAITING);
             Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "进入等待队列");
-            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, maxThreads, progressResponseTime, this);
+            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, this);
             waitingTasks.add(downloadTask);
             sendMessage(taskInfo, STATE_WAITING, null);
         } else {
             Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "进入下载队列");
-            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, maxThreads, progressResponseTime, this);
+            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, this);
             activeTasks.put(taskInfo.getTag(), downloadTask);
             downloadTask.start();
         }

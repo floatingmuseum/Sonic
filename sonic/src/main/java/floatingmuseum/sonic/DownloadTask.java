@@ -1,9 +1,7 @@
 package floatingmuseum.sonic;
 
 
-import android.graphics.drawable.StateListDrawable;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,22 +25,24 @@ public class DownloadTask implements InitListener, ThreadListener {
     private String TAG = DownloadTask.class.getName();
     private TaskInfo taskInfo;
     private DBManager dbManager;
+    private TaskConfig taskConfig;
     private int maxThreads;
+    private int retryTime;
     private TaskListener taskListener;
     private List<DownloadThread> threads;
     private List<ThreadInfo> threadInfoList;
-    private int alreadyStopThreads;
-    private int progressResponseTime;
     private long lastUpdateTime = System.currentTimeMillis();
     private boolean stopAfterInitThreadDone = false;
 
-    public DownloadTask(TaskInfo taskInfo, DBManager dbManager, int maxThreads, int progressResponseTime, TaskListener taskListener) {
+    public DownloadTask(TaskInfo taskInfo, DBManager dbManager, TaskConfig taskConfig, TaskListener taskListener) {
+        // TODO: 2017/4/24 把TaskConfi存入到Task数据库中 
         this.taskInfo = taskInfo;
         this.dbManager = dbManager;
-        this.maxThreads = maxThreads;
+        this.taskConfig = taskConfig;
         this.taskListener = taskListener;
-        this.progressResponseTime = progressResponseTime;
-        Log.i(TAG, "任务详情...名称:" + taskInfo.getName() + "...最大线程数:" + maxThreads + "...进度反馈最小时间间隔:" + progressResponseTime + "...文件存储路径:" + taskInfo.getFilePath());
+        this.retryTime = taskConfig.getRetryTime();
+        this.maxThreads = taskConfig.getMaxThreads();
+        Log.i(TAG, "任务详情...名称:" + taskInfo.getName() + "...最大线程数:" + taskConfig.getMaxThreads() + "...进度反馈最小时间间隔:" + taskConfig.getProgressResponseInterval() + "...文件存储路径:" + taskInfo.getFilePath());
         threads = new ArrayList<>();
         FileUtil.initDir(taskInfo.getDirPath());
     }
@@ -54,7 +54,6 @@ public class DownloadTask implements InitListener, ThreadListener {
     public void start() {
         taskInfo.setState(Sonic.STATE_START);
         taskListener.onStart(taskInfo);
-        alreadyStopThreads = 0;
         threadInfoList = dbManager.getAllThreadInfo(taskInfo.getDownloadUrl());
         if (threadInfoList.size() == 0) {//First time
             Log.i(TAG, "start()...第一次下载此任务." + "..." + taskInfo.getName());
@@ -73,7 +72,7 @@ public class DownloadTask implements InitListener, ThreadListener {
          * 等于0说明，是第一次下载，且处于获取任务长度的阶段,如果此时暂停，没有效果。获取长度后会继续下载
          * 所以设置一个变量来控制，当长度获取完毕后，检查变量，可以获知用户是否在获取长度阶段点击了暂停
          */
-        Log.i(TAG, "stop()...停止下载线程:" + threads.size() + taskInfo.getName() + "..." + stopAfterInitThreadDone + "..." + alreadyStopThreads);
+        Log.i(TAG, "stop()...停止下载线程:" + threads.size() + taskInfo.getName() + "..." + stopAfterInitThreadDone);
         if (threads.size() == 0) {
             stopAfterInitThreadDone = true;
         } else {
@@ -99,7 +98,7 @@ public class DownloadTask implements InitListener, ThreadListener {
             Log.i(TAG, "initDownloadThreadInfo线程" + info.getId() + "号...初始位置:" + info.getStartPosition() + "...当前位置:" + info.getCurrentPosition() + "...末尾位置:" + info.getEndPosition() + "..." + taskInfo.getName());
             if (info.getCurrentPosition() < info.getEndPosition()) {//只初始化还没完成的线程
                 Log.i(TAG, info.getId() + "号继续工作" + "..." + taskInfo.getName());
-                DownloadThread thread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, this);
+                DownloadThread thread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
                 threads.add(thread);
             } else {
                 Log.i(TAG, info.getId() + "号已完成工作，休息" + "..." + taskInfo.getName());
@@ -174,20 +173,30 @@ public class DownloadTask implements InitListener, ThreadListener {
     @Override
     public void onProgress(ThreadInfo threadInfo) {
         long nowTime = System.currentTimeMillis();
-        if (nowTime - lastUpdateTime > progressResponseTime) {
+        if (taskConfig.getProgressResponseInterval() == 0 || (nowTime - lastUpdateTime) > taskConfig.getProgressResponseInterval()) {
             lastUpdateTime = nowTime;
             updateProgress();
         }
     }
 
-    private int retryTime;
-
-    @Override
-    public void onError(ThreadInfo threadInfo, Throwable e) {
-
+    private synchronized boolean isHaveRetryTime(DownloadThread errorThread) {
         if (retryTime != 0) {
             retryTime--;
-            // TODO: 2017/4/19 还有retry可以使用时继续retry 这里可能会有多线程同步的问题?
+            ThreadInfo info = errorThread.getThreadInfo();
+            Log.i(TAG, info.getId() + "号线程发生错误...进行重试...当前剩余重试次数:" + retryTime + "...当前位置:" + info.getCurrentPosition());
+            threads.remove(errorThread);
+            DownloadThread retryThread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
+            threads.add(retryThread);
+            retryThread.start();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void onError(DownloadThread errorThread, Throwable e) {
+        if (isHaveRetryTime(errorThread)) {
             return;
         }
 

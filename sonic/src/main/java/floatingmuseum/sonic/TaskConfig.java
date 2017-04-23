@@ -1,4 +1,4 @@
-package floatingmuseum.sample.sonic;
+package floatingmuseum.sonic;
 
 import android.os.Environment;
 
@@ -6,7 +6,7 @@ import android.os.Environment;
  * Created by Floatingmuseum on 2017/4/20.
  */
 
-public class SingleTaskConfig {
+public class TaskConfig {
 
     private int maxThreads = 3;
     private int retryTime = 5;
@@ -19,53 +19,47 @@ public class SingleTaskConfig {
         return maxThreads;
     }
 
-    public SingleTaskConfig setMaxThreads(int maxThreads) {
+    public void setMaxThreads(int maxThreads) {
         this.maxThreads = maxThreads;
-        return this;
     }
 
     public int getRetryTime() {
         return retryTime;
     }
 
-    public SingleTaskConfig setRetryTime(int retryTime) {
+    public void setRetryTime(int retryTime) {
         this.retryTime = retryTime;
-        return this;
     }
 
     public int getProgressResponseInterval() {
         return progressResponseInterval;
     }
 
-    public SingleTaskConfig setProgressResponseInterval(int progressResponseInterval) {
+    public void setProgressResponseInterval(int progressResponseInterval) {
         this.progressResponseInterval = progressResponseInterval;
-        return this;
     }
 
     public int getConnectTimeout() {
         return connectTimeout;
     }
 
-    public SingleTaskConfig setConnectTimeout(int connectTimeout) {
+    public void setConnectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
-        return this;
     }
 
     public int getReadTimeout() {
         return readTimeout;
     }
 
-    public SingleTaskConfig setReadTimeout(int readTimeout) {
+    public void setReadTimeout(int readTimeout) {
         this.readTimeout = readTimeout;
-        return this;
     }
 
     public String getDirPath() {
         return dirPath;
     }
 
-    public SingleTaskConfig setDirPath(String dirPath) {
+    public void setDirPath(String dirPath) {
         this.dirPath = dirPath;
-        return this;
     }
 }

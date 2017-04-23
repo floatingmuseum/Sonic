@@ -61,9 +61,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void initSonic() {
         sonic = Sonic.getInstance()
-                .setMaxThreads(5)
-                .setActiveTaskNumber(2)
-                .setProgressResponseTime(300)
                 .registerDownloadListener(this);
     }
 
@@ -148,14 +145,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case Sonic.STATE_START:
             case Sonic.STATE_PAUSE:
             case Sonic.STATE_ERROR:
-                sonic.addTask(appInfo.getUrl());
+                sonic.addTask(appInfo.getUrl(), null);
                 break;
             case Sonic.STATE_WAITING:
             case Sonic.STATE_DOWNLOADING:
                 sonic.stopTask(appInfo.getUrl());
                 break;
             case Sonic.STATE_FINISH:
-                sonic.addTask(appInfo.getUrl());
+                sonic.addTask(appInfo.getUrl(), null);
                 break;
         }
     }
@@ -186,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.bt_single_task_start:
-                sonic.addTask(singleTaskUrl);
+                sonic.addTask(singleTaskUrl, null);
 //                sonic.addTask("http://dldir1.qq.com/weixin/android/weixin6330android920.apk");
                 break;
             case R.id.bt_single_task_stop:

@@ -28,14 +28,18 @@ public class DownloadThread extends Thread {
     //下载文件夹路径
     private String dirPath;
     private String fileName;
+    private int readTimeout;
+    private int connectTimeout;
     private ThreadInfo threadInfo;
     private DBManager dbManager;
     private ThreadListener listener;
 
-    public DownloadThread(ThreadInfo threadInfo, String dirPath, String fileName, DBManager dbManager, ThreadListener listener) {
+    public DownloadThread(ThreadInfo threadInfo, String dirPath, String fileName, DBManager dbManager, int readTimeout, int connectTimeout, ThreadListener listener) {
         this.threadInfo = threadInfo;
         this.dirPath = dirPath;
         this.fileName = fileName;
+        this.connectTimeout = connectTimeout;
+        this.readTimeout = readTimeout;
         this.listener = listener;
         this.dbManager = dbManager;
     }
@@ -52,8 +56,8 @@ public class DownloadThread extends Thread {
             URL url = new URL(threadInfo.getUrl());
             connection = (HttpURLConnection) url.openConnection();
 
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
+            connection.setConnectTimeout(connectTimeout);
+            connection.setReadTimeout(readTimeout);
             connection.setRequestMethod("GET");
 
             long currentPosition = threadInfo.getCurrentPosition();
@@ -111,7 +115,7 @@ public class DownloadThread extends Thread {
                 isDownloading = false;
                 Log.i(TAG, threadInfo.getId() + "号线程出现异常" + "..." + fileName + "..." + responseCode);
                 downloadException = new DownloadException("DownloadThread failed", responseCode);
-                listener.onError(threadInfo, new IllegalStateException("DownloadThread Request failed with response code:" + responseCode));
+                listener.onError(this, new IllegalStateException("DownloadThread Request failed with response code:" + responseCode));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -120,7 +124,7 @@ public class DownloadThread extends Thread {
             isFailed = true;
             isDownloading = false;
             downloadException = new DownloadException("DownloadThread failed", e);
-            listener.onError(threadInfo, e);
+            listener.onError(this, e);
         } finally {
             try {
                 if (connection != null) {

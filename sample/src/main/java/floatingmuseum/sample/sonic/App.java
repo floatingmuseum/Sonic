@@ -30,9 +30,13 @@ public class App extends Application {
     }
 
     private void initSonic() {
-
-        GlobeConfig globeConfig = new GlobeConfig();
-
-        Sonic.getInstance().init(this);
+        Sonic.getInstance()
+                .setActiveTaskNumber(2)
+                .setMaxThreads(3)
+                .setProgressResponseInterval(300)
+                .setRetryTime(3)
+                .setReadTimeout(3000)
+                .setConnectTimeout(3000)
+                .init(this);
     }
 }
