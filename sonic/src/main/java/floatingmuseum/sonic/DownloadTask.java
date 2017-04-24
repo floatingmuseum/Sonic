@@ -26,8 +26,8 @@ public class DownloadTask implements InitListener, ThreadListener {
     private TaskInfo taskInfo;
     private DBManager dbManager;
     private TaskConfig taskConfig;
-    private int maxThreads;
     private int retryTime;
+    private int maxThreads;
     private TaskListener taskListener;
     private List<DownloadThread> threads;
     private List<ThreadInfo> threadInfoList;
@@ -35,13 +35,13 @@ public class DownloadTask implements InitListener, ThreadListener {
     private boolean stopAfterInitThreadDone = false;
 
     public DownloadTask(TaskInfo taskInfo, DBManager dbManager, TaskConfig taskConfig, TaskListener taskListener) {
-        // TODO: 2017/4/24 把TaskConfi存入到Task数据库中 
+        // TODO: 2017/4/24 把TaskConfig存入到Task数据库中
         this.taskInfo = taskInfo;
         this.dbManager = dbManager;
+        this.maxThreads = taskConfig.getMaxThreads();
         this.taskConfig = taskConfig;
         this.taskListener = taskListener;
         this.retryTime = taskConfig.getRetryTime();
-        this.maxThreads = taskConfig.getMaxThreads();
         Log.i(TAG, "任务详情...名称:" + taskInfo.getName() + "...最大线程数:" + taskConfig.getMaxThreads() + "...进度反馈最小时间间隔:" + taskConfig.getProgressResponseInterval() + "...文件存储路径:" + taskInfo.getFilePath());
         threads = new ArrayList<>();
         FileUtil.initDir(taskInfo.getDirPath());
@@ -100,9 +100,6 @@ public class DownloadTask implements InitListener, ThreadListener {
                 Log.i(TAG, info.getId() + "号继续工作" + "..." + taskInfo.getName());
                 DownloadThread thread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
                 threads.add(thread);
-            } else {
-                Log.i(TAG, info.getId() + "号已完成工作，休息" + "..." + taskInfo.getName());
-                maxThreads--;
             }
         }
         Log.i(TAG, "TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize());

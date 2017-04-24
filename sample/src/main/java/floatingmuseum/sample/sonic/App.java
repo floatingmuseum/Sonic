@@ -32,9 +32,9 @@ public class App extends Application {
     private void initSonic() {
         Sonic.getInstance()
                 .setActiveTaskNumber(2)
-                .setMaxThreads(3)
+                .setMaxThreads(5)
                 .setProgressResponseInterval(300)
-                .setRetryTime(3)
+                .setRetryTime(4)
                 .setReadTimeout(3000)
                 .setConnectTimeout(3000)
                 .init(this);
