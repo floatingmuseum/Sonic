@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for (AppInfo appInfo : downloadList) {
             if (allTasks.containsKey(appInfo.getUrl())) {
                 TaskInfo taskInfo = allTasks.get(appInfo.getUrl());
+                Log.i(TAG, "初始TaskInfo:" + taskInfo.toString());
                 appInfo.setCurrentSize(taskInfo.getCurrentSize());
                 appInfo.setTotalSize(taskInfo.getTotalSize());
                 appInfo.setProgress(taskInfo.getProgress());
@@ -315,6 +316,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         // TODO: 2017/4/20 内存泄漏
+        Log.i(TAG,"onDestroy");
         sonic.stopAllTask();
         sonic.unRegisterDownloadListener();
         super.onDestroy();

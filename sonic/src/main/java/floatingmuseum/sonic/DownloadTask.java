@@ -126,6 +126,7 @@ public class DownloadTask implements InitListener, ThreadListener {
     public void onGetContentLength(long contentLength) {
         Log.i(TAG, "onGetContentLength总文件大小:" + contentLength + "..." + FileUtil.bytesToMb(contentLength) + "mb" + "..." + taskInfo.getName());
         taskInfo.setTotalSize(contentLength);
+        // TODO: 2017/4/26  updateTaskInfo方法没有更新TotalSize的字段
         dbManager.updateTaskInfo(taskInfo);
         taskListener.onProgress(taskInfo);
         threadInfoList = new ArrayList<>();
@@ -255,9 +256,10 @@ public class DownloadTask implements InitListener, ThreadListener {
             taskInfo.setState(Sonic.STATE_ERROR);
             taskListener.onError(taskInfo, downloadException);
         } else {
-            dbManager.delete(DBManager.THREADS_TABLE_NAME, "url", taskInfo.getDownloadUrl());
-            dbManager.delete(DBManager.TASKS_TABLE_NAME, "tag", taskInfo.getDownloadUrl());
-            dbManager.delete(DBManager.TASK_CONFIG_NAME, "tag", taskInfo.getTag());
+            dbManager.delete(taskInfo);
+//            dbManager.delete(DBManager.THREADS_TABLE_NAME, "url", taskInfo.getDownloadUrl());
+//            dbManager.delete(DBManager.TASKS_TABLE_NAME, "tag", taskInfo.getDownloadUrl());
+//            dbManager.delete(DBManager.TASK_CONFIG_NAME, "tag", taskInfo.getTag());
             taskInfo.setState(Sonic.STATE_FINISH);
             taskListener.onFinish(taskInfo);
         }

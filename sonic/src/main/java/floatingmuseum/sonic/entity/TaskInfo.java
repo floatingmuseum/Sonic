@@ -111,4 +111,20 @@ public class TaskInfo {
     public void setState(int state) {
         this.state = state;
     }
+
+    @Override
+    public String toString() {
+        return "TaskInfo{" +
+                "downloadUrl='" + downloadUrl + '\'' +
+                ", tag='" + tag + '\'' +
+                ", name='" + name + '\'' +
+                ", dirPath='" + dirPath + '\'' +
+                ", filePath='" + filePath + '\'' +
+                ", currentSize=" + currentSize +
+                ", totalSize=" + totalSize +
+                ", progress=" + progress +
+                ", speed=" + speed +
+                ", state=" + state +
+                '}';
+    }
 }

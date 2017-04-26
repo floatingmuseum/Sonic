@@ -59,17 +59,25 @@ public class DBManager {
     }
 
     public synchronized void updateTaskInfo(TaskInfo task) {
-        Log.i(TAG, "updateTaskInfo()..." + task.getCurrentSize() + "..." + task.getState() + "..." + task.getProgress());
+        Log.i(TAG, "updateTaskInfo()..." + task.getCurrentSize() + "..." + task.getState() + "..." + task.getProgress()+"..."+task.getTotalSize());
         String updateSql = "update task_info set current_size=?,state=?,download_progress=? where tag=?";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL(updateSql, new Object[]{task.getCurrentSize(), task.getState(), task.getProgress(), task.getTag()});
         db.close();
     }
 
-    public synchronized void delete(String tableName, String fieldName, String fieldValue) {
-        String deleteSql = "delete from " + tableName + " where " + fieldName + "=?";
+    public void delete(TaskInfo taskInfo) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.execSQL(deleteSql, new Object[]{fieldValue});
+
+        String deleteThreadsSql = "delete from " + THREADS_TABLE_NAME + " where url=?";
+        db.execSQL(deleteThreadsSql, new Object[]{taskInfo.getDownloadUrl()});
+
+        String deleteTaskInfoSql = "delete from " + TASKS_TABLE_NAME + " where tag=?";
+        db.execSQL(deleteTaskInfoSql, new Object[]{taskInfo.getTag()});
+
+        String deleteConfigSql = "delete from " + TASK_CONFIG_NAME + " where tag=?";
+        db.execSQL(deleteConfigSql, new Object[]{taskInfo.getTag()});
+
         db.close();
     }
 
