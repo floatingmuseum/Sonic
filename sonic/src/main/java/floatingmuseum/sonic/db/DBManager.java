@@ -8,6 +8,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+import floatingmuseum.sonic.TaskConfig;
 import floatingmuseum.sonic.db.DBHelper;
 import floatingmuseum.sonic.entity.TaskInfo;
 import floatingmuseum.sonic.entity.ThreadInfo;
@@ -23,6 +24,7 @@ public class DBManager {
     private static final String TAG = DBManager.class.getName();
     public static final String THREADS_TABLE_NAME = "thread_info";
     public static final String TASKS_TABLE_NAME = "task_info";
+    public static final String TASK_CONFIG_NAME = "task_config";
 
     public DBManager(Context context) {
         dbHelper = DBHelper.getInstance(context);
@@ -42,6 +44,13 @@ public class DBManager {
         db.close();
     }
 
+    public void insertTaskConfig(String tag, TaskConfig config) {
+        String insertSql = "insert into task_config(tag,max_threads,retry_time,progress_response_interval,connect_timeout,read_timeout) values(?,?,?,?,?,?)";
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.execSQL(insertSql, new Object[]{tag, config.getMaxThreads(), config.getRetryTime(), config.getProgressResponseInterval(), config.getConnectTimeout(), config.getReadTimeout()});
+        db.close();
+    }
+
     public synchronized void updateThreadInfo(ThreadInfo info) {
         String updateSql = "update thread_info set current_position=? where thread_id=? and url=?";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -57,10 +66,10 @@ public class DBManager {
         db.close();
     }
 
-    public synchronized void delete(String tableName, String fieldName) {
-        String deleteSql = "delete from " + tableName + " where url=?";
+    public synchronized void delete(String tableName, String fieldName, String fieldValue) {
+        String deleteSql = "delete from " + tableName + " where " + fieldName + "=?";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.execSQL(deleteSql, new Object[]{fieldName});
+        db.execSQL(deleteSql, new Object[]{fieldValue});
         db.close();
     }
 
@@ -68,29 +77,28 @@ public class DBManager {
         String querySql = "select * from thread_info where thread_id=? and url=?";
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor = db.rawQuery(querySql, new String[]{String.valueOf(id), url});
+        ThreadInfo info = null;
         if (cursor.moveToNext()) {
-            ThreadInfo info = new ThreadInfo();
+            info = new ThreadInfo();
             info.setId(cursor.getInt(cursor.getColumnIndex("thread_id")));
             info.setUrl(cursor.getString(cursor.getColumnIndex("url")));
             info.setStartPosition(cursor.getLong(cursor.getColumnIndex("start_position")));
             info.setEndPosition(cursor.getLong(cursor.getColumnIndex("end_position")));
             info.setCurrentPosition(cursor.getLong(cursor.getColumnIndex("current_position")));
             info.setFileSize(cursor.getLong(cursor.getColumnIndex("file_size")));
-            cursor.close();
-            db.close();
-            return info;
         }
         cursor.close();
         db.close();
-        return null;
+        return info;
     }
 
     public synchronized TaskInfo queryDownloadTask(String tag) {
         String querySql = "select * from task_info where tag=?";
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor = db.rawQuery(querySql, new String[]{tag});
+        TaskInfo task = null;
         if (cursor.moveToNext()) {
-            TaskInfo task = new TaskInfo();
+            task = new TaskInfo();
             task.setDownloadUrl(cursor.getString(cursor.getColumnIndex("url")));
             task.setTag(cursor.getString(cursor.getColumnIndex("tag")));
             task.setName(cursor.getString(cursor.getColumnIndex("name")));
@@ -100,13 +108,29 @@ public class DBManager {
             task.setTotalSize(cursor.getLong(cursor.getColumnIndex("total_size")));
             task.setProgress(cursor.getInt(cursor.getColumnIndex("download_progress")));
             task.setState(cursor.getInt(cursor.getColumnIndex("state")));
-            cursor.close();
-            db.close();
-            return task;
         }
         cursor.close();
         db.close();
-        return null;
+        return task;
+    }
+
+    public synchronized TaskConfig queryTaskConfig(String tag) {
+        String querySql = "select * from task_config where tag=?";
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery(querySql, new String[]{tag});
+        TaskConfig taskConfig = null;
+        if (cursor.moveToNext()) {
+            taskConfig = new TaskConfig();
+            taskConfig.setMaxThreads(cursor.getInt(cursor.getColumnIndex("max_threads")));
+            taskConfig.setRetryTime(cursor.getInt(cursor.getColumnIndex("retry_time")));
+            taskConfig.setProgressResponseInterval(cursor.getInt(cursor.getColumnIndex("progress_response_interval")));
+            taskConfig.setConnectTimeout(cursor.getInt(cursor.getColumnIndex("connect_timeout")));
+            taskConfig.setReadTimeout(cursor.getInt(cursor.getColumnIndex("read_timeout")));
+
+        }
+        cursor.close();
+        db.close();
+        return taskConfig;
     }
 
     public synchronized List<ThreadInfo> getAllThreadInfo(String url) {

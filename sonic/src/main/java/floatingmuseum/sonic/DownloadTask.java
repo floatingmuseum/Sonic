@@ -38,14 +38,30 @@ public class DownloadTask implements InitListener, ThreadListener {
         // TODO: 2017/4/24 把TaskConfig存入到Task数据库中
         this.taskInfo = taskInfo;
         this.dbManager = dbManager;
-        this.maxThreads = taskConfig.getMaxThreads();
-        this.taskConfig = taskConfig;
         this.taskListener = taskListener;
+        this.maxThreads = taskConfig.getMaxThreads();
         this.retryTime = taskConfig.getRetryTime();
+        this.taskConfig = taskConfig;
+//        initTaskConfig(taskConfig);
         Log.i(TAG, "任务详情...名称:" + taskInfo.getName() + "...最大线程数:" + taskConfig.getMaxThreads() + "...进度反馈最小时间间隔:" + taskConfig.getProgressResponseInterval() + "...文件存储路径:" + taskInfo.getFilePath());
         threads = new ArrayList<>();
         FileUtil.initDir(taskInfo.getDirPath());
     }
+
+//    private boolean isCustomTaskConfig;
+//
+//    private void initTaskConfig(TaskConfig taskConfig) {
+//        TaskConfig existTaskConfig = dbManager.queryTaskConfig(taskInfo.getTag());
+//        if (existTaskConfig != null) {
+//            this.maxThreads = existTaskConfig.getMaxThreads();
+//            this.retryTime = existTaskConfig.getRetryTime();
+//            this.taskConfig = existTaskConfig;
+//        } else {
+//            this.maxThreads = taskConfig.getMaxThreads();
+//            this.retryTime = taskConfig.getRetryTime();
+//            this.taskConfig = taskConfig;
+//        }
+//    }
 
     public TaskInfo getTaskInfo() {
         return taskInfo;
@@ -239,8 +255,9 @@ public class DownloadTask implements InitListener, ThreadListener {
             taskInfo.setState(Sonic.STATE_ERROR);
             taskListener.onError(taskInfo, downloadException);
         } else {
-            dbManager.delete(DBManager.THREADS_TABLE_NAME, taskInfo.getDownloadUrl());
-            dbManager.delete(DBManager.TASKS_TABLE_NAME, taskInfo.getDownloadUrl());
+            dbManager.delete(DBManager.THREADS_TABLE_NAME, "url", taskInfo.getDownloadUrl());
+            dbManager.delete(DBManager.TASKS_TABLE_NAME, "tag", taskInfo.getDownloadUrl());
+            dbManager.delete(DBManager.TASK_CONFIG_NAME, "tag", taskInfo.getTag());
             taskInfo.setState(Sonic.STATE_FINISH);
             taskListener.onFinish(taskInfo);
         }

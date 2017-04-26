@@ -25,6 +25,7 @@ import java.util.Map;
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.Sonic;
 import floatingmuseum.sonic.Tails;
+import floatingmuseum.sonic.TaskConfig;
 import floatingmuseum.sonic.entity.TaskInfo;
 import floatingmuseum.sonic.listener.DownloadListener;
 
@@ -145,6 +146,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case Sonic.STATE_START:
             case Sonic.STATE_PAUSE:
             case Sonic.STATE_ERROR:
+                if (appInfo.getUrl().equals("http://apk.r1.market.hiapk.com/data/upload/apkres/2016/12_2/15/com.lbe.security_035225.apk")) {
+                    TaskConfig config = new TaskConfig();
+                    config.setMaxThreads(2);
+                    config.setRetryTime(2);
+                    config.setProgressResponseInterval(800);
+                    sonic.addTask(appInfo.getUrl(), config);
+                    return;
+                }
                 sonic.addTask(appInfo.getUrl(), null);
                 break;
             case Sonic.STATE_WAITING:
@@ -152,7 +161,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 sonic.stopTask(appInfo.getUrl());
                 break;
             case Sonic.STATE_FINISH:
-                sonic.addTask(appInfo.getUrl(), null);
+                if (appInfo.getUrl().equals("http://apk.r1.market.hiapk.com/data/upload/apkres/2016/12_2/15/com.lbe.security_035225.apk")) {
+                    TaskConfig config = new TaskConfig();
+                    config.setMaxThreads(2);
+                    config.setRetryTime(2);
+                    config.setProgressResponseInterval(800);
+                    sonic.addTask(appInfo.getUrl(), config);
+                    return;
+                }
                 break;
         }
     }

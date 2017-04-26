@@ -217,8 +217,23 @@ public class Sonic implements TaskListener {
         return allTaskInfo;
     }
 
+    public TaskConfig getFinalTaskConfig(TaskInfo taskInfo, TaskConfig singleTaskConfig) {
+        TaskConfig existTaskConfig = dbManager.queryTaskConfig(taskInfo.getTag());
+        if (existTaskConfig != null) {//数据库存在此任务配置,使用数据库配置
+            Log.i(TAG, "任务配置...数据库已存在:" + existTaskConfig.toString());
+            return existTaskConfig;
+        } else if (singleTaskConfig != null) {//数据库不存在配置,且单一任务设置不为空,存储并使用此配置
+            dbManager.insertTaskConfig(taskInfo.getTag(), singleTaskConfig);
+            Log.i(TAG, "任务配置...数据库不存在...存储:" + singleTaskConfig.toString() + "..." + existTaskConfig);
+            return singleTaskConfig;
+        } else {//使用全局配置
+            Log.i(TAG, "任务配置...全局配置:" + taskConfig.toString() + "..." + existTaskConfig);
+            return taskConfig;
+        }
+    }
+
     private void initDownload(TaskInfo taskInfo, boolean isExist, TaskConfig singleTaskConfig) {
-        TaskConfig finalTaskConfig = singleTaskConfig == null ? taskConfig : singleTaskConfig;
+        TaskConfig finalTaskConfig = getFinalTaskConfig(taskInfo, singleTaskConfig);
         if (!isExist) {
             dbManager.insertTaskInfo(taskInfo);
             allTaskInfo.put(taskInfo.getTag(), taskInfo);

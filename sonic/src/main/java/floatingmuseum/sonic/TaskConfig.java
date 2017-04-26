@@ -62,4 +62,16 @@ public class TaskConfig {
     public void setDirPath(String dirPath) {
         this.dirPath = dirPath;
     }
+
+    @Override
+    public String toString() {
+        return "TaskConfig{" +
+                "maxThreads=" + maxThreads +
+                ", retryTime=" + retryTime +
+                ", progressResponseInterval=" + progressResponseInterval +
+                ", connectTimeout=" + connectTimeout +
+                ", readTimeout=" + readTimeout +
+                ", dirPath='" + dirPath + '\'' +
+                '}';
+    }
 }

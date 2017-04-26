@@ -25,6 +25,11 @@ public class FileUtil {
         return bytes.divide(mb).floatValue();
     }
 
+    /**
+     * Get file name from url.
+     * <p>https://github.com/floatingmuseum/MoCloud/blob/master/README.md
+     * <p>README.md
+     */
     public static String getUrlFileName(String url) {
         int lastDivideIndex = url.lastIndexOf("/");
         String fileName = url.substring(lastDivideIndex + 1);
