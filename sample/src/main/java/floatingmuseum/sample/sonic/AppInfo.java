@@ -1,6 +1,5 @@
 package floatingmuseum.sample.sonic;
 
-import floatingmuseum.sonic.entity.TaskInfo;
 
 /**
  * Created by Floatingmuseum on 2017/4/1.

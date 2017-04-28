@@ -19,4 +19,6 @@ public interface DownloadListener {
     void onFinish(TaskInfo taskInfo);
 
     void onError(TaskInfo taskInfo, DownloadException downloadException);
+
+    void onCancel(TaskInfo taskInfo);
 }

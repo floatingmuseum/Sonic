@@ -3,6 +3,7 @@ package floatingmuseum.sample.sonic;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -147,12 +148,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case Sonic.STATE_START:
             case Sonic.STATE_PAUSE:
             case Sonic.STATE_ERROR:
+            case Sonic.STATE_CANCEL:
                 if (appInfo.getUrl().equals("http://apk.r1.market.hiapk.com/data/upload/apkres/2016/12_2/15/com.lbe.security_035225.apk")) {
-                    TaskConfig config = new TaskConfig();
-                    config.setMaxThreads(2);
-                    config.setRetryTime(2);
-                    config.setProgressResponseInterval(800);
+                    TaskConfig config = new TaskConfig().setMaxThreads(2)
+                            .setRetryTime(2)
+                            .setProgressResponseInterval(800)
+                            .setDirPath(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
                     sonic.addTask(appInfo.getUrl(), config);
+                    sonic.cancelTask("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_23/10/com.tencent.mtt_105815.apk");
                 } else {
                     sonic.addTask(appInfo.getUrl());
                 }
@@ -163,10 +166,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case Sonic.STATE_FINISH:
                 if (appInfo.getUrl().equals("http://apk.r1.market.hiapk.com/data/upload/apkres/2016/12_2/15/com.lbe.security_035225.apk")) {
-                    TaskConfig config = new TaskConfig();
-                    config.setMaxThreads(2);
-                    config.setRetryTime(2);
-                    config.setProgressResponseInterval(800);
+                    TaskConfig config = new TaskConfig().setMaxThreads(2)
+                            .setRetryTime(2)
+                            .setProgressResponseInterval(800)
+                            .setDirPath(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
                     sonic.addTask(appInfo.getUrl(), config);
                 } else {
                     sonic.addTask(appInfo.getUrl());
@@ -216,28 +219,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onStart(TaskInfo taskInfo) {
+        Log.i(TAG, "任务开始...onStart:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
         updateAppInfo(taskInfo);
-        Log.i(TAG, "任务开始...onStart:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName());
     }
 
     @Override
     public void onWaiting(TaskInfo taskInfo) {
+        Log.i(TAG, "任务等待...onWaiting:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
         updateAppInfo(taskInfo);
         //几个回调方法不需要notifyDataSetChanged说明只需要当其处在可见范围内时刷新其状态
         //需要notifyDataSetChanged说明可能在滑出屏幕时也会变换状态
 //        adapter.notifyDataSetChanged();
-        Log.i(TAG, "任务等待...onWaiting:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName());
     }
 
     @Override
     public void onPause(TaskInfo taskInfo) {
+        Log.i(TAG, "任务暂停...onPause:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
         updateAppInfo(taskInfo);
         adapter.notifyDataSetChanged();
-        Log.i(TAG, "任务暂停...onPause:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName());
     }
 
     @Override
     public void onProgress(TaskInfo taskInfo) {
+        Log.i(TAG, "任务进行中...onProgress:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
 //        tvSingleTaskSize.setText("Size:" + taskInfo.getCurrentSize() + "/" + taskInfo.getTotalSize());
 //        pbSingleTask.setProgress(taskInfo.getProgress());
         updateAppInfo(taskInfo);
@@ -245,22 +249,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onFinish(TaskInfo taskInfo) {
+        Log.i(TAG, "任务完成...onFinish:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
         updateAppInfo(taskInfo);
         adapter.notifyDataSetChanged();
-        Log.i(TAG, "任务完成...onFinish:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getName());
     }
 
     @Override
     public void onError(TaskInfo taskInfo, DownloadException DownloadException) {
+        Log.i(TAG, "任务异常...onError:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
         updateAppInfo(taskInfo);
         adapter.notifyDataSetChanged();
-        Log.i(TAG, "任务异常...onError:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName());
+    }
+
+    @Override
+    public void onCancel(TaskInfo taskInfo) {
+        Log.i(TAG, "任务取消...onCancel:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
+        updateAppInfo(taskInfo);
     }
 
     private void updateAppInfo(TaskInfo taskInfo) {
+        Log.i(TAG, "刷新AppInfo...updateAppInfo():" + taskInfo.getName() + "..." + taskInfo.getCurrentSize() + "..." + taskInfo.getTotalSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
         for (int i = 0; i < downloadList.size(); i++) {
             AppInfo appInfo = downloadList.get(i);
-            if (taskInfo.getDownloadUrl().equals(appInfo.getUrl())) {
+            if (taskInfo.getTag().equals(appInfo.getUrl())) {
                 Log.i(TAG, "刷新AppInfo:" + taskInfo.getName() + "..." + taskInfo.getCurrentSize() + "..." + taskInfo.getTotalSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
                 appInfo.setCurrentSize(taskInfo.getCurrentSize());
                 appInfo.setTotalSize(taskInfo.getTotalSize());
@@ -277,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
         if (position >= firstVisibleItemPosition && position <= lastVisibleItemPosition) {
             TasksAdapter.TaskViewHolder holder = (TasksAdapter.TaskViewHolder) rvTasks.findViewHolderForAdapterPosition(position);
-            Log.i(TAG, "刷新UI:" + appInfo.getName() + "..." + appInfo.getCurrentSize() + "..." + appInfo.getTotalSize() + "..." + appInfo.getProgress() + "..." + appInfo.getState() + "..." + holder);
+            Log.i(TAG, "刷新UI:" + appInfo.getName() + "...CurrentSize:" + appInfo.getCurrentSize() + "...TotalSize:" + appInfo.getTotalSize() + "...Progress:" + appInfo.getProgress() + "...State:" + appInfo.getState());
             if (holder == null) {
                 /**
                  * if notifyDataSetChanged() has been called but the new layout has not been calculated yet,
@@ -297,7 +308,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     holder.btTaskState.setText("等待");
                     break;
                 case Sonic.STATE_PAUSE:
-                    holder.btTaskState.setText("下载");
+                    holder.btTaskState.setText("继续");
                     break;
                 case Sonic.STATE_DOWNLOADING:
                     holder.btTaskState.setText("暂停");
@@ -307,6 +318,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     break;
                 case Sonic.STATE_ERROR:
                     holder.btTaskState.setText("错误");
+                    break;
+                case Sonic.STATE_CANCEL:
+                    holder.btTaskState.setText("下载");
                     break;
             }
             holder.pbTask.setProgress(appInfo.getProgress());

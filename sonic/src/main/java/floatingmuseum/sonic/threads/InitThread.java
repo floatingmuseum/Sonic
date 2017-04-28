@@ -11,7 +11,6 @@ import java.util.List;
 
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.listener.InitListener;
-import floatingmuseum.sonic.utils.FileUtil;
 
 /**
  * Created by Floatingmuseum on 2017/3/31.
@@ -21,11 +20,14 @@ public class InitThread extends Thread {
 
     private static final String TAG = InitThread.class.getName();
     private String downloadUrl;
+    private String fileName;
     private InitListener listener;
-    private String downloadDirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Downloads/";
+    private String downloadDirPath;
 
-    public InitThread(String downloadUrl, InitListener listener) {
+    public InitThread(String downloadUrl, String fileName, String downloadDirPath, InitListener listener) {
         this.downloadUrl = downloadUrl;
+        this.fileName = fileName;
+        this.downloadDirPath = downloadDirPath;
         this.listener = listener;
     }
 
@@ -50,7 +52,7 @@ public class InitThread extends Thread {
                 }
                 File dir = new File(downloadDirPath);
                 //创建文件
-                File file = new File(dir, FileUtil.getUrlFileName(downloadUrl));
+                File file = new File(dir, fileName);
                 //操作的文件，和可操作的模式，读写删
                 randomAccessFile = new RandomAccessFile(file, "rwd");
                 //设置长度
