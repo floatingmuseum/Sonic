@@ -3,10 +3,10 @@ Sonic is a android download library.
 
 ### Features
 
-1.MultiThreading.
-2.MultiTask.
-3.Breakpoint.
-4.Auto retry.
+1. MultiThreading.
+2. MultiTask.
+3. Breakpoint.
+4. Auto retry.
 
 ### How to use
 
