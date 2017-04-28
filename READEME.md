@@ -1,13 +1,15 @@
-###Sonic
+### Sonic
 Sonic is a android download library.
 
-###Features
+### Features
+
 1.MultiThreading.
 2.MultiTask.
 3.Breakpoint.
 4.Auto retry.
 
-###How to use
+### How to use
+
 #####Step1
 Add permission to your AndroidManifest.xml.
 Request permission at runtime if your android version higher than or equal 6.0.
@@ -15,7 +17,7 @@ Request permission at runtime if your android version higher than or equal 6.0.
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 ```
-#####Step2
+##### Step2
 Init sonic at your application class.
 ```java
 Sonic.getInstance.init(getApplicationContext()).
@@ -32,7 +34,7 @@ Sonic.getInstance()
       .setDirPath(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath())//Default is sdcard/Download
       .init(getApplicationContext());
 ```
-#####Step3
+##### Step3
 Start use.
 ```java
 Sonic sonic = Sonic.getInstance().registerDownloadListener(new DownloadListener(){
@@ -65,13 +67,13 @@ Sonic sonic = Sonic.getInstance().registerDownloadListener(new DownloadListener(
                     public void onError(TaskInfo taskInfo, DownloadException downloadException) {
 
                     }
-				});
+		});
                 
 //start download
-sonic.addTask(url,null);
+sonic.addTask(url);
 
 //stop download
-sonic.stopTask(url);
+sonic.stopTask(tag);
 
 //stop all task
 sonic.stopAllTask();
@@ -79,14 +81,17 @@ sonic.stopAllTask();
 //cancel task
 sonic.cancelTask(tag);
 ```
-#####Other
+##### Other
+
 for more detail,you can see sample project.
 Some memory leak found by using leakcanary.i'm working on it,if you have any solution.please tell me by issue or send email to me.
-#####To do
+##### To do
+
 1.Custom http headers.
 2.Custom http params.
 3.Check if server support multithreadings and breakpoint.
 4.Improve DownloadException by http response code.
 
-#####About me
+##### About me
+
 Email:[floatingmuseumyan@gmail.com](floatingmuseumyan@gmail.com)
