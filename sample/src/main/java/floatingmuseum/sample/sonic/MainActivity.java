@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     config.setProgressResponseInterval(800);
                     sonic.addTask(appInfo.getUrl(), config);
                 } else {
-                    sonic.addTask(appInfo.getUrl(), null);
+                    sonic.addTask(appInfo.getUrl());
                 }
                 break;
             case Sonic.STATE_WAITING:
@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     config.setProgressResponseInterval(800);
                     sonic.addTask(appInfo.getUrl(), config);
                 } else {
-                    sonic.addTask(appInfo.getUrl(), null);
+                    sonic.addTask(appInfo.getUrl());
                 }
                 break;
         }
@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.bt_single_task_start:
-                sonic.addTask(singleTaskUrl, null);
+                sonic.addTask(singleTaskUrl);
 //                sonic.addTask("http://dldir1.qq.com/weixin/android/weixin6330android920.apk");
                 break;
             case R.id.bt_single_task_stop:

@@ -190,6 +190,18 @@ public class Sonic implements TaskListener {
         uiHandler.removeListener();
     }
 
+    public void addTask(String downloadUrl) {
+        addTask(downloadUrl, downloadUrl, FileUtil.getUrlFileName(downloadUrl), null);
+    }
+
+    public void addTask(String downloadUrl, String tag) {
+        addTask(downloadUrl, tag, FileUtil.getUrlFileName(downloadUrl), null);
+    }
+
+    public void addTask(String downloadUrl, String tag, String fileName) {
+        addTask(downloadUrl, tag, fileName, null);
+    }
+
     public void addTask(String downloadUrl, TaskConfig singleTaskConfig) {
         addTask(downloadUrl, downloadUrl, FileUtil.getUrlFileName(downloadUrl), singleTaskConfig);
     }
