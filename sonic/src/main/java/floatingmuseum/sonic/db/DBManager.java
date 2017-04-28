@@ -59,10 +59,10 @@ public class DBManager {
     }
 
     public synchronized void updateTaskInfo(TaskInfo task) {
-        Log.i(TAG, "updateTaskInfo()..." + task.getCurrentSize() + "..." + task.getState() + "..." + task.getProgress()+"..."+task.getTotalSize());
-        String updateSql = "update task_info set current_size=?,state=?,download_progress=? where tag=?";
+        Log.i(TAG, "updateTaskInfo()..." + task.getCurrentSize() + "..." + task.getState() + "..." + task.getProgress() + "..." + task.getTotalSize());
+        String updateSql = "update task_info set current_size=?,state=?,download_progress=?,total_size=? where tag=?";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.execSQL(updateSql, new Object[]{task.getCurrentSize(), task.getState(), task.getProgress(), task.getTag()});
+        db.execSQL(updateSql, new Object[]{task.getCurrentSize(), task.getState(), task.getProgress(), task.getTotalSize(), task.getTag()});
         db.close();
     }
 

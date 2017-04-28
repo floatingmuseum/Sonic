@@ -153,9 +153,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     config.setRetryTime(2);
                     config.setProgressResponseInterval(800);
                     sonic.addTask(appInfo.getUrl(), config);
-                    return;
+                } else {
+                    sonic.addTask(appInfo.getUrl(), null);
                 }
-                sonic.addTask(appInfo.getUrl(), null);
                 break;
             case Sonic.STATE_WAITING:
             case Sonic.STATE_DOWNLOADING:
@@ -168,7 +168,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     config.setRetryTime(2);
                     config.setProgressResponseInterval(800);
                     sonic.addTask(appInfo.getUrl(), config);
-                    return;
+                } else {
+                    sonic.addTask(appInfo.getUrl(), null);
                 }
                 break;
         }
@@ -316,7 +317,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         // TODO: 2017/4/20 内存泄漏
-        Log.i(TAG,"onDestroy");
+        Log.i(TAG, "onDestroy");
         sonic.stopAllTask();
         sonic.unRegisterDownloadListener();
         super.onDestroy();

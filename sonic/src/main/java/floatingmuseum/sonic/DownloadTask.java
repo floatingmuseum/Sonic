@@ -126,8 +126,9 @@ public class DownloadTask implements InitListener, ThreadListener {
     public void onGetContentLength(long contentLength) {
         Log.i(TAG, "onGetContentLength总文件大小:" + contentLength + "..." + FileUtil.bytesToMb(contentLength) + "mb" + "..." + taskInfo.getName());
         taskInfo.setTotalSize(contentLength);
-        // TODO: 2017/4/26  updateTaskInfo方法没有更新TotalSize的字段
         dbManager.updateTaskInfo(taskInfo);
+        TaskInfo dbTaskInfo = dbManager.queryDownloadTask(taskInfo.getTag());
+        Log.i(TAG, "First init TaskInfo:" + dbTaskInfo.toString());
         taskListener.onProgress(taskInfo);
         threadInfoList = new ArrayList<>();
         long blockLength = contentLength / maxThreads;
@@ -268,7 +269,6 @@ public class DownloadTask implements InitListener, ThreadListener {
     @Override
     public void onInitError(DownloadException e) {
         updateTaskInfo(Sonic.STATE_ERROR);
-        // TODO: 2017/4/19 把初始线程里的异常也改成DownloadException,然后下面这里别强转
         taskListener.onError(taskInfo, e);
     }
 
