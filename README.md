@@ -87,10 +87,10 @@ for more detail,you can see sample project.
 Some memory leak found by using leakcanary.i'm working on it,if you have any solution.please tell me by issue or send email to me.
 ### To do
 
-1.Custom http headers.
-2.Custom http params.
-3.Check if server support multithreadings and breakpoint.
-4.Improve DownloadException by http response code.
+1. Custom http headers.
+2. Custom http params.
+3. Check if server support multithreadings and breakpoint.
+4. Improve DownloadException by http response code.
 
 ### About me
 

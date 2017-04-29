@@ -168,6 +168,7 @@ public class DownloadTask implements InitListener, ThreadListener {
         taskInfo.setState(Sonic.STATE_DOWNLOADING);
         taskInfo.setCurrentSize(getCurrentSize());
         taskInfo.setProgress(getProgress());
+        Log.i(TAG, "updateProgress...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
         taskListener.onProgress(taskInfo);
     }
 
@@ -187,9 +188,9 @@ public class DownloadTask implements InitListener, ThreadListener {
                 cancelTask();
                 return;
             }
-            Log.i(TAG, "onPause...暂停成功:"+taskInfo.getState());
+            Log.i(TAG, "onPause...暂停成功:" + taskInfo.getState());
             updateProgress();
-            Log.i(TAG, "onPause...暂停成功:"+taskInfo.getState());
+            Log.i(TAG, "onPause...暂停成功:" + taskInfo.getState());
             updateTaskInfo(Sonic.STATE_PAUSE);
             taskListener.onPause(taskInfo);
         }

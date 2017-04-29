@@ -50,8 +50,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         String extensionFromUrl = MimeTypeMap.getFileExtensionFromUrl("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_16/20/com.sina.weibog3_080004.apk");
         Log.i(TAG, "ExtensionFromUrl:" + extensionFromUrl);
-        LoaderManager loaderManager = getSupportLoaderManager();
-        Loader loader = loaderManager.getLoader(0);
 
 //        Tails.getSonic();
 
@@ -149,31 +147,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case Sonic.STATE_PAUSE:
             case Sonic.STATE_ERROR:
             case Sonic.STATE_CANCEL:
-                if (appInfo.getUrl().equals("http://apk.r1.market.hiapk.com/data/upload/apkres/2016/12_2/15/com.lbe.security_035225.apk")) {
-                    TaskConfig config = new TaskConfig().setMaxThreads(2)
-                            .setRetryTime(2)
-                            .setProgressResponseInterval(800)
-                            .setDirPath(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
-                    sonic.addTask(appInfo.getUrl(), config);
-                    sonic.cancelTask("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_23/10/com.tencent.mtt_105815.apk");
-                } else {
-                    sonic.addTask(appInfo.getUrl());
-                }
+                sonic.addTask(appInfo.getUrl());
                 break;
             case Sonic.STATE_WAITING:
             case Sonic.STATE_DOWNLOADING:
                 sonic.stopTask(appInfo.getUrl());
                 break;
             case Sonic.STATE_FINISH:
-                if (appInfo.getUrl().equals("http://apk.r1.market.hiapk.com/data/upload/apkres/2016/12_2/15/com.lbe.security_035225.apk")) {
-                    TaskConfig config = new TaskConfig().setMaxThreads(2)
-                            .setRetryTime(2)
-                            .setProgressResponseInterval(800)
-                            .setDirPath(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
-                    sonic.addTask(appInfo.getUrl(), config);
-                } else {
-                    sonic.addTask(appInfo.getUrl());
-                }
+                sonic.addTask(appInfo.getUrl());
                 break;
         }
     }
