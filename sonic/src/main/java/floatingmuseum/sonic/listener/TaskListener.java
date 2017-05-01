@@ -18,4 +18,6 @@ public interface TaskListener {
     void onError(TaskInfo taskInfo, DownloadException downloadException);
 
     void onFinish(TaskInfo taskInfo);
+
+    void onCancel(TaskInfo taskInfo);
 }

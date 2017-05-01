@@ -44,7 +44,7 @@ public class DBManager {
         db.close();
     }
 
-    public void insertTaskConfig(String tag, TaskConfig config) {
+    public synchronized void insertTaskConfig(String tag, TaskConfig config) {
         String insertSql = "insert into task_config(tag,max_threads,retry_time,progress_response_interval,connect_timeout,read_timeout) values(?,?,?,?,?,?)";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL(insertSql, new Object[]{tag, config.getMaxThreads(), config.getRetryTime(), config.getProgressResponseInterval(), config.getConnectTimeout(), config.getReadTimeout()});
@@ -59,14 +59,14 @@ public class DBManager {
     }
 
     public synchronized void updateTaskInfo(TaskInfo task) {
-        Log.i(TAG, "updateTaskInfo()..." + task.getCurrentSize() + "..." + task.getState() + "..." + task.getProgress()+"..."+task.getTotalSize());
-        String updateSql = "update task_info set current_size=?,state=?,download_progress=? where tag=?";
+        Log.i(TAG, "updateTaskInfo()..." + task.getCurrentSize() + "..." + task.getState() + "..." + task.getProgress() + "..." + task.getTotalSize());
+        String updateSql = "update task_info set current_size=?,state=?,download_progress=?,total_size=? where tag=?";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.execSQL(updateSql, new Object[]{task.getCurrentSize(), task.getState(), task.getProgress(), task.getTag()});
+        db.execSQL(updateSql, new Object[]{task.getCurrentSize(), task.getState(), task.getProgress(), task.getTotalSize(), task.getTag()});
         db.close();
     }
 
-    public void delete(TaskInfo taskInfo) {
+    public synchronized void delete(TaskInfo taskInfo) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         String deleteThreadsSql = "delete from " + THREADS_TABLE_NAME + " where url=?";

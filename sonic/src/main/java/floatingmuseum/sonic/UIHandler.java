@@ -41,6 +41,9 @@ public class UIHandler extends Handler {
                 case Sonic.STATE_FINISH:
                     listener.onFinish(taskInfo);
                     break;
+                case Sonic.STATE_CANCEL:
+                    listener.onCancel(taskInfo);
+                    break;
             }
         }
     }

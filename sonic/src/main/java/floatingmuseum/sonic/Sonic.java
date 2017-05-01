@@ -35,6 +35,7 @@ public class Sonic implements TaskListener {
     public static final int STATE_DOWNLOADING = 3;
     public static final int STATE_ERROR = 4;
     public static final int STATE_FINISH = 5;
+    public static final int STATE_CANCEL = 7;
 
     private UIHandler uiHandler;
     private static Context context;
@@ -190,8 +191,27 @@ public class Sonic implements TaskListener {
         uiHandler.removeListener();
     }
 
+    /**
+     * downloadUrl will be the tag for this task.
+     */
+    public void addTask(String downloadUrl) {
+//        Log.i(TAG, "地址:" + context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
+        addTask(downloadUrl, downloadUrl);
+    }
+
+    public void addTask(String downloadUrl, String tag) {
+        addTask(downloadUrl, tag, FileUtil.getUrlFileName(downloadUrl));
+    }
+
+    public void addTask(String downloadUrl, String tag, String fileName) {
+        addTask(downloadUrl, tag, fileName, null);
+    }
+
+    /**
+     * downloadUrl will be the tag for this task.
+     */
     public void addTask(String downloadUrl, TaskConfig singleTaskConfig) {
-        addTask(downloadUrl, downloadUrl, FileUtil.getUrlFileName(downloadUrl), singleTaskConfig);
+        addTask(downloadUrl, downloadUrl, singleTaskConfig);
     }
 
     public void addTask(String downloadUrl, String tag, TaskConfig singleTaskConfig) {
@@ -204,7 +224,12 @@ public class Sonic implements TaskListener {
             TaskInfo taskInfo = allTaskInfo.get(tag);
             initDownload(taskInfo, true, null);
         } else {
-            TaskInfo taskInfo = new TaskInfo(downloadUrl, tag, fileName, taskConfig.getDirPath(), taskConfig.getDirPath() + fileName, 0, 0, 0, 0, 0);
+            TaskInfo taskInfo;
+            if (singleTaskConfig != null) {
+                taskInfo = new TaskInfo(downloadUrl, tag, fileName, singleTaskConfig.getDirPath(), singleTaskConfig.getDirPath() + "/" + fileName, 0, 0, 0, 0, 0);
+            } else {
+                taskInfo = new TaskInfo(downloadUrl, tag, fileName, taskConfig.getDirPath(), taskConfig.getDirPath() + "/" + fileName, 0, 0, 0, 0, 0);
+            }
             initDownload(taskInfo, false, singleTaskConfig);
         }
     }
@@ -292,10 +317,47 @@ public class Sonic implements TaskListener {
 //            activeTasks.remove(key);
         }
         activeTasks.clear();
+        cancelTask("");
     }
 
+    /**
+     * <p>CancelTask will remove all information from database about this task.also delete file from sdcard.
+     * <p>if this task downloaded by using addTask(url),so the url is the tag.
+     */
     public void cancelTask(String tag) {
+        //处于下载队列中时
+        if (activeTasks.containsKey(tag)) {
+            DownloadTask task = activeTasks.get(tag);
+            task.cancel();
+            FileUtil.deleteFile(task.getTaskInfo().getFilePath());
+            activeTasks.remove(tag);
+            allTaskInfo.remove(tag);
+            return;
+        }
 
+        //处于等待队列中时
+        for (DownloadTask waitingTask : waitingTasks) {
+            if (tag.equals(waitingTask.getTaskInfo().getTag())) {
+                waitingTask.cancelTask();
+                FileUtil.deleteFile(waitingTask.getTaskInfo().getFilePath());
+                waitingTasks.remove(waitingTask);
+                allTaskInfo.remove(waitingTask);
+                return;
+            }
+        }
+
+
+        if (allTaskInfo.containsKey(tag)) {
+            TaskInfo taskInfo = allTaskInfo.get(tag);
+            taskInfo.setProgress(0);
+            taskInfo.setCurrentSize(0);
+            taskInfo.setTotalSize(0);
+            taskInfo.setState(Sonic.STATE_CANCEL);
+            onCancel(taskInfo);
+            dbManager.delete(taskInfo);
+            FileUtil.deleteFile(taskInfo.getFilePath());
+            allTaskInfo.remove(tag);
+        }
     }
 
     @Override
@@ -326,6 +388,11 @@ public class Sonic implements TaskListener {
         sendMessage(taskInfo, STATE_FINISH, null);
         allTaskInfo.remove(taskInfo.getTag());
         checkWaitingTasks(taskInfo);
+    }
+
+    @Override
+    public void onCancel(TaskInfo taskInfo) {
+        sendMessage(taskInfo, STATE_CANCEL, null);
     }
 
     /**

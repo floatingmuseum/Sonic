@@ -63,7 +63,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
                 holder.btTaskState.setText("等待");
                 break;
             case Sonic.STATE_PAUSE:
-                holder.btTaskState.setText("下载");
+                holder.btTaskState.setText("继续");
                 break;
             case Sonic.STATE_DOWNLOADING:
                 holder.btTaskState.setText("暂停");

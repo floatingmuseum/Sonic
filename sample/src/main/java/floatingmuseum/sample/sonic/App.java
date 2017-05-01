@@ -3,6 +3,7 @@ package floatingmuseum.sample.sonic;
 import android.app.Application;
 import android.content.Context;
 import android.nfc.Tag;
+import android.os.Environment;
 import android.util.Log;
 
 import com.squareup.leakcanary.LeakCanary;
@@ -42,6 +43,7 @@ public class App extends Application {
                 .setRetryTime(4)
                 .setReadTimeout(3000)
                 .setConnectTimeout(3000)
+                .setDirPath(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath())
                 .init(this);
     }
 }
