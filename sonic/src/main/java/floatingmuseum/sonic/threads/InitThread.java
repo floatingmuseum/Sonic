@@ -1,13 +1,14 @@
 package floatingmuseum.sonic.threads;
 
-import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.listener.InitListener;
@@ -38,27 +39,23 @@ public class InitThread extends Thread {
         HttpURLConnection connection = null;
         try {
             url = new URL(downloadUrl);
+        } catch (MalformedURLException e) {
+            listener.onInitError(new DownloadException("Wrong url.", e));
+            return;
+        }
+
+        try {
             connection = (HttpURLConnection) url.openConnection();
             connection.setConnectTimeout(3000);
             connection.setRequestMethod("GET");
+            connection.setRequestProperty("Range", "bytes=" + 0 + "-");
             int responseCode = connection.getResponseCode();
             Log.i(TAG, "InitThread...Response code:" + responseCode);
-            if (responseCode == 200 || responseCode == 206) {
-                long contentLength = connection.getContentLength();
-                if (contentLength <= 0) {
-                    // TODO: 2017/4/19 没有响应码和throwable
-                    listener.onInitError(new DownloadException("Service file length exception. length:", -1));
-                    return;
-                }
-                File dir = new File(downloadDirPath);
-                //创建文件
-                File file = new File(dir, fileName);
-                //操作的文件，和可操作的模式，读写删
-                randomAccessFile = new RandomAccessFile(file, "rwd");
-                //设置长度
-                randomAccessFile.setLength(contentLength);
-                listener.onGetContentLength(contentLength);
-                return;
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                prepare(connection, false);
+            } else if (responseCode == HttpURLConnection.HTTP_PARTIAL) {
+                prepare(connection, true);
             } else {
                 listener.onInitError(new DownloadException("InitThread Request failed", responseCode));
             }
@@ -66,16 +63,40 @@ public class InitThread extends Thread {
             e.printStackTrace();
             listener.onInitError(new DownloadException("InitThread Request failed", e));
         } finally {
-            try {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-                if (randomAccessFile != null) {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    private void prepare(HttpURLConnection connection, boolean isSupportRange) {
+        long contentLength = connection.getContentLength();
+        if (contentLength <= 0) {
+            listener.onInitError(new DownloadException("File length exception. length<=0."));
+            return;
+        }
+        File dir = new File(downloadDirPath);
+        //创建文件
+        File file = new File(dir, fileName);
+        //操作的文件，和可操作的模式，读写删
+        RandomAccessFile randomAccessFile = null;
+        try {
+            randomAccessFile = new RandomAccessFile(file, "rwd");
+            //设置长度
+            randomAccessFile.setLength(contentLength);
+            listener.onGetContentLength(contentLength, isSupportRange);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (randomAccessFile != null) {
+                try {
                     randomAccessFile.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    listener.onInitError(new DownloadException("InitThread Request failed", e));
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                listener.onInitError(new DownloadException("InitThread Request failed", e));
             }
         }
     }
