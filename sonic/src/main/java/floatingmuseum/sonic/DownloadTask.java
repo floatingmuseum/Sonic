@@ -276,7 +276,11 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onInitError(DownloadException e) {
-        // TODO: 2017/4/28 这里也应该加入retry范围内
+        if (retryTime != 0) {
+            retryTime--;
+            new InitThread(taskInfo.getDownloadUrl(), taskInfo.getName(), taskInfo.getDirPath(), this).start();
+            return;
+        }
         updateTaskInfo(Sonic.STATE_ERROR);
         taskListener.onError(taskInfo, e);
     }
