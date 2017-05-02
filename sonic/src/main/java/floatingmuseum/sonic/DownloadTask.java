@@ -126,12 +126,19 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     @Override
-    public void onGetContentLength(long contentLength) {
-        Log.i(TAG, "onGetContentLength总文件大小:" + contentLength + "..." + FileUtil.bytesToMb(contentLength) + "mb" + "..." + taskInfo.getName());
+    public void onGetContentLength(long contentLength, boolean isSupportRange) {
+        Log.i(TAG, "onGetContentLength总文件大小:" + contentLength + "..." + FileUtil.bytesToMb(contentLength) + "mb" + "..." + taskInfo.getName() + "...isSupportRange:" + isSupportRange);
         taskInfo.setTotalSize(contentLength);
+
+        if (isSupportRange) {
+            initMultipleThreads(contentLength);
+        }else{
+            initSingleThread();
+        }
+    }
+
+    private void initMultipleThreads(long contentLength){
         dbManager.updateTaskInfo(taskInfo);
-        TaskInfo dbTaskInfo = dbManager.queryDownloadTask(taskInfo.getTag());
-        Log.i(TAG, "First init TaskInfo:" + dbTaskInfo.toString());
         taskListener.onProgress(taskInfo);
         threadInfoList = new ArrayList<>();
         long blockLength = contentLength / maxThreads;
@@ -142,13 +149,17 @@ public class DownloadTask implements InitListener, ThreadListener {
             long current = start;
             ThreadInfo threadInfo = new ThreadInfo(x, taskInfo.getDownloadUrl(), start, end, current, contentLength);
             threadInfoList.add(threadInfo);
-            // TODO: 2017/4/28 出现存储线程信息时,数据库连接被关闭的情况,导致部分线程没有存储成功.继而在后续下载时无法完整下载文件,初步判断是因为数据库插入TaskConfig的方法不是同步导致的
             dbManager.insertThreadInfo(threadInfo);//第一次初始化，存储线程信息到数据库
         }
         initDownloadThread(threadInfoList);
         for (DownloadThread thread : threads) {
             thread.start();
         }
+    }
+
+    private void initSingleThread(){
+        taskListener.onProgress(taskInfo);
+
     }
 
     private int getProgress() {

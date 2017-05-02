@@ -8,6 +8,6 @@ import floatingmuseum.sonic.DownloadException;
  */
 
 public interface InitListener {
-    void onGetContentLength(long contentLength);
+    void onGetContentLength(long contentLength,boolean isSupportRange);
     void onInitError(DownloadException e);
 }

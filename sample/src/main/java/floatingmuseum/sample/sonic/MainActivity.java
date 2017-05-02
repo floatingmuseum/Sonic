@@ -236,8 +236,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onError(TaskInfo taskInfo, DownloadException DownloadException) {
+    public void onError(TaskInfo taskInfo, DownloadException downloadException) {
         Log.i(TAG, "任务异常...onError:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
+        downloadException.printStackTrace();
         updateAppInfo(taskInfo);
         adapter.notifyDataSetChanged();
     }
