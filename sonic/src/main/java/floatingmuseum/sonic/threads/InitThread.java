@@ -6,6 +6,7 @@ import android.util.Log;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
@@ -38,6 +39,12 @@ public class InitThread extends Thread {
         HttpURLConnection connection = null;
         try {
             url = new URL(downloadUrl);
+        } catch (MalformedURLException e) {
+            listener.onInitError(new DownloadException("Wrong url.", e));
+            return;
+        }
+
+        try {
             connection = (HttpURLConnection) url.openConnection();
             connection.setConnectTimeout(3000);
             connection.setRequestMethod("GET");
