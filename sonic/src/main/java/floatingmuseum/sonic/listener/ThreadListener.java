@@ -1,6 +1,7 @@
 package floatingmuseum.sonic.listener;
 
 import floatingmuseum.sonic.entity.ThreadInfo;
+import floatingmuseum.sonic.threads.BaseThread;
 import floatingmuseum.sonic.threads.DownloadThread;
 
 /**
@@ -13,7 +14,7 @@ public interface ThreadListener {
 
     void onProgress(ThreadInfo threadInfo);
 
-    void onError(DownloadThread errorThread, Throwable e);
+    void onError(BaseThread errorThread, Throwable e);
 
     void onFinished(int threadId);
 }

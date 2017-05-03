@@ -12,6 +12,7 @@ import floatingmuseum.sonic.entity.ThreadInfo;
 import floatingmuseum.sonic.listener.InitListener;
 import floatingmuseum.sonic.listener.TaskListener;
 import floatingmuseum.sonic.listener.ThreadListener;
+import floatingmuseum.sonic.threads.BaseThread;
 import floatingmuseum.sonic.threads.DownloadThread;
 import floatingmuseum.sonic.threads.InitThread;
 import floatingmuseum.sonic.utils.FileUtil;
@@ -34,7 +35,8 @@ public class DownloadTask implements InitListener, ThreadListener {
     private long lastUpdateTime = System.currentTimeMillis();
     private boolean stopAfterInitThreadDone = false;
     private boolean isCancel = false;
-
+    private int activeThreadsNum;
+    private DownloadException downloadException;
 
     public DownloadTask(TaskInfo taskInfo, DBManager dbManager, TaskConfig taskConfig, TaskListener taskListener) {
         this.taskInfo = taskInfo;
@@ -123,6 +125,8 @@ public class DownloadTask implements InitListener, ThreadListener {
         }
         Log.i(TAG, "TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize());
         taskInfo.setProgress(getProgress());
+
+        activeThreadsNum = threads.size();
     }
 
     @Override
@@ -132,12 +136,12 @@ public class DownloadTask implements InitListener, ThreadListener {
 
         if (isSupportRange) {
             initMultipleThreads(contentLength);
-        }else{
+        } else {
             initSingleThread();
         }
     }
 
-    private void initMultipleThreads(long contentLength){
+    private void initMultipleThreads(long contentLength) {
         dbManager.updateTaskInfo(taskInfo);
         taskListener.onProgress(taskInfo);
         threadInfoList = new ArrayList<>();
@@ -157,7 +161,7 @@ public class DownloadTask implements InitListener, ThreadListener {
         }
     }
 
-    private void initSingleThread(){
+    private void initSingleThread() {
         taskListener.onProgress(taskInfo);
 
     }
@@ -185,16 +189,7 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onPause(ThreadInfo threadInfo) {
-        boolean isAllPaused = true;
-        for (DownloadThread thread : threads) {
-            //线程状态处于暂停或者失败,都表明线程停止了
-            Log.i(TAG, "onPause...线程状态:...当前ID:" + threadInfo.getId() + "...ID:" + thread.getThreadInfo().getId() + "...Failed:" + thread.isFailed() + "...Paused:" + thread.isPaused() + "...Finished:" + thread.isFinished());
-            if (thread.isDownloading()) {
-                isAllPaused = false;
-            }
-        }
-
-        if (isAllPaused) {
+        if (isAllThreadsDead()) {
             if (isCancel) {
                 cancelTask();
                 return;
@@ -216,7 +211,7 @@ public class DownloadTask implements InitListener, ThreadListener {
         }
     }
 
-    private synchronized boolean isHaveRetryTime(DownloadThread errorThread) {
+    private synchronized boolean isHaveRetryTime(BaseThread errorThread) {
         if (retryTime != 0) {
             retryTime--;
             ThreadInfo info = errorThread.getThreadInfo();
@@ -231,57 +226,55 @@ public class DownloadTask implements InitListener, ThreadListener {
         }
     }
 
+    /**
+     * 无论是暂停,异常,完成区块下载都表明线程运行完毕死亡.
+     */
+    private synchronized boolean isAllThreadsDead() {
+        if (activeThreadsNum > 0) {
+            activeThreadsNum--;
+            return activeThreadsNum == 0;
+        } else {
+            return true;
+        }
+    }
+
     @Override
-    public void onError(DownloadThread errorThread, Throwable e) {
+    public void onError(BaseThread errorThread, Throwable e) {
         if (isHaveRetryTime(errorThread)) {
             return;
         }
 
-        boolean isAllFailed = true;
-        DownloadException downloadException = null;
-        for (DownloadThread thread : threads) {
-            //线程状态处于暂停或者失败,都表明线程停止了
-            if (thread.isDownloading()) {
-                isAllFailed = false;
-            } else {
-                downloadException = thread.getException();
-            }
-        }
+        downloadException = errorThread.getException();
 
-        if (isAllFailed) {
+        if (isAllThreadsDead()) {
+            if (isCancel) {
+                cancelTask();
+                return;
+            }
             updateProgress();
             updateTaskInfo(Sonic.STATE_ERROR);
-            taskListener.onError(taskInfo, downloadException);
+            taskListener.onError(taskInfo, errorThread.getException());
         }
     }
 
     @Override
     public void onFinished(int threadId) {
-        boolean isHasError = false;
-        DownloadException downloadException = null;
-        for (DownloadThread thread : threads) {
-            Log.i(TAG, "下载完成:" + threadId + "...其他线程状态:" + thread.getThreadInfo().getId() + "...isFailed:" + thread.isFailed() + "...isFinished:" + thread.isFinished());
-            //只有当所有线程处于失败或者完成状态时(俩种状态可同时存在,因为当其中一条线程出错时,其他线程继续工作,直到工作结束,再结算失败状态)
-            if (thread.isFailed() || thread.isFinished()) {
-                if (thread.isFailed()) {
-                    downloadException = thread.getException();
-                    isHasError = true;
-                }
-            } else {
+        if (isAllThreadsDead()) {
+            if (isCancel) {
+                cancelTask();
                 return;
             }
-        }
 
-        updateProgress();
+            updateProgress();
 
-        //所有线程停止状态下含有错误,回调onError
-        if (isHasError) {
-            taskInfo.setState(Sonic.STATE_ERROR);
-            taskListener.onError(taskInfo, downloadException);
-        } else {
-            dbManager.delete(taskInfo);
-            taskInfo.setState(Sonic.STATE_FINISH);
-            taskListener.onFinish(taskInfo);
+            if (downloadException==null) {
+                dbManager.delete(taskInfo);
+                taskInfo.setState(Sonic.STATE_FINISH);
+                taskListener.onFinish(taskInfo);
+            }else{
+                taskInfo.setState(Sonic.STATE_ERROR);
+                taskListener.onError(taskInfo, downloadException);
+            }
         }
     }
 

@@ -1,12 +1,12 @@
 package floatingmuseum.sonic.threads;
 
-import android.util.Log;
 
-import java.io.InputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
+import java.util.Map;
 
-import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.entity.ThreadInfo;
 import floatingmuseum.sonic.listener.ThreadListener;
 
@@ -14,19 +14,7 @@ import floatingmuseum.sonic.listener.ThreadListener;
  * Created by Floatingmuseum on 2017/5/2.
  */
 
-public class SingleThread implements Runnable {
-
-    private static final String TAG = SingleThread.class.getName();
-
-    private boolean stopThread = false;
-
-    //下载文件夹路径
-    private String dirPath;
-    private String fileName;
-    private int readTimeout;
-    private int connectTimeout;
-    private ThreadInfo threadInfo;
-    private ThreadListener listener;
+public class SingleThread extends BaseThread {
 
     public SingleThread(ThreadInfo threadInfo, String dirPath, String fileName, int readTimeout, int connectTimeout, ThreadListener listener) {
         this.threadInfo = threadInfo;
@@ -38,45 +26,24 @@ public class SingleThread implements Runnable {
     }
 
     @Override
-    public void run() {
-        Log.i(TAG, threadInfo.getId() + "号线程开始工作" + "..." + fileName);
-        isDownloading = true;
-        HttpURLConnection connection = null;
-        RandomAccessFile randomAccessFile = null;
-        InputStream inputStream = null;
+    protected RandomAccessFile getRandomAccessFile() throws IOException {
+        File file = new File(dirPath, fileName);
+        RandomAccessFile raf = new RandomAccessFile(file, "rwd");
+        raf.seek(0);
+        return raf;
     }
 
-    private boolean isDownloading = false;
-    private boolean isPaused = false;
-    private boolean isFailed = false;
-    private boolean isFinished = false;
-    private DownloadException downloadException;
-
-    public boolean isDownloading() {
-        return isDownloading;
+    @Override
+    protected void updateDB() {
     }
 
-    public boolean isPaused() {
-        return isPaused;
+    @Override
+    protected Map<String, String> getHttpHeaders() {
+        return null;
     }
 
-    public boolean isFailed() {
-        return isFailed;
-    }
-
-    public boolean isFinished() {
-        return isFinished;
-    }
-
-    public DownloadException getException() {
-        return downloadException;
-    }
-
-    public ThreadInfo getThreadInfo() {
-        return threadInfo;
-    }
-
-    public void stopThread() {
-        stopThread = true;
+    @Override
+    protected int getResponseCode() {
+        return HttpURLConnection.HTTP_OK;
     }
 }

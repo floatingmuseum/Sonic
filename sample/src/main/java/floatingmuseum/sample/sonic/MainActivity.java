@@ -15,8 +15,11 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -41,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TasksAdapter adapter;
     private List<AppInfo> downloadList;
     private TextView tvSingleTaskSize;
+    private int cancelTaskPosition = 0;
     private String singleTaskUrl = "http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_17/17/com.xiachufang_054408.apk";
 
     @Override
@@ -105,11 +109,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initView() {
-        pbSingleTask = (ProgressBar) findViewById(R.id.pb_single_task);
-        tvSingleTaskSize = (TextView) findViewById(R.id.tv_single_task_size);
-        Button btSingleTaskStart = (Button) findViewById(R.id.bt_single_task_start);
-        Button btSingleTaskStop = (Button) findViewById(R.id.bt_single_task_stop);
+//        pbSingleTask = (ProgressBar) findViewById(R.id.pb_single_task);
+//        tvSingleTaskSize = (TextView) findViewById(R.id.tv_single_task_size);
+//        Button btSingleTaskStart = (Button) findViewById(R.id.bt_single_task_start);
+//        Button btSingleTaskStop = (Button) findViewById(R.id.bt_single_task_stop);
         Button btPauseAll = (Button) findViewById(R.id.bt_pause_all);
+        Button btCancelTask = (Button) findViewById(R.id.bt_cancel_task);
+        Spinner spinner = (Spinner) findViewById(R.id.spinner_cancer);
+
         rvTasks = (RecyclerView) findViewById(R.id.rv_tasks);
         linearLayoutManager = new LinearLayoutManager(this);
         rvTasks.setLayoutManager(linearLayoutManager);
@@ -118,20 +125,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         rvTasks.setAdapter(adapter);
         adapter.setOnItemChildClickListener(new TasksAdapter.OnItemChildClickListener() {
             @Override
-            public void onChildClick(int viewId, int position) {
+            public void onChildClick(int viewId, View view, int position) {
                 switch (viewId) {
                     case R.id.bt_task_state:
-                        Log.i(TAG, "点击State:...位置:" + position);
-                        executeCommand(downloadList.get(position));
-//                        sonic.addTask(downloadList.get(position).getUrl());
+                        TextView textView = (TextView) view;
+                        AppInfo appInfo = downloadList.get(position);
+                        Log.i(TAG, "点击:" + textView.getText() + "...任务名:" + appInfo.getName() + "...状态:" + getState(appInfo.getState()));
+                        executeCommand(appInfo);
                         break;
                 }
             }
         });
-        btSingleTaskStart.setOnClickListener(this);
-        btSingleTaskStop.setOnClickListener(this);
+//        btSingleTaskStart.setOnClickListener(this);
+//        btSingleTaskStop.setOnClickListener(this);
 
         btPauseAll.setOnClickListener(this);
+        btCancelTask.setOnClickListener(this);
+
+        spinner.setAdapter(new ArrayAdapter(this, android.R.layout.simple_spinner_item, generateStringArray(downloadList.size())));
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                cancelTaskPosition = position;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
         TaskInfo taskInfo = sonic.getTaskInfo(singleTaskUrl);
         if (taskInfo != null) {
             pbSingleTask.setProgress(taskInfo.getProgress());
@@ -139,8 +161,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private String[] generateStringArray(int size) {
+        if (size > 0) {
+            String[] arr = new String[size];
+            for (int i = 0; i < arr.length; i++) {
+                arr[i] = String.valueOf(i);
+            }
+            return arr;
+        } else {
+            return null;
+        }
+    }
+
+    private String getState(int state) {
+        switch (state) {
+            case Sonic.STATE_NONE:
+                return "无";
+            case Sonic.STATE_START:
+                return "开始";
+            case Sonic.STATE_DOWNLOADING:
+                return "下载中";
+            case Sonic.STATE_PAUSE:
+                return "暂停";
+            case Sonic.STATE_WAITING:
+                return "等待";
+            case Sonic.STATE_ERROR:
+                return "错误";
+            case Sonic.STATE_FINISH:
+                return "完成";
+            case Sonic.STATE_CANCEL:
+                return "取消";
+            default:
+                return "未知";
+        }
+    }
+
     private void executeCommand(AppInfo appInfo) {
-        Log.i(TAG, "点击State:...状态:" + appInfo.getState());
         switch (appInfo.getState()) {
             case Sonic.STATE_NONE:
             case Sonic.STATE_START:
@@ -184,16 +240,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.bt_single_task_start:
-                sonic.addTask(singleTaskUrl);
+//            case R.id.bt_single_task_start:
+//                sonic.addTask(singleTaskUrl);
 //                sonic.addTask("http://dldir1.qq.com/weixin/android/weixin6330android920.apk");
-                break;
-            case R.id.bt_single_task_stop:
-                sonic.stopTask(singleTaskUrl);
+//                break;
+//            case R.id.bt_single_task_stop:
+//                sonic.stopTask(singleTaskUrl);
 //                sonic.stopTask("http://dldir1.qq.com/weixin/android/weixin6330android920.apk");
-                break;
+//                break;
             case R.id.bt_pause_all:
                 sonic.stopAllTask();
+                break;
+            case R.id.bt_cancel_task:
+                AppInfo appInfo = downloadList.get(cancelTaskPosition);
+                sonic.cancelTask(appInfo.getUrl());
                 break;
         }
     }
