@@ -1,7 +1,6 @@
 package floatingmuseum.sonic;
 
 import android.content.Context;
-import android.os.Environment;
 import android.os.Message;
 import android.util.Log;
 
@@ -89,8 +88,8 @@ public class Sonic implements TaskListener {
     }
 
     /**
-     * How many threads working for a task.
-     * default is 3.
+     * <p>How many threads working for a task.
+     * <p>default is 3.
      */
     public Sonic setMaxThreads(int maxThreads) {
         if (maxThreads < 1) {
@@ -102,8 +101,8 @@ public class Sonic implements TaskListener {
     }
 
     /**
-     * How many tasks can running at the same time.
-     * default is 3.
+     * <p>How many tasks can running at the same time.
+     * <p>default is 3.
      */
     public Sonic setActiveTaskNumber(int activeTaskNumber) {
         if (activeTaskNumber < 1) {
@@ -115,9 +114,9 @@ public class Sonic implements TaskListener {
     }
 
     /**
-     * DownloadListener onProgress() method will be call at defined interval.
-     * the milliseconds must between 0 to 1000.
-     * the default for the interval is 500 milliseconds.
+     * <p>DownloadListener onProgress() method will be call at defined interval.
+     * <p>the milliseconds must between 0 to 1000.
+     * <p>the default for the interval is 500 milliseconds.
      */
     public Sonic setProgressResponseInterval(int progressResponseInterval) {
         if (progressResponseInterval < 0) {
@@ -161,8 +160,8 @@ public class Sonic implements TaskListener {
     }
 
     /**
-     * Storage dir path.
-     * default is sdcard/downloads
+     * <p>Storage dir path.
+     * <p>default is sdcard/downloads
      */
     public Sonic setDirPath(String dirPath) {
         if (dirPath != null && dirPath != "") {
@@ -175,7 +174,7 @@ public class Sonic implements TaskListener {
         return this;
     }
 
-    public Sonic setStopServiceAfterAllTaskFinished(boolean stopServiceAfterAllTaskFinished) {
+    private Sonic setStopServiceAfterAllTaskFinished(boolean stopServiceAfterAllTaskFinished) {
 //        this.stopServiceAfterAllTaskFinished = stopServiceAfterAllTaskFinished;
         return this;
     }
@@ -233,6 +232,8 @@ public class Sonic implements TaskListener {
             initDownload(taskInfo, false, singleTaskConfig);
         }
     }
+
+    private void addAllTask(){};
 
     public TaskInfo getTaskInfo(String tag) {
         return allTaskInfo.get(tag);
@@ -359,6 +360,8 @@ public class Sonic implements TaskListener {
             allTaskInfo.remove(tag);
         }
     }
+
+    private void cancelAllTask(){}
 
     @Override
     public void onStart(TaskInfo taskInfo) {

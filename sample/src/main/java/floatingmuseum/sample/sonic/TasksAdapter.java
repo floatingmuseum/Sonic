@@ -96,7 +96,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         @Override
         public void onClick(View v) {
             if (listener != null) {
-                listener.onChildClick(v.getId(), getAdapterPosition());
+                listener.onChildClick(v.getId(),v, getAdapterPosition());
             }
         }
     }
@@ -108,6 +108,6 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     }
 
     public interface OnItemChildClickListener {
-        void onChildClick(int viewId, int position);
+        void onChildClick(int viewId,View view, int position);
     }
 }
