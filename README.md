@@ -89,8 +89,7 @@ Some memory leak found by using leakcanary.i'm working on it,if you have any sol
 
 1. Custom http headers.
 2. Custom http params.
-3. Check if server support multithreadings and breakpoint.
-4. Improve DownloadException by http response code.
+3. Improve DownloadException by http response code.
 
 ### About me
 
