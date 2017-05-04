@@ -2,10 +2,9 @@ package floatingmuseum.sonic.threads;
 
 import android.util.Log;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -60,6 +59,7 @@ public abstract class BaseThread extends Thread {
 
             long currentPosition = threadInfo.getCurrentPosition();
             int responseCode = connection.getResponseCode();
+            // TODO: 2017/5/4 如果网络信号不好,线程一直卡在这里,而执行暂停又只能依靠下面的stopThread,导致用户看到下载不动,想点击暂停时却没有反应.
             if (responseCode == getResponseCode()) {
 
                 raf = getRandomAccessFile();
@@ -107,11 +107,17 @@ public abstract class BaseThread extends Thread {
             e.printStackTrace();
             downloadException = new DownloadException("DownloadThread failed", e);
             listener.onError(this, downloadException);
+        } catch (InterruptedIOException e) {
+            Log.i(TAG, "第" + threadInfo.getId() + "线程停止 by interrupted.");
+            e.printStackTrace();
+            updateDB();
+            downloadException = new DownloadException("DownloadThread failed", e);
+            listener.onPause(threadInfo);
         } catch (IOException e) {
             e.printStackTrace();
             downloadException = new DownloadException("DownloadThread failed", e);
             listener.onError(this, downloadException);
-        }finally {
+        } finally {
             try {
                 if (connection != null) {
                     connection.disconnect();
@@ -147,7 +153,10 @@ public abstract class BaseThread extends Thread {
     }
 
     public void stopThread() {
-        stopThread = true;
+        if (!Thread.interrupted()) {
+            interrupt();
+        }
+//        stopThread = true;
     }
 
     public boolean isDownloading() {

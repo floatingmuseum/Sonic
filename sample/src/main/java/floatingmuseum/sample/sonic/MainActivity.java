@@ -36,15 +36,12 @@ import floatingmuseum.sonic.listener.DownloadListener;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, DownloadListener {
 
     private static final String TAG = MainActivity.class.getName();
-    private ProgressBar pbSingleTask;
     private int request_permission_code = 233;
     private Sonic sonic;
     private RecyclerView rvTasks;
     private LinearLayoutManager linearLayoutManager;
     private TasksAdapter adapter;
     private List<AppInfo> downloadList;
-    private TextView tvSingleTaskSize;
-    private int cancelTaskPosition = 0;
     private String singleTaskUrl = "http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_17/17/com.xiachufang_054408.apk";
 
     @Override
@@ -71,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initData() {
         downloadList = new ArrayList<>();
         new DividerItemDecoration(this, DividerItemDecoration.HORIZONTAL);
-        AppInfo appInfo1 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_16/20/com.sina.weibog3_080004.apk", "微博");
+        AppInfo appInfo1 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_24/12/com.tencent.qqpim_121006.apk", "QQ同步助手");
         downloadList.add(appInfo1);
         AppInfo appInfo2 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_23/10/com.tencent.mtt_105815.apk", "QQ浏览器");
         downloadList.add(appInfo2);
@@ -87,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         downloadList.add(appInfo7);
         AppInfo appInfo8 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_24/14/com.ss.android.article.news_024007.apk", "今日头条");
         downloadList.add(appInfo8);
-        AppInfo appInfo9 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_24/12/com.tencent.qqpim_121006.apk", "QQ同步助手");
+        AppInfo appInfo9 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_16/20/com.sina.weibog3_080004.apk", "微博");
         downloadList.add(appInfo9);
         AppInfo appInfo10 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_31/17/com.duokan.reader_050812.apk", "多看阅读");
         downloadList.add(appInfo10);
@@ -109,13 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initView() {
-//        pbSingleTask = (ProgressBar) findViewById(R.id.pb_single_task);
-//        tvSingleTaskSize = (TextView) findViewById(R.id.tv_single_task_size);
-//        Button btSingleTaskStart = (Button) findViewById(R.id.bt_single_task_start);
-//        Button btSingleTaskStop = (Button) findViewById(R.id.bt_single_task_stop);
         Button btPauseAll = (Button) findViewById(R.id.bt_pause_all);
-        Button btCancelTask = (Button) findViewById(R.id.bt_cancel_task);
-        Spinner spinner = (Spinner) findViewById(R.id.spinner_cancer);
 
         rvTasks = (RecyclerView) findViewById(R.id.rv_tasks);
         linearLayoutManager = new LinearLayoutManager(this);
@@ -128,37 +119,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onChildClick(int viewId, View view, int position) {
                 switch (viewId) {
                     case R.id.bt_task_state:
-                        TextView textView = (TextView) view;
+                        Button btState = (Button) view;
                         AppInfo appInfo = downloadList.get(position);
-                        Log.i(TAG, "点击:" + textView.getText() + "...任务名:" + appInfo.getName() + "...状态:" + getState(appInfo.getState()));
+                        Log.i(TAG, "点击:" + btState.getText() + "...任务名:" + appInfo.getName() + "...状态:" + getState(appInfo.getState()));
                         executeCommand(appInfo);
+                        break;
+                    case R.id.bt_task_cancel:
+                        Button btCancel = (Button) view;
+                        AppInfo info = downloadList.get(position);
+                        Log.i(TAG, "点击:" + btCancel.getText() + "...任务名:" + info.getName() + "...状态:" + getState(info.getState()));
+                        sonic.cancelTask(info.getUrl());
                         break;
                 }
             }
         });
-//        btSingleTaskStart.setOnClickListener(this);
-//        btSingleTaskStop.setOnClickListener(this);
 
         btPauseAll.setOnClickListener(this);
-        btCancelTask.setOnClickListener(this);
-
-        spinner.setAdapter(new ArrayAdapter(this, android.R.layout.simple_spinner_item, generateStringArray(downloadList.size())));
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                cancelTaskPosition = position;
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-        TaskInfo taskInfo = sonic.getTaskInfo(singleTaskUrl);
-        if (taskInfo != null) {
-            pbSingleTask.setProgress(taskInfo.getProgress());
-            tvSingleTaskSize.setText("Size:" + taskInfo.getCurrentSize() + "/" + taskInfo.getTotalSize());
-        }
     }
 
     private String[] generateStringArray(int size) {
@@ -240,20 +216,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-//            case R.id.bt_single_task_start:
-//                sonic.addTask(singleTaskUrl);
-//                sonic.addTask("http://dldir1.qq.com/weixin/android/weixin6330android920.apk");
-//                break;
-//            case R.id.bt_single_task_stop:
-//                sonic.stopTask(singleTaskUrl);
-//                sonic.stopTask("http://dldir1.qq.com/weixin/android/weixin6330android920.apk");
-//                break;
             case R.id.bt_pause_all:
                 sonic.stopAllTask();
-                break;
-            case R.id.bt_cancel_task:
-                AppInfo appInfo = downloadList.get(cancelTaskPosition);
-                sonic.cancelTask(appInfo.getUrl());
                 break;
         }
     }
@@ -367,6 +331,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             holder.pbTask.setProgress(appInfo.getProgress());
             holder.tvSize.setText("Size:" + appInfo.getCurrentSize() + "/" + appInfo.getTotalSize());
+            holder.tvProgress.setText("Progress:" + appInfo.getProgress() + "%");
         }
     }
 

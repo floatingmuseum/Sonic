@@ -5,7 +5,7 @@ Sonic is a android download library.
 
 1. MultiThreading.
 2. MultiTask.
-3. Breakpoint.
+3. Breakpoint resume.
 4. Auto retry.
 
 ### How to use

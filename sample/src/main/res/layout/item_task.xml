@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -14,20 +15,28 @@
         android:id="@+id/tv_size"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Size:" />
+        android:text="Size:"
+        tools:text="Size:68198682/68198682" />
 
-    <LinearLayout
-        android:gravity="center_vertical"
+    <TextView
+        android:id="@+id/tv_progress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="Progress:"
+        tools:text="Progress:85%" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <ProgressBar
             android:id="@+id/pb_task"
             style="@android:style/Widget.ProgressBar.Horizontal"
-            android:layout_weight="8"
             android:layout_width="0dp"
-            android:layout_height="5dp" />
+            android:layout_height="5dp"
+            android:layout_weight="6" />
 
         <Button
             android:id="@+id/bt_task_state"
@@ -36,5 +45,11 @@
             android:layout_weight="2"
             android:text="Start" />
 
+        <Button
+            android:id="@+id/bt_task_cancel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:text="取消" />
     </LinearLayout>
 </LinearLayout>
