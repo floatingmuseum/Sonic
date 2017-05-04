@@ -37,6 +37,7 @@ public class DownloadTask implements InitListener, ThreadListener {
     private boolean isCancel = false;
     private int activeThreadsNum;
     private DownloadException downloadException;
+    private InitThread initThread;
 
     public DownloadTask(TaskInfo taskInfo, DBManager dbManager, TaskConfig taskConfig, TaskListener taskListener) {
         this.taskInfo = taskInfo;
@@ -60,7 +61,8 @@ public class DownloadTask implements InitListener, ThreadListener {
         threadInfoList = dbManager.getAllThreadInfo(taskInfo.getDownloadUrl());
         if (threadInfoList.size() == 0) {//First time
             Log.i(TAG, "start()...第一次下载此任务." + "..." + taskInfo.getName());
-            new InitThread(taskInfo.getDownloadUrl(), taskInfo.getName(), taskInfo.getDirPath(), this).start();
+            initThread = new InitThread(taskInfo.getDownloadUrl(), taskInfo.getName(), taskInfo.getDirPath(), taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
+            initThread.start();
         } else {
             Log.i(TAG, "start()...继续下载此任务" + "..." + taskInfo.getName());
             initDownloadThread(threadInfoList);
@@ -77,6 +79,9 @@ public class DownloadTask implements InitListener, ThreadListener {
          */
         Log.i(TAG, "stop()...停止下载线程:" + threads.size() + taskInfo.getName() + "..." + stopAfterInitThreadDone);
         if (threads.size() == 0) {
+            if (initThread != null) {
+                initThread.stopThread();
+            }
             stopAfterInitThreadDone = true;
         } else {
             stopAllThreads();
@@ -267,11 +272,11 @@ public class DownloadTask implements InitListener, ThreadListener {
 
             updateProgress();
 
-            if (downloadException==null) {
+            if (downloadException == null) {
                 dbManager.delete(taskInfo);
                 taskInfo.setState(Sonic.STATE_FINISH);
                 taskListener.onFinish(taskInfo);
-            }else{
+            } else {
                 taskInfo.setState(Sonic.STATE_ERROR);
                 taskListener.onError(taskInfo, downloadException);
             }
@@ -282,7 +287,8 @@ public class DownloadTask implements InitListener, ThreadListener {
     public void onInitError(DownloadException e) {
         if (retryTime != 0) {
             retryTime--;
-            new InitThread(taskInfo.getDownloadUrl(), taskInfo.getName(), taskInfo.getDirPath(), this).start();
+            initThread = new InitThread(taskInfo.getDownloadUrl(), taskInfo.getName(), taskInfo.getDirPath(), taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
+            initThread.start();
             return;
         }
         updateTaskInfo(Sonic.STATE_ERROR);

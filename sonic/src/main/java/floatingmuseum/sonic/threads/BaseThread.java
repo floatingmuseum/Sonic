@@ -59,7 +59,6 @@ public abstract class BaseThread extends Thread {
 
             long currentPosition = threadInfo.getCurrentPosition();
             int responseCode = connection.getResponseCode();
-            // TODO: 2017/5/4 如果网络信号不好,线程一直卡在这里,而执行暂停又只能依靠下面的stopThread,导致用户看到下载不动,想点击暂停时却没有反应.
             if (responseCode == getResponseCode()) {
 
                 raf = getRandomAccessFile();
