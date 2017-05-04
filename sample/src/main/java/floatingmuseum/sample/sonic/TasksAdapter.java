@@ -49,9 +49,11 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         if (appInfo.getTotalSize() != 0) {
             holder.tvSize.setText("Size:" + appInfo.getCurrentSize() + "/" + appInfo.getTotalSize());
             holder.pbTask.setProgress(appInfo.getProgress());
+            holder.tvProgress.setText("Progress:" + appInfo.getProgress() + "%");
         } else {
-            holder.tvSize.setText("Size:unknown");
+            holder.tvSize.setText("Size:0/unknown");
             holder.pbTask.setProgress(0);
+            holder.tvProgress.setText("Progress:0%");
         }
         switch (appInfo.getState()) {
             case Sonic.STATE_NONE:
@@ -80,23 +82,28 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     public class TaskViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView tvName;
         TextView tvSize;
+        TextView tvProgress;
         ProgressBar pbTask;
         Button btTaskState;
+        Button btTaskCancel;
 
         public TaskViewHolder(View itemView) {
             super(itemView);
             tvName = (TextView) itemView.findViewById(R.id.tv_name);
             tvSize = (TextView) itemView.findViewById(R.id.tv_size);
+            tvProgress = (TextView) itemView.findViewById(R.id.tv_progress);
             pbTask = (ProgressBar) itemView.findViewById(R.id.pb_task);
             btTaskState = (Button) itemView.findViewById(R.id.bt_task_state);
+            btTaskCancel = (Button) itemView.findViewById(R.id.bt_task_cancel);
 
             btTaskState.setOnClickListener(this);
+            btTaskCancel.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
             if (listener != null) {
-                listener.onChildClick(v.getId(),v, getAdapterPosition());
+                listener.onChildClick(v.getId(), v, getAdapterPosition());
             }
         }
     }
@@ -108,6 +115,6 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     }
 
     public interface OnItemChildClickListener {
-        void onChildClick(int viewId,View view, int position);
+        void onChildClick(int viewId, View view, int position);
     }
 }

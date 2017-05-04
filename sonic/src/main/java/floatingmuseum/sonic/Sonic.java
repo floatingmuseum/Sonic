@@ -52,8 +52,8 @@ public class Sonic implements TaskListener {
     }
 
     public void init(Context applicationContext) {
-
         context = applicationContext;
+        Log.i(TAG, "包名:" + context.getPackageName());
         Log.i(TAG, "Download dir path:" + taskConfig.getDirPath());
         dbManager = new DBManager(context);
         uiHandler = new UIHandler();
@@ -233,7 +233,10 @@ public class Sonic implements TaskListener {
         }
     }
 
-    private void addAllTask(){};
+    private void addAllTask() {
+    }
+
+    ;
 
     public TaskInfo getTaskInfo(String tag) {
         return allTaskInfo.get(tag);
@@ -361,7 +364,8 @@ public class Sonic implements TaskListener {
         }
     }
 
-    private void cancelAllTask(){}
+    private void cancelAllTask() {
+    }
 
     @Override
     public void onStart(TaskInfo taskInfo) {

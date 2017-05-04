@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 
 import floatingmuseum.sonic.DownloadException;
@@ -22,20 +23,23 @@ public class InitThread extends Thread {
     private static final String TAG = InitThread.class.getName();
     private String downloadUrl;
     private String fileName;
-    private InitListener listener;
     private String downloadDirPath;
+    private int readTimeout;
+    private int connectTimeout;
+    private InitListener listener;
 
-    public InitThread(String downloadUrl, String fileName, String downloadDirPath, InitListener listener) {
+    public InitThread(String downloadUrl, String fileName, String downloadDirPath, int readTimeout, int connectTimeout, InitListener listener) {
         this.downloadUrl = downloadUrl;
         this.fileName = fileName;
         this.downloadDirPath = downloadDirPath;
+        this.readTimeout = readTimeout;
+        this.connectTimeout = connectTimeout;
         this.listener = listener;
     }
 
     @Override
     public void run() {
         URL url = null;
-        RandomAccessFile randomAccessFile = null;
         HttpURLConnection connection = null;
         try {
             url = new URL(downloadUrl);
@@ -46,7 +50,8 @@ public class InitThread extends Thread {
 
         try {
             connection = (HttpURLConnection) url.openConnection();
-            connection.setConnectTimeout(3000);
+            connection.setConnectTimeout(connectTimeout);
+            connection.setReadTimeout(readTimeout);
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Range", "bytes=" + 0 + "-");
             int responseCode = connection.getResponseCode();
@@ -59,7 +64,10 @@ public class InitThread extends Thread {
             } else {
                 listener.onInitError(new DownloadException("InitThread Request failed", responseCode));
             }
-        } catch (Exception e) {
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+            listener.onInitError(new DownloadException("InitThread Request failed", e));
+        } catch (IOException e) {
             e.printStackTrace();
             listener.onInitError(new DownloadException("InitThread Request failed", e));
         } finally {
@@ -98,6 +106,12 @@ public class InitThread extends Thread {
                     listener.onInitError(new DownloadException("InitThread Request failed", e));
                 }
             }
+        }
+    }
+
+    public void stopThread() {
+        if (!Thread.interrupted()) {
+            interrupt();
         }
     }
 }

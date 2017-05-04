@@ -1,11 +1,13 @@
 ### Sonic
 Sonic is a android download library.
 
+##### [Sample Apk](https://github.com/floatingmuseum/Sonic/raw/master/apk/Sonic_sample_1.0.0.apk)
+
 ### Features
 
 1. MultiThreading.
 2. MultiTask.
-3. Breakpoint.
+3. Breakpoint resume.
 4. Auto retry.
 
 ### How to use
@@ -89,8 +91,7 @@ Some memory leak found by using leakcanary.i'm working on it,if you have any sol
 
 1. Custom http headers.
 2. Custom http params.
-3. Check if server support multithreadings and breakpoint.
-4. Improve DownloadException by http response code.
+3. Improve DownloadException by http response code.
 
 ### About me
 

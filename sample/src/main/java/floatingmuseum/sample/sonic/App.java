@@ -39,7 +39,7 @@ public class App extends Application {
         Sonic.getInstance()
                 .setActiveTaskNumber(2)
                 .setMaxThreads(5)
-                .setProgressResponseInterval(300)
+                .setProgressResponseInterval(100)
                 .setRetryTime(4)
                 .setReadTimeout(3000)
                 .setConnectTimeout(3000)
