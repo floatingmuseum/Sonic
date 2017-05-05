@@ -69,17 +69,8 @@ public abstract class BaseThread extends Thread {
                     raf.write(buffer, 0, len);
                     currentPosition += len;
                     threadInfo.setCurrentPosition(currentPosition);
-
                     listener.onProgress(threadInfo);
 
-                    if (stopThread) {
-                        //更新数据库,停止循环
-                        updateDB();
-                        isPaused = true;
-                        isDownloading = false;
-                        listener.onPause(threadInfo);
-                        return;
-                    }
                     if (currentPosition > threadInfo.getEndPosition()) {
                         break;
                     }
@@ -107,11 +98,16 @@ public abstract class BaseThread extends Thread {
             downloadException = new DownloadException("DownloadThread failed", e);
             listener.onError(this, downloadException);
         } catch (InterruptedIOException e) {
-            Log.i(TAG, "第" + threadInfo.getId() + "线程停止 by interrupted.");
             e.printStackTrace();
             updateDB();
-            downloadException = new DownloadException("DownloadThread failed", e);
-            listener.onPause(threadInfo);
+            if (stopThread) {
+                Log.i(TAG, "第" + threadInfo.getId() + "线程停止 by user interrupted.");
+                listener.onPause(threadInfo);
+            } else {
+                Log.i(TAG, "第" + threadInfo.getId() + "线程停止 by auto interrupted.");
+                downloadException = new DownloadException("DownloadThread failed", e);
+                listener.onError(this, downloadException);
+            }
         } catch (IOException e) {
             e.printStackTrace();
             downloadException = new DownloadException("DownloadThread failed", e);
@@ -152,10 +148,10 @@ public abstract class BaseThread extends Thread {
     }
 
     public void stopThread() {
+        stopThread = true;
         if (!Thread.interrupted()) {
             interrupt();
         }
-//        stopThread = true;
     }
 
     public boolean isDownloading() {
