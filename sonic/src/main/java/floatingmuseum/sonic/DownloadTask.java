@@ -73,16 +73,18 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     public void stop() {
+        // TODO: 2017/5/5 快速点击开始暂停,会暂停失败,进度条闪烁,并且再点击暂停无效 
+        
         /**
          * 等于0说明，是第一次下载，且处于获取任务长度的阶段,如果此时暂停，没有效果。获取长度后会继续下载
          * 所以设置一个变量来控制，当长度获取完毕后，检查变量，可以获知用户是否在获取长度阶段点击了暂停
          */
         Log.i(TAG, "stop()...停止下载线程:" + threads.size() + taskInfo.getName() + "..." + stopAfterInitThreadDone);
         if (threads.size() == 0) {
+            stopAfterInitThreadDone = true;
             if (initThread != null) {
                 initThread.stopThread();
             }
-            stopAfterInitThreadDone = true;
         } else {
             stopAllThreads();
         }
@@ -109,16 +111,6 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     private void initDownloadThread(List<ThreadInfo> threadInfoList) {
-        if (stopAfterInitThreadDone) {
-            if (isCancel) {
-                cancelTask();
-                return;
-            }
-            taskInfo.setState(Sonic.STATE_PAUSE);
-            dbManager.updateTaskInfo(taskInfo);
-            taskListener.onProgress(taskInfo);
-            return;
-        }
         Log.i(TAG, "TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getName());
         for (ThreadInfo info : threadInfoList) {
             Log.i(TAG, "initDownloadThreadInfo线程" + info.getId() + "号...初始位置:" + info.getStartPosition() + "...当前位置:" + info.getCurrentPosition() + "...末尾位置:" + info.getEndPosition() + "..." + taskInfo.getName());
@@ -160,6 +152,18 @@ public class DownloadTask implements InitListener, ThreadListener {
             threadInfoList.add(threadInfo);
             dbManager.insertThreadInfo(threadInfo);//第一次初始化，存储线程信息到数据库
         }
+
+        if (stopAfterInitThreadDone) {
+            if (isCancel) {
+                cancelTask();
+                return;
+            }
+            taskInfo.setState(Sonic.STATE_PAUSE);
+            dbManager.updateTaskInfo(taskInfo);
+            taskListener.onProgress(taskInfo);
+            return;
+        }
+
         initDownloadThread(threadInfoList);
         for (DownloadThread thread : threads) {
             thread.start();
