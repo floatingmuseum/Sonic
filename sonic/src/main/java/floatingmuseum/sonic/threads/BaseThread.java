@@ -152,10 +152,11 @@ public abstract class BaseThread extends Thread {
     }
 
     public void stopThread() {
-        if (!Thread.interrupted()) {
-            interrupt();
-        }
-//        stopThread = true;
+        Log.i(TAG,"stopThread()...interrupted:"+Thread.interrupted());
+//        if (!Thread.interrupted()) {
+//            interrupt();
+//        }
+        stopThread = true;
     }
 
     public boolean isDownloading() {
