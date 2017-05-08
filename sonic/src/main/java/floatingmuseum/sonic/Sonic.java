@@ -233,10 +233,7 @@ public class Sonic implements TaskListener {
         }
     }
 
-    private void addAllTask() {
-    }
-
-    ;
+    private void addAllTask() {}
 
     public TaskInfo getTaskInfo(String tag) {
         return allTaskInfo.get(tag);
