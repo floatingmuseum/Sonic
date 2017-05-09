@@ -206,6 +206,9 @@ public class Sonic implements TaskListener {
         addTask(downloadUrl, tag, fileName, null);
     }
 
+    // TODO: 2017/5/9 参数多变,新建一个DownloadRequest比较好 
+    public void addTask(String downloadUrl,boolean forceStart){}
+
     /**
      * downloadUrl will be the tag for this task.
      */
