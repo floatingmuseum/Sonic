@@ -9,8 +9,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import floatingmuseum.sonic.db.DBManager;
+import floatingmuseum.sonic.entity.DownloadRequest;
 import floatingmuseum.sonic.entity.TaskInfo;
 import floatingmuseum.sonic.entity.UIListenerMessage;
 import floatingmuseum.sonic.listener.DownloadListener;
@@ -36,6 +39,9 @@ public class Sonic implements TaskListener {
     public static final int STATE_FINISH = 5;
     public static final int STATE_CANCEL = 7;
 
+    public static final int FORCE_START_NO = 0;
+    public static final int FORCE_START_YES = 1;
+
     private UIHandler uiHandler;
     private static Context context;
     private static Sonic sonic;
@@ -45,8 +51,10 @@ public class Sonic implements TaskListener {
     private Map<String, TaskInfo> allTaskInfo;
     private Map<String, DownloadTask> activeTasks;
     private List<DownloadTask> waitingTasks;
+    private Map<String, DownloadTask> forceStartTasks;
     private DBManager dbManager;
     private TaskConfig taskConfig = new TaskConfig();
+    private ExecutorService threadsPool;
 
     private Sonic() {
     }
@@ -61,6 +69,9 @@ public class Sonic implements TaskListener {
         allTaskInfo = new HashMap<>();
         activeTasks = new HashMap<>();
         waitingTasks = new ArrayList<>();
+        forceStartTasks = new HashMap<>();
+        threadsPool = Executors.newCachedThreadPool();
+
         if (!ListUtil.isEmpty(allTask)) {
             for (TaskInfo downloadTask : allTask) {
                 allTaskInfo.put(downloadTask.getTag(), downloadTask);
@@ -88,19 +99,6 @@ public class Sonic implements TaskListener {
     }
 
     /**
-     * <p>How many threads working for a task.
-     * <p>default is 3.
-     */
-    public Sonic setMaxThreads(int maxThreads) {
-        if (maxThreads < 1) {
-            taskConfig.setMaxThreads(1);
-        } else {
-            taskConfig.setMaxThreads(maxThreads);
-        }
-        return this;
-    }
-
-    /**
      * <p>How many tasks can running at the same time.
      * <p>default is 3.
      */
@@ -109,6 +107,19 @@ public class Sonic implements TaskListener {
             this.activeTaskNumber = 1;
         } else {
             this.activeTaskNumber = activeTaskNumber;
+        }
+        return this;
+    }
+
+    /**
+     * <p>How many threads working for a task.
+     * <p>default is 3.
+     */
+    public Sonic setMaxThreads(int maxThreads) {
+        if (maxThreads < 1) {
+            taskConfig.setMaxThreads(1);
+        } else {
+            taskConfig.setMaxThreads(maxThreads);
         }
         return this;
     }
@@ -203,40 +214,24 @@ public class Sonic implements TaskListener {
     }
 
     public void addTask(String downloadUrl, String tag, String fileName) {
-        addTask(downloadUrl, tag, fileName, null);
+        DownloadRequest request = new DownloadRequest().setUrl(downloadUrl)
+                .setTag(tag)
+                .setFileName(fileName);
+        addTask(request);
     }
 
-    // TODO: 2017/5/9 参数多变,新建一个DownloadRequest比较好 
-    public void addTask(String downloadUrl,boolean forceStart){}
-
-    /**
-     * downloadUrl will be the tag for this task.
-     */
-    public void addTask(String downloadUrl, TaskConfig singleTaskConfig) {
-        addTask(downloadUrl, downloadUrl, singleTaskConfig);
-    }
-
-    public void addTask(String downloadUrl, String tag, TaskConfig singleTaskConfig) {
-        addTask(downloadUrl, tag, FileUtil.getUrlFileName(downloadUrl), singleTaskConfig);
-    }
-
-    public void addTask(String downloadUrl, String tag, String fileName, TaskConfig singleTaskConfig) {
-        //check is this task inside database
-        if (allTaskInfo.containsKey(tag)) {
-            TaskInfo taskInfo = allTaskInfo.get(tag);
-            initDownload(taskInfo, true, null);
+    public void addTask(DownloadRequest request) {
+        if (allTaskInfo.containsKey(request.getTag())) {
+            TaskInfo taskInfo = allTaskInfo.get(request.getTag());
+            initDownload(taskInfo, true, request);
         } else {
-            TaskInfo taskInfo;
-            if (singleTaskConfig != null) {
-                taskInfo = new TaskInfo(downloadUrl, tag, fileName, singleTaskConfig.getDirPath(), singleTaskConfig.getDirPath() + "/" + fileName, 0, 0, 0, 0, 0);
-            } else {
-                taskInfo = new TaskInfo(downloadUrl, tag, fileName, taskConfig.getDirPath(), taskConfig.getDirPath() + "/" + fileName, 0, 0, 0, 0, 0);
-            }
-            initDownload(taskInfo, false, singleTaskConfig);
+            TaskInfo taskInfo = new TaskInfo(request.getUrl(), request.getTag(), request.getFileName(), request.getDirPath(), request.getDirPath() + "/" + request.getFileName(), 0, 0, 0, 0, 0);
+            initDownload(taskInfo, false, request);
         }
     }
 
-    private void addAllTask() {}
+    private void addAllTask() {
+    }
 
     public TaskInfo getTaskInfo(String tag) {
         return allTaskInfo.get(tag);
@@ -246,12 +241,13 @@ public class Sonic implements TaskListener {
         return allTaskInfo;
     }
 
-    public TaskConfig getFinalTaskConfig(TaskInfo taskInfo, TaskConfig singleTaskConfig) {
+    public TaskConfig getFinalTaskConfig(TaskInfo taskInfo, DownloadRequest request) {
         TaskConfig existTaskConfig = dbManager.queryTaskConfig(taskInfo.getTag());
         if (existTaskConfig != null) {//数据库存在此任务配置,使用数据库配置
             Log.i(TAG, "任务配置...数据库已存在:" + existTaskConfig.toString());
             return existTaskConfig;
-        } else if (singleTaskConfig != null) {//数据库不存在配置,且单一任务设置不为空,存储并使用此配置
+        } else if (request.isCustomTaskConfig()) {//数据库不存在配置,且单一任务设置不为空,存储并使用此配置
+            TaskConfig singleTaskConfig = request.getTaskConfig();
             dbManager.insertTaskConfig(taskInfo.getTag(), singleTaskConfig);
             Log.i(TAG, "任务配置...数据库不存在...存储:" + singleTaskConfig.toString() + "..." + existTaskConfig);
             return singleTaskConfig;
@@ -261,32 +257,53 @@ public class Sonic implements TaskListener {
         }
     }
 
-    private void initDownload(TaskInfo taskInfo, boolean isExist, TaskConfig singleTaskConfig) {
-        TaskConfig finalTaskConfig = getFinalTaskConfig(taskInfo, singleTaskConfig);
+    private void initDownload(TaskInfo taskInfo, boolean isExist, DownloadRequest request) {
+        TaskConfig finalTaskConfig = getFinalTaskConfig(taskInfo, request);
         if (!isExist) {
             dbManager.insertTaskInfo(taskInfo);
             allTaskInfo.put(taskInfo.getTag(), taskInfo);
         }
 
+        if (isForceStart(taskInfo, finalTaskConfig)) {
+            Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "强制开始下载");
+            return;
+        }
+
         if (activeTasks.size() == activeTaskNumber) {
             taskInfo.setState(Sonic.STATE_WAITING);
             Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "进入等待队列");
-            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, this);
+            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
             waitingTasks.add(downloadTask);
             sendMessage(taskInfo, STATE_WAITING, null);
         } else {
             Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "进入下载队列");
-            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, this);
+            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
             activeTasks.put(taskInfo.getTag(), downloadTask);
             downloadTask.start();
         }
         Log.i(TAG, "initDownload()...最大同时下载任务数:" + activeTaskNumber + "...当前任务数:" + activeTasks.size() + "...等待任务数:" + waitingTasks.size());
     }
 
-    public void stopTask(String tag) {
+    private boolean isForceStart(TaskInfo taskInfo, TaskConfig finalTaskConfig) {
+        Log.i(TAG, "isForceStart:" + finalTaskConfig.toString());
+        if (finalTaskConfig.getForceStart() == FORCE_START_YES) {
+            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
+            forceStartTasks.put(taskInfo.getTag(), downloadTask);
+            downloadTask.start();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void pauseTask(String tag) {
         if (activeTasks.containsKey(tag)) {
             Log.i(TAG, "stopTask()...activeTasks:" + activeTasks.size() + "..." + tag);
             activeTasks.get(tag).stop();
+            return;
+        } else if (forceStartTasks.containsKey(tag)) {
+            Log.i(TAG, "stopTask()...forceStartTasks:" + activeTasks.size() + "..." + tag);
+            forceStartTasks.get(tag).stop();
         } else {
             Log.i(TAG, "stopTask()...waitingTasks:" + waitingTasks.size() + "..." + tag);
             for (DownloadTask waitingTask : waitingTasks) {
@@ -300,17 +317,16 @@ public class Sonic implements TaskListener {
                     return;
                 }
             }
-            Log.i(TAG, "Which task that you want removed,doesn't exist.");
+            Log.i(TAG, "Which task that you want stop,doesn't exist.");
         }
     }
 
-    public void stopAllTask() {
+    public void pauseAllTask() {
         //移除等待队列的任务
         for (DownloadTask waitingTask : waitingTasks) {
             TaskInfo taskInfo = waitingTask.getTaskInfo();
             taskInfo.setState(STATE_PAUSE);
             sendMessage(taskInfo, STATE_PAUSE, null);
-//            waitingTasks.remove(waitingTask);
         }
         waitingTasks.clear();
 
@@ -318,10 +334,14 @@ public class Sonic implements TaskListener {
         for (String key : activeTasks.keySet()) {
             DownloadTask downloadTask = activeTasks.get(key);
             downloadTask.stop();
-//            activeTasks.remove(key);
         }
-        activeTasks.clear();
-        cancelTask("");
+//        activeTasks.clear();
+
+        for (String key : forceStartTasks.keySet()) {
+            DownloadTask downloadTask = forceStartTasks.get(key);
+            downloadTask.stop();
+        }
+//        cancelTask("");
     }
 
     /**
@@ -333,9 +353,13 @@ public class Sonic implements TaskListener {
         if (activeTasks.containsKey(tag)) {
             DownloadTask task = activeTasks.get(tag);
             task.cancel();
-            FileUtil.deleteFile(task.getTaskInfo().getFilePath());
-            activeTasks.remove(tag);
-            allTaskInfo.remove(tag);
+            return;
+        }
+
+        //处于强制下载队列中
+        if (forceStartTasks.containsKey(tag)) {
+            DownloadTask task = forceStartTasks.get(tag);
+            task.cancel();
             return;
         }
 
@@ -343,13 +367,11 @@ public class Sonic implements TaskListener {
         for (DownloadTask waitingTask : waitingTasks) {
             if (tag.equals(waitingTask.getTaskInfo().getTag())) {
                 waitingTask.cancelTask();
-                FileUtil.deleteFile(waitingTask.getTaskInfo().getFilePath());
                 waitingTasks.remove(waitingTask);
-                allTaskInfo.remove(waitingTask);
+                allTaskInfo.remove(waitingTask.getTaskInfo());
                 return;
             }
         }
-
 
         if (allTaskInfo.containsKey(tag)) {
             TaskInfo taskInfo = allTaskInfo.get(tag);
@@ -357,10 +379,9 @@ public class Sonic implements TaskListener {
             taskInfo.setCurrentSize(0);
             taskInfo.setTotalSize(0);
             taskInfo.setState(Sonic.STATE_CANCEL);
-            onCancel(taskInfo);
             dbManager.delete(taskInfo);
             FileUtil.deleteFile(taskInfo.getFilePath());
-            allTaskInfo.remove(tag);
+            onCancel(taskInfo);
         }
     }
 
@@ -400,6 +421,8 @@ public class Sonic implements TaskListener {
     @Override
     public void onCancel(TaskInfo taskInfo) {
         sendMessage(taskInfo, STATE_CANCEL, null);
+        checkWaitingTasks(taskInfo);
+        allTaskInfo.remove(taskInfo.getTag());
     }
 
     /**
@@ -407,14 +430,20 @@ public class Sonic implements TaskListener {
      */
     private void checkWaitingTasks(TaskInfo taskInfo) {
         // TODO: 2017/4/6 有时会有超过 activeTaskNumber 的任务在执行
-        activeTasks.remove(taskInfo.getTag());
-        if (waitingTasks.size() > 0) {
-            DownloadTask downloadTask = waitingTasks.get(0);
-            waitingTasks.remove(0);
-            activeTasks.put(downloadTask.getTaskInfo().getTag(), downloadTask);
-            downloadTask.start();
+        String tag = taskInfo.getTag();
+        if (activeTasks.containsKey(tag)) {
+            activeTasks.remove(taskInfo.getTag());
+            if (waitingTasks.size() > 0) {
+                DownloadTask downloadTask = waitingTasks.get(0);
+                waitingTasks.remove(0);
+                activeTasks.put(downloadTask.getTaskInfo().getTag(), downloadTask);
+                downloadTask.start();
+            }
+        } else if (forceStartTasks.containsKey(tag)) {
+            forceStartTasks.remove(tag);
         }
-        Log.i(TAG, "onFinish()...最大同时下载任务数:" + activeTaskNumber + "...当前任务数:" + activeTasks.size() + "...等待任务数:" + waitingTasks.size());
+
+        Log.i(TAG, "checkWaitingTasks()...最大同时下载任务数:" + activeTaskNumber + "...当前任务数:" + activeTasks.size() + "...等待任务数:" + waitingTasks.size() + "...强制下载队列:" + forceStartTasks.size());
     }
 
     private void sendMessage(TaskInfo taskInfo, int downloadState, DownloadException downloadException) {

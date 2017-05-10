@@ -24,7 +24,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     //创建任务配置表
     private static final String SQL_TASKS_CONFIG_TABLE_CREATE = "create table task_config(_id integer primary key autoincrement,"+
-            "tag text,max_threads integer,retry_time integer,progress_response_interval integer,connect_timeout integer,read_timeout integer)";
+            "tag text,max_threads integer,retry_time integer,progress_response_interval integer,connect_timeout integer,read_timeout integer,force_start integer)";
 
     //删除表
     private static final String SQL_DROP_THREADS_TABLE = "drop table if exists thread_info";

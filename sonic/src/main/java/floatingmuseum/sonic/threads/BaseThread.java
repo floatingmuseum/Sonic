@@ -20,7 +20,7 @@ import floatingmuseum.sonic.listener.ThreadListener;
  * Created by Floatingmuseum on 2017/5/2.
  */
 
-public abstract class BaseThread extends Thread {
+public abstract class BaseThread implements Runnable {
     private static final String TAG = DownloadThread.class.getName();
 
     protected boolean stopThread = false;
@@ -66,6 +66,11 @@ public abstract class BaseThread extends Thread {
                 byte[] buffer = new byte[1024 * 4];
                 int len;
                 while ((len = inputStream.read(buffer)) != -1) {
+                    if (stopThread) {
+                        updateDB();
+                        listener.onPause(threadInfo);
+                        return;
+                    }
                     raf.write(buffer, 0, len);
                     currentPosition += len;
                     threadInfo.setCurrentPosition(currentPosition);

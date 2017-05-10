@@ -45,9 +45,9 @@ public class DBManager {
     }
 
     public synchronized void insertTaskConfig(String tag, TaskConfig config) {
-        String insertSql = "insert into task_config(tag,max_threads,retry_time,progress_response_interval,connect_timeout,read_timeout) values(?,?,?,?,?,?)";
+        String insertSql = "insert into task_config(tag,max_threads,retry_time,progress_response_interval,connect_timeout,read_timeout,force_start) values(?,?,?,?,?,?,?)";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.execSQL(insertSql, new Object[]{tag, config.getMaxThreads(), config.getRetryTime(), config.getProgressResponseInterval(), config.getConnectTimeout(), config.getReadTimeout()});
+        db.execSQL(insertSql, new Object[]{tag, config.getMaxThreads(), config.getRetryTime(), config.getProgressResponseInterval(), config.getConnectTimeout(), config.getReadTimeout(),config.getForceStart()});
         db.close();
     }
 
@@ -134,7 +134,7 @@ public class DBManager {
             taskConfig.setProgressResponseInterval(cursor.getInt(cursor.getColumnIndex("progress_response_interval")));
             taskConfig.setConnectTimeout(cursor.getInt(cursor.getColumnIndex("connect_timeout")));
             taskConfig.setReadTimeout(cursor.getInt(cursor.getColumnIndex("read_timeout")));
-
+            taskConfig.setForceStart(cursor.getInt(cursor.getColumnIndex("force_start")));
         }
         cursor.close();
         db.close();

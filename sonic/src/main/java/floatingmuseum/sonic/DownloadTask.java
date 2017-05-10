@@ -5,6 +5,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import floatingmuseum.sonic.db.DBManager;
 import floatingmuseum.sonic.entity.TaskInfo;
@@ -36,10 +37,11 @@ public class DownloadTask implements InitListener, ThreadListener {
     private boolean stopAfterInitThreadDone = false;
     private boolean isCancel = false;
     private int activeThreadsNum;
+    private ExecutorService  threadsPool;
     private DownloadException downloadException;
     private InitThread initThread;
 
-    public DownloadTask(TaskInfo taskInfo, DBManager dbManager, TaskConfig taskConfig, TaskListener taskListener) {
+    public DownloadTask(TaskInfo taskInfo, DBManager dbManager, TaskConfig taskConfig, ExecutorService threadsPool, TaskListener taskListener) {
         this.taskInfo = taskInfo;
         this.dbManager = dbManager;
         this.taskListener = taskListener;
@@ -49,6 +51,7 @@ public class DownloadTask implements InitListener, ThreadListener {
         Log.i(TAG, "任务详情...名称:" + taskInfo.getName() + "...最大线程数:" + taskConfig.getMaxThreads() + "...进度反馈最小时间间隔:" + taskConfig.getProgressResponseInterval() + "...文件存储路径:" + taskInfo.getFilePath());
         threads = new ArrayList<>();
         FileUtil.initDir(taskInfo.getDirPath());
+        this.threadsPool = threadsPool;
     }
 
     public TaskInfo getTaskInfo() {
@@ -66,15 +69,20 @@ public class DownloadTask implements InitListener, ThreadListener {
         } else {
             Log.i(TAG, "start()...继续下载此任务" + "..." + taskInfo.getName());
             initDownloadThread(threadInfoList);
-            for (DownloadThread thread : threads) {
-                thread.start();
+            if (threads.size() > 0) {
+                for (DownloadThread thread : threads) {
+                    threadsPool.execute(thread);
+//                    thread.start();
+                }
+            } else {
+                taskListener.onFinish(taskInfo);
             }
         }
     }
 
     public void stop() {
         // TODO: 2017/5/5 快速点击开始暂停,会暂停失败,进度条闪烁,并且再点击暂停无效 
-        
+
         /**
          * 等于0说明，是第一次下载，且处于获取任务长度的阶段,如果此时暂停，没有效果。获取长度后会继续下载
          * 所以设置一个变量来控制，当长度获取完毕后，检查变量，可以获知用户是否在获取长度阶段点击了暂停
@@ -107,6 +115,7 @@ public class DownloadTask implements InitListener, ThreadListener {
         taskInfo.setTotalSize(0);
         taskInfo.setState(Sonic.STATE_CANCEL);
         dbManager.delete(taskInfo);
+        FileUtil.deleteFile(taskInfo.getFilePath());
         taskListener.onCancel(taskInfo);
     }
 
@@ -166,7 +175,8 @@ public class DownloadTask implements InitListener, ThreadListener {
 
         initDownloadThread(threadInfoList);
         for (DownloadThread thread : threads) {
-            thread.start();
+            threadsPool.execute(thread);
+//            thread.start();
         }
     }
 
@@ -228,7 +238,8 @@ public class DownloadTask implements InitListener, ThreadListener {
             threads.remove(errorThread);
             DownloadThread retryThread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
             threads.add(retryThread);
-            retryThread.start();
+            threadsPool.execute(retryThread);
+//            retryThread.start();
             return true;
         } else {
             return false;

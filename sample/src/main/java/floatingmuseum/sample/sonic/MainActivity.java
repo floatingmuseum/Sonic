@@ -30,10 +30,11 @@ import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.Sonic;
 import floatingmuseum.sonic.Tails;
 import floatingmuseum.sonic.TaskConfig;
+import floatingmuseum.sonic.entity.DownloadRequest;
 import floatingmuseum.sonic.entity.TaskInfo;
 import floatingmuseum.sonic.listener.DownloadListener;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = MainActivity.class.getName();
     private int request_permission_code = 233;
@@ -174,17 +175,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void executeCommand(AppInfo appInfo) {
         switch (appInfo.getState()) {
             case Sonic.STATE_START:
-                sonic.stopTask(appInfo.getUrl());
+                sonic.pauseTask(appInfo.getUrl());
                 break;
             case Sonic.STATE_NONE:
             case Sonic.STATE_PAUSE:
             case Sonic.STATE_ERROR:
             case Sonic.STATE_CANCEL:
-                sonic.addTask(appInfo.getUrl());
+                if (appInfo.getName().equals("QQ同步助手")) {
+                    DownloadRequest request = new DownloadRequest().setUrl(appInfo.getUrl()).setForceStart(Sonic.FORCE_START_YES);
+                    sonic.addTask(request);
+                } else {
+                    sonic.addTask(appInfo.getUrl());
+                }
                 break;
             case Sonic.STATE_WAITING:
             case Sonic.STATE_DOWNLOADING:
-                sonic.stopTask(appInfo.getUrl());
+                sonic.pauseTask(appInfo.getUrl());
                 break;
             case Sonic.STATE_FINISH:
                 sonic.addTask(appInfo.getUrl());
@@ -218,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.bt_pause_all:
-                sonic.stopAllTask();
+                sonic.pauseAllTask();
                 break;
         }
     }
