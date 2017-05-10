@@ -297,6 +297,7 @@ public class Sonic implements TaskListener {
     }
 
     public void pauseTask(String tag) {
+        // TODO: 2017/5/10 暂停存在延迟 
         if (activeTasks.containsKey(tag)) {
             Log.i(TAG, "stopTask()...activeTasks:" + activeTasks.size() + "..." + tag);
             activeTasks.get(tag).stop();
@@ -349,6 +350,7 @@ public class Sonic implements TaskListener {
      * <p>if this task downloaded by using addTask(url),so the url is the tag.
      */
     public void cancelTask(String tag) {
+        // TODO: 2017/5/10 取消任务可以立即将任务从队列中删除并反馈用户.后续删除数据库信息,本地文件删除等操作可以继续执行.
         //处于下载队列中时
         if (activeTasks.containsKey(tag)) {
             DownloadTask task = activeTasks.get(tag);

@@ -1,7 +1,7 @@
 ### Sonic
 Sonic is a android download library.
 
-##### [Sample Apk](https://github.com/floatingmuseum/Sonic/raw/master/apk/Sonic_sample_1.0.0.apk)
+##### [Sample Apk](https://github.com/floatingmuseum/Sonic/raw/master/apk/Sonic_sample.apk)
 
 ### Features
 
@@ -71,14 +71,29 @@ Sonic sonic = Sonic.getInstance().registerDownloadListener(new DownloadListener(
                     }
 		});
                 
-//start download
+//start a simple download,3 ways
 sonic.addTask(url);
+sonic.addTask(url,tag);
+sonic.addTask(url,tag,fileName);
+
+//start a DownloadRequest,custom multiple config for a single task if you need.
+DownloadRequest request = new DownloadRequest().setUrl(url)
+                            .setTag("tag")
+                            .setFileName("test.apk")
+                            .setDirPath(Environment.getExternalStorageDirectory().getAbsolutePath())
+                            .setMaxThreads(4)
+                            .setRetryTime(5)
+                            .setConnectTimeout(5000)
+                            .setReadTimeout(5000)
+                            .setProgressResponseInterval(400)
+                            .setForceStart(Sonic.FORCE_START_YES);
+sonic.addTask(request);
 
 //stop download
-sonic.stopTask(tag);
+sonic.pauseTask(tag);
 
 //stop all task
-sonic.stopAllTask();
+sonic.pauseAllTask();
 
 //cancel task
 sonic.cancelTask(tag);
