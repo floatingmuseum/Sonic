@@ -71,10 +71,10 @@ public class Sonic implements TaskListener {
         waitingTasks = new ArrayList<>();
         forceStartTasks = new HashMap<>();
         threadsPool = Executors.newCachedThreadPool();
-
         if (!ListUtil.isEmpty(allTask)) {
-            for (TaskInfo downloadTask : allTask) {
-                allTaskInfo.put(downloadTask.getTag(), downloadTask);
+            for (TaskInfo taskInfo : allTask) {
+                Log.i(TAG, "init()...数据库中存在的任务:" + taskInfo.toString());
+                allTaskInfo.put(taskInfo.getTag(), taskInfo);
             }
         }
     }
@@ -258,6 +258,7 @@ public class Sonic implements TaskListener {
     }
 
     private void initDownload(TaskInfo taskInfo, boolean isExist, DownloadRequest request) {
+        Log.i(TAG, "initDownload()...初始化下载TaskInfo:" + taskInfo.toString());
         TaskConfig finalTaskConfig = getFinalTaskConfig(taskInfo, request);
         if (!isExist) {
             dbManager.insertTaskInfo(taskInfo);
@@ -265,7 +266,6 @@ public class Sonic implements TaskListener {
         }
 
         if (isForceStart(taskInfo, finalTaskConfig)) {
-            Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "强制开始下载");
             return;
         }
 
@@ -287,6 +287,7 @@ public class Sonic implements TaskListener {
     private boolean isForceStart(TaskInfo taskInfo, TaskConfig finalTaskConfig) {
         Log.i(TAG, "isForceStart:" + finalTaskConfig.toString());
         if (finalTaskConfig.getForceStart() == FORCE_START_YES) {
+            Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "强制开始下载");
             DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
             forceStartTasks.put(taskInfo.getTag(), downloadTask);
             downloadTask.start();

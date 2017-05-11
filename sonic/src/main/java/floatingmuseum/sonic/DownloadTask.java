@@ -37,7 +37,7 @@ public class DownloadTask implements InitListener, ThreadListener {
     private boolean stopAfterInitThreadDone = false;
     private boolean isCancel = false;
     private int activeThreadsNum;
-    private ExecutorService  threadsPool;
+    private ExecutorService threadsPool;
     private DownloadException downloadException;
     private InitThread initThread;
 
@@ -120,6 +120,7 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     private void initDownloadThread(List<ThreadInfo> threadInfoList) {
+        // TODO: 2017/5/11 部分情况下会出现TaskInfo中的各种size均为0,而数据库线程表中却存在已下载过部分数据的情况,导致数据混乱.
         Log.i(TAG, "TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getName());
         for (ThreadInfo info : threadInfoList) {
             Log.i(TAG, "initDownloadThreadInfo线程" + info.getId() + "号...初始位置:" + info.getStartPosition() + "...当前位置:" + info.getCurrentPosition() + "...末尾位置:" + info.getEndPosition() + "..." + taskInfo.getName());
@@ -169,7 +170,7 @@ public class DownloadTask implements InitListener, ThreadListener {
             }
             taskInfo.setState(Sonic.STATE_PAUSE);
             dbManager.updateTaskInfo(taskInfo);
-            taskListener.onProgress(taskInfo);
+            taskListener.onPause(taskInfo);
             return;
         }
 
@@ -292,7 +293,7 @@ public class DownloadTask implements InitListener, ThreadListener {
                 taskInfo.setState(Sonic.STATE_FINISH);
                 taskListener.onFinish(taskInfo);
             } else {
-                taskInfo.setState(Sonic.STATE_ERROR);
+                updateTaskInfo(Sonic.STATE_ERROR);
                 taskListener.onError(taskInfo, downloadException);
             }
         }
