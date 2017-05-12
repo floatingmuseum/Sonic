@@ -432,7 +432,6 @@ public class Sonic implements TaskListener {
      * 查看等待列表中是否有任务
      */
     private void checkWaitingTasks(TaskInfo taskInfo) {
-        // TODO: 2017/4/6 有时会有超过 activeTaskNumber 的任务在执行
         String tag = taskInfo.getTag();
         if (activeTasks.containsKey(tag)) {
             activeTasks.remove(taskInfo.getTag());

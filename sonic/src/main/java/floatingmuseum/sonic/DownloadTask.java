@@ -81,8 +81,6 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     public void stop() {
-        // TODO: 2017/5/5 快速点击开始暂停,会暂停失败,进度条闪烁,并且再点击暂停无效 
-
         /**
          * 等于0说明，是第一次下载，且处于获取任务长度的阶段,如果此时暂停，没有效果。获取长度后会继续下载
          * 所以设置一个变量来控制，当长度获取完毕后，检查变量，可以获知用户是否在获取长度阶段点击了暂停
@@ -120,7 +118,6 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     private void initDownloadThread(List<ThreadInfo> threadInfoList) {
-        // TODO: 2017/5/11 部分情况下会出现TaskInfo中的各种size均为0,而数据库线程表中却存在已下载过部分数据的情况,导致数据混乱.
         Log.i(TAG, "TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getName());
         for (ThreadInfo info : threadInfoList) {
             Log.i(TAG, "initDownloadThreadInfo线程" + info.getId() + "号...初始位置:" + info.getStartPosition() + "...当前位置:" + info.getCurrentPosition() + "...末尾位置:" + info.getEndPosition() + "..." + taskInfo.getName());
@@ -151,7 +148,6 @@ public class DownloadTask implements InitListener, ThreadListener {
     private void initMultipleThreads(long contentLength) {
         dbManager.updateTaskInfo(taskInfo);
         updateProgress();
-//        taskListener.onProgress(taskInfo);
         threadInfoList = new ArrayList<>();
         long blockLength = contentLength / maxThreads;
 
