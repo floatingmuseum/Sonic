@@ -150,7 +150,8 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     private void initMultipleThreads(long contentLength) {
         dbManager.updateTaskInfo(taskInfo);
-        taskListener.onProgress(taskInfo);
+        updateProgress();
+//        taskListener.onProgress(taskInfo);
         threadInfoList = new ArrayList<>();
         long blockLength = contentLength / maxThreads;
 
