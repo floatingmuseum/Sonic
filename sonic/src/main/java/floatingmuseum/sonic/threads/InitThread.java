@@ -84,13 +84,11 @@ public class InitThread extends Thread {
             return;
         }
         File dir = new File(downloadDirPath);
-        //创建文件
+        //Create file
         File file = new File(dir, fileName);
-        //操作的文件，和可操作的模式，读写删
         RandomAccessFile randomAccessFile = null;
         try {
             randomAccessFile = new RandomAccessFile(file, "rwd");
-            //设置长度
             randomAccessFile.setLength(contentLength);
             listener.onGetContentLength(contentLength, isSupportRange);
         } catch (FileNotFoundException e) {

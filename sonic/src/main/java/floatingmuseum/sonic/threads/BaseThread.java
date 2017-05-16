@@ -25,7 +25,6 @@ public abstract class BaseThread implements Runnable {
 
     protected boolean stopThread = false;
 
-    //下载文件夹路径
     protected String dirPath;
     protected String fileName;
     protected int readTimeout;
@@ -41,13 +40,12 @@ public abstract class BaseThread implements Runnable {
 
     @Override
     public void run() {
-        Log.i(TAG, threadInfo.getId() + "号线程开始工作" + "..." + fileName);
+        Log.i(TAG, threadInfo.getId() + "Thread start work" + "..." + fileName);
         isDownloading = true;
         HttpURLConnection connection = null;
         RandomAccessFile raf = null;
         InputStream inputStream = null;
 
-        //获取文件长度
         URL url = null;
         try {
             url = new URL(threadInfo.getUrl());
@@ -80,8 +78,8 @@ public abstract class BaseThread implements Runnable {
                         break;
                     }
                 }
-                //当前区块下载完成
-                Log.i(TAG, threadInfo.getId() + "号线程完成工作" + "..." + fileName);
+                //This thread has finished its work.
+                Log.i(TAG, threadInfo.getId() + "Thread has finished its work" + "..." + fileName);
                 updateDB();
                 isFinished = true;
                 isDownloading = false;
@@ -90,7 +88,7 @@ public abstract class BaseThread implements Runnable {
             } else {
                 isFailed = true;
                 isDownloading = false;
-                Log.i(TAG, threadInfo.getId() + "号线程出现异常" + "..." + fileName + "..." + responseCode);
+                Log.i(TAG, threadInfo.getId() + "Thread exception occurred" + "..." + fileName + "..." + responseCode);
                 downloadException = new DownloadException("DownloadThread failed", responseCode);
                 listener.onError(this, downloadException);
             }
@@ -106,10 +104,10 @@ public abstract class BaseThread implements Runnable {
             e.printStackTrace();
             updateDB();
             if (stopThread) {
-                Log.i(TAG, "第" + threadInfo.getId() + "线程停止 by user interrupted.");
+                Log.i(TAG, threadInfo.getId() + "Thread stop by user interrupted.");
                 listener.onPause(threadInfo);
             } else {
-                Log.i(TAG, "第" + threadInfo.getId() + "线程停止 by auto interrupted.");
+                Log.i(TAG, threadInfo.getId() + "Thread stop by auto interrupted.");
                 downloadException = new DownloadException("DownloadThread failed", e);
                 listener.onError(this, downloadException);
             }

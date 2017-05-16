@@ -62,14 +62,13 @@ public class FileUtil {
     }
 
     /**
-     * <p>未实现的方法
-     * <p>判断文件是否完整
-     * <p>1.比较文件的md5值是否和服务器提供的md5值相同
-     * <p>2.比较文件长度和服务器文件长度
-     * <p>3.开始下载时将文件名扩展名改为.tmp,当下载完毕后改为原有扩展名.之后检查如果扩展名不是.tmp,即表示下载完毕.
+     * <p>Estimate is the file complete
+     * <p>1.Compare md5 between local file and server file.
+     * <p>2.Compare full length between local file and server file.
+     * <p>3.Named the file suffix .tmp when it start download.after download finish change suffix to original.
      */
     private static boolean isFileComplete(){
-        // TODO: 2017/5/10 检验文件是否完整
+        // TODO: 2017/5/10 test file is complete
         return false;
     }
 }
