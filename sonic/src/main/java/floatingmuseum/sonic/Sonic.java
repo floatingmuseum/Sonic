@@ -20,6 +20,7 @@ import floatingmuseum.sonic.listener.DownloadListener;
 import floatingmuseum.sonic.listener.TaskListener;
 import floatingmuseum.sonic.utils.FileUtil;
 import floatingmuseum.sonic.utils.ListUtil;
+import floatingmuseum.sonic.utils.LogUtil;
 
 
 /**
@@ -61,8 +62,8 @@ public class Sonic implements TaskListener {
 
     public void init(Context applicationContext) {
         context = applicationContext;
-        Log.i(TAG, "init()...PackageName:" + context.getPackageName());
-        Log.i(TAG, "init()...Download dir path:" + taskConfig.getDirPath());
+        LogUtil.i(TAG, "init()...PackageName:" + context.getPackageName());
+        LogUtil.i(TAG, "init()...Download dir path:" + taskConfig.getDirPath());
         dbManager = new DBManager(context);
         uiHandler = new UIHandler();
         List<TaskInfo> allTask = dbManager.getAllDownloadTask();
@@ -73,7 +74,7 @@ public class Sonic implements TaskListener {
         threadsPool = Executors.newCachedThreadPool();
         if (!ListUtil.isEmpty(allTask)) {
             for (TaskInfo taskInfo : allTask) {
-                Log.i(TAG, "init()...tasks exist in db:" + taskInfo.toString());
+                LogUtil.i(TAG, "init()...tasks exist in db:" + taskInfo.toString());
                 allTaskInfo.put(taskInfo.getTag(), taskInfo);
             }
         }
@@ -87,7 +88,7 @@ public class Sonic implements TaskListener {
     }
 
     public static Sonic getInstance() {
-        Log.i(TAG, "getInstance()...Instance:" + sonic);
+        LogUtil.i(TAG, "getInstance()...Instance:" + sonic);
         if (sonic == null) {
             synchronized (Sonic.class) {
                 if (sonic == null) {
@@ -185,6 +186,14 @@ public class Sonic implements TaskListener {
         return this;
     }
 
+    /**
+     * If you want see All the log from this library.
+     */
+    public Sonic setLogEnabled() {
+        LogUtil.enabled(true);
+        return this;
+    }
+
     private Sonic setStopServiceAfterAllTaskFinished(boolean stopServiceAfterAllTaskFinished) {
 //        this.stopServiceAfterAllTaskFinished = stopServiceAfterAllTaskFinished;
         return this;
@@ -192,7 +201,7 @@ public class Sonic implements TaskListener {
 
 
     public Sonic registerDownloadListener(DownloadListener listener) {
-        Log.i(TAG, "DownloadListener:" + listener);
+        LogUtil.i(TAG, "DownloadListener:" + listener);
         uiHandler.setListener(listener);
         return this;
     }
@@ -243,21 +252,21 @@ public class Sonic implements TaskListener {
     public TaskConfig getFinalTaskConfig(TaskInfo taskInfo, DownloadRequest request) {
         TaskConfig existTaskConfig = dbManager.queryTaskConfig(taskInfo.getTag());
         if (existTaskConfig != null) {
-            Log.i(TAG, "getFinalTaskConfig()...config exist in db:" + existTaskConfig.toString());
+            LogUtil.i(TAG, "getFinalTaskConfig()...config exist in db:" + existTaskConfig.toString());
             return existTaskConfig;
         } else if (request.isCustomTaskConfig()) {
             TaskConfig singleTaskConfig = request.getTaskConfig();
             dbManager.insertTaskConfig(taskInfo.getTag(), singleTaskConfig);
-            Log.i(TAG, "getFinalTaskConfig()...save config:" + singleTaskConfig.toString() + "..." + existTaskConfig);
+            LogUtil.i(TAG, "getFinalTaskConfig()...save config:" + singleTaskConfig.toString() + "..." + existTaskConfig);
             return singleTaskConfig;
         } else {
-            Log.i(TAG, "getFinalTaskConfig()...use default config:" + taskConfig.toString() + "..." + existTaskConfig);
+            LogUtil.i(TAG, "getFinalTaskConfig()...use default config:" + taskConfig.toString() + "..." + existTaskConfig);
             return taskConfig;
         }
     }
 
     private void initDownload(TaskInfo taskInfo, boolean isExist, DownloadRequest request) {
-        Log.i(TAG, "initDownload()...TaskInfo:" + taskInfo.toString());
+        LogUtil.i(TAG, "initDownload()...TaskInfo:" + taskInfo.toString());
         TaskConfig finalTaskConfig = getFinalTaskConfig(taskInfo, request);
         if (!isExist) {
             dbManager.insertTaskInfo(taskInfo);
@@ -270,23 +279,23 @@ public class Sonic implements TaskListener {
 
         if (activeTasks.size() == activeTaskNumber) {
             taskInfo.setState(Sonic.STATE_WAITING);
-            Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...into waiting queue");
+            LogUtil.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...into waiting queue");
             DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
             waitingTasks.add(downloadTask);
             sendMessage(taskInfo, STATE_WAITING, null);
         } else {
-            Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...into download queue");
+            LogUtil.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...into download queue");
             DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
             activeTasks.put(taskInfo.getTag(), downloadTask);
             downloadTask.start();
         }
-        Log.i(TAG, "initDownload()...MaxActiveTaskNumber:" + activeTaskNumber + "...CurrentDownloadTaskNumber:" + activeTasks.size() + "...CurrentWaitingTaskNumber:" + waitingTasks.size() + "...ForceDownloadTaskNumber:" + forceStartTasks.size());
+        LogUtil.i(TAG, "initDownload()...MaxActiveTaskNumber:" + activeTaskNumber + "...CurrentDownloadTaskNumber:" + activeTasks.size() + "...CurrentWaitingTaskNumber:" + waitingTasks.size() + "...ForceDownloadTaskNumber:" + forceStartTasks.size());
     }
 
     private boolean isForceStart(TaskInfo taskInfo, TaskConfig finalTaskConfig) {
-        Log.i(TAG, "isForceStart:" + finalTaskConfig.toString());
+        LogUtil.i(TAG, "isForceStart:" + finalTaskConfig.toString());
         if (finalTaskConfig.getForceStart() == FORCE_START_YES) {
-            Log.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...force start download");
+            LogUtil.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...force start download");
             DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
             forceStartTasks.put(taskInfo.getTag(), downloadTask);
             downloadTask.start();
@@ -299,17 +308,17 @@ public class Sonic implements TaskListener {
     public void pauseTask(String tag) {
         // TODO: 2017/5/10 pause has delay
         if (activeTasks.containsKey(tag)) {
-            Log.i(TAG, "pauseTask()...activeTasks:" + activeTasks.size() + "..." + tag);
+            LogUtil.i(TAG, "pauseTask()...activeTasks:" + activeTasks.size() + "..." + tag);
             activeTasks.get(tag).stop();
             return;
         } else if (forceStartTasks.containsKey(tag)) {
-            Log.i(TAG, "pauseTask()...forceStartTasks:" + activeTasks.size() + "..." + tag);
+            LogUtil.i(TAG, "pauseTask()...forceStartTasks:" + activeTasks.size() + "..." + tag);
             forceStartTasks.get(tag).stop();
         } else {
-            Log.i(TAG, "pauseTask()...waitingTasks:" + waitingTasks.size() + "..." + tag);
+            LogUtil.i(TAG, "pauseTask()...waitingTasks:" + waitingTasks.size() + "..." + tag);
             for (DownloadTask waitingTask : waitingTasks) {
                 TaskInfo taskInfo = waitingTask.getTaskInfo();
-                Log.i(TAG, "pauseTask()...waitingTasks:" + taskInfo.getName());
+                LogUtil.i(TAG, "pauseTask()...waitingTasks:" + taskInfo.getName());
                 if (taskInfo.getTag().equals(tag)) {
                     Log.i(TAG, "pauseTask()...waitingTasks:" + taskInfo.getName());
                     taskInfo.setState(STATE_PAUSE);
@@ -318,7 +327,7 @@ public class Sonic implements TaskListener {
                     return;
                 }
             }
-            Log.i(TAG, "Which task that you want stop,doesn't exist.");
+            LogUtil.i(TAG, "Which task that you want stop,doesn't exist.");
         }
     }
 
@@ -439,7 +448,7 @@ public class Sonic implements TaskListener {
             forceStartTasks.remove(tag);
         }
 
-        Log.i(TAG, "checkWaitingTasks()...MaxActiveTaskNumber:" + activeTaskNumber + "...CurrentDownloadTaskNumber:" + activeTasks.size() + "...CurrentWaitingTaskNumber:" + waitingTasks.size() + "...ForceDownloadTaskNumber:" + forceStartTasks.size());
+        LogUtil.i(TAG, "checkWaitingTasks()...MaxActiveTaskNumber:" + activeTaskNumber + "...CurrentDownloadTaskNumber:" + activeTasks.size() + "...CurrentWaitingTaskNumber:" + waitingTasks.size() + "...ForceDownloadTaskNumber:" + forceStartTasks.size());
     }
 
     private void sendMessage(TaskInfo taskInfo, int downloadState, DownloadException downloadException) {

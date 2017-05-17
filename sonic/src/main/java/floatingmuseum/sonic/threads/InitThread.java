@@ -1,7 +1,5 @@
 package floatingmuseum.sonic.threads;
 
-import android.util.Log;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,6 +11,7 @@ import java.net.URL;
 
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.listener.InitListener;
+import floatingmuseum.sonic.utils.LogUtil;
 
 /**
  * Created by Floatingmuseum on 2017/3/31.
@@ -55,7 +54,7 @@ public class InitThread extends Thread {
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Range", "bytes=" + 0 + "-");
             int responseCode = connection.getResponseCode();
-            Log.i(TAG, "InitThread...Response code:" + responseCode);
+            LogUtil.i(TAG, "InitThread...Response code:" + responseCode);
 
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 prepare(connection, false);

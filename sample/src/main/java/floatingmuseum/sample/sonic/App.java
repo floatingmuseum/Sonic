@@ -44,6 +44,7 @@ public class App extends Application {
                 .setReadTimeout(3000)
                 .setConnectTimeout(3000)
                 .setDirPath(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath())
+                .setLogEnabled()
                 .init(this);
     }
 }

@@ -1,7 +1,5 @@
 package floatingmuseum.sonic.threads;
 
-import android.util.Log;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -15,6 +13,7 @@ import java.util.Map;
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.entity.ThreadInfo;
 import floatingmuseum.sonic.listener.ThreadListener;
+import floatingmuseum.sonic.utils.LogUtil;
 
 /**
  * Created by Floatingmuseum on 2017/5/2.
@@ -40,7 +39,7 @@ public abstract class BaseThread implements Runnable {
 
     @Override
     public void run() {
-        Log.i(TAG, threadInfo.getId() + "Thread start work" + "..." + fileName);
+        LogUtil.i(TAG, threadInfo.getId() + "Thread start work" + "..." + fileName);
         isDownloading = true;
         HttpURLConnection connection = null;
         RandomAccessFile raf = null;
@@ -79,7 +78,7 @@ public abstract class BaseThread implements Runnable {
                     }
                 }
                 //This thread has finished its work.
-                Log.i(TAG, threadInfo.getId() + "Thread has finished its work" + "..." + fileName);
+                LogUtil.i(TAG, threadInfo.getId() + "Thread has finished its work" + "..." + fileName);
                 updateDB();
                 isFinished = true;
                 isDownloading = false;
@@ -88,7 +87,7 @@ public abstract class BaseThread implements Runnable {
             } else {
                 isFailed = true;
                 isDownloading = false;
-                Log.i(TAG, threadInfo.getId() + "Thread exception occurred" + "..." + fileName + "..." + responseCode);
+                LogUtil.i(TAG, threadInfo.getId() + "Thread exception occurred" + "..." + fileName + "..." + responseCode);
                 downloadException = new DownloadException("DownloadThread failed", responseCode);
                 listener.onError(this, downloadException);
             }
@@ -104,10 +103,10 @@ public abstract class BaseThread implements Runnable {
             e.printStackTrace();
             updateDB();
             if (stopThread) {
-                Log.i(TAG, threadInfo.getId() + "Thread stop by user interrupted.");
+                LogUtil.i(TAG, threadInfo.getId() + "Thread stop by user interrupted.");
                 listener.onPause(threadInfo);
             } else {
-                Log.i(TAG, threadInfo.getId() + "Thread stop by auto interrupted.");
+                LogUtil.i(TAG, threadInfo.getId() + "Thread stop by auto interrupted.");
                 downloadException = new DownloadException("DownloadThread failed", e);
                 listener.onError(this, downloadException);
             }
@@ -151,7 +150,7 @@ public abstract class BaseThread implements Runnable {
     }
 
     public void stopThread() {
-        Log.i(TAG, "stopThread()...interrupted:" + Thread.interrupted());
+        LogUtil.i(TAG, "stopThread()...interrupted:" + Thread.interrupted());
 //        if (!Thread.interrupted()) {
 //            interrupt();
 //        }

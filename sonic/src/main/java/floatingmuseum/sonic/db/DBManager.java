@@ -3,15 +3,14 @@ package floatingmuseum.sonic.db;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import floatingmuseum.sonic.TaskConfig;
-import floatingmuseum.sonic.db.DBHelper;
 import floatingmuseum.sonic.entity.TaskInfo;
 import floatingmuseum.sonic.entity.ThreadInfo;
+import floatingmuseum.sonic.utils.LogUtil;
 
 
 /**
@@ -59,7 +58,7 @@ public class DBManager {
     }
 
     public synchronized void updateTaskInfo(TaskInfo task) {
-        Log.i(TAG, "updateTaskInfo()..." + task.getCurrentSize() + "..." + task.getState() + "..." + task.getProgress() + "..." + task.getTotalSize());
+        LogUtil.i(TAG, "updateTaskInfo()..." + task.getCurrentSize() + "..." + task.getState() + "..." + task.getProgress() + "..." + task.getTotalSize());
         String updateSql = "update task_info set current_size=?,state=?,download_progress=?,total_size=? where tag=?";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL(updateSql, new Object[]{task.getCurrentSize(), task.getState(), task.getProgress(), task.getTotalSize(), task.getTag()});
