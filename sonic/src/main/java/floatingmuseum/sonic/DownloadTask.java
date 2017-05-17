@@ -59,11 +59,12 @@ public class DownloadTask implements InitListener, ThreadListener {
     public void start() {
         taskInfo.setState(Sonic.STATE_START);
         taskListener.onStart(taskInfo);
+        taskInfo.setState(Sonic.STATE_DOWNLOADING);
         threadInfoList = dbManager.getAllThreadInfo(taskInfo.getDownloadUrl());
         if (threadInfoList.size() == 0) {//First time
             LogUtil.i(TAG, "start()...First download." + "..." + taskInfo.getName());
             initThread = new InitThread(taskInfo.getDownloadUrl(), taskInfo.getName(), taskInfo.getDirPath(), taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
-            initThread.start();
+            threadsPool.execute(initThread);
         } else {
             LogUtil.i(TAG, "start()...Resume download" + "..." + taskInfo.getName());
             initDownloadThread(threadInfoList);
