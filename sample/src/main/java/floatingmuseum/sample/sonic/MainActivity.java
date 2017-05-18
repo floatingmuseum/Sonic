@@ -182,7 +182,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case Sonic.STATE_ERROR:
             case Sonic.STATE_CANCEL:
                 if (appInfo.getName().equals("QQ同步助手")) {
-                    DownloadRequest request = new DownloadRequest().setUrl(appInfo.getUrl()).setForceStart(Sonic.FORCE_START_YES);
+                    DownloadRequest request = new DownloadRequest()
+                            .setUrl(appInfo.getUrl()).setForceStart(Sonic.FORCE_START_YES);
                     sonic.addTask(request);
                 } else {
                     sonic.addTask(appInfo.getUrl());

@@ -224,7 +224,8 @@ public class Sonic implements TaskListener {
     public void addTask(String downloadUrl, String tag, String fileName) {
         DownloadRequest request = new DownloadRequest().setUrl(downloadUrl)
                 .setTag(tag)
-                .setFileName(fileName);
+                .setFileName(fileName)
+                .setDirPath(taskConfig.getDirPath());
         addTask(request);
     }
 
