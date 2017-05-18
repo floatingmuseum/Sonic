@@ -92,8 +92,10 @@ public class InitThread extends Thread {
             listener.onGetContentLength(contentLength, isSupportRange);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            listener.onInitError(new DownloadException("InitThread Request failed,File not found", e));
         } catch (IOException e) {
             e.printStackTrace();
+            listener.onInitError(new DownloadException("InitThread Request failed", e));
         } finally {
             if (randomAccessFile != null) {
                 try {
