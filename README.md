@@ -2,6 +2,7 @@
 Sonic is a android download library.
 
 ##### [Sample Apk](https://github.com/floatingmuseum/Sonic/raw/master/apk/Sonic_sample.apk)
+##### [Change Log](https://github.com/floatingmuseum/Sonic/blob/master/ChangeLog.md)
 
 ### Features
 
@@ -16,7 +17,7 @@ Sonic is a android download library.
 Add dependency to your build.gradle.
 ```groovy
 dependencies{
-	compile 'com.floatingmuseum:sonic:1.0.0'
+	compile 'com.floatingmuseum:sonic:1.0.1'
 }
 ```
 Add permission to your AndroidManifest.xml.

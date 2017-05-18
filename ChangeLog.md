@@ -8,3 +8,4 @@
 #### Version 1.0.1
 1. Not save task state when state is start.
 2. Hiding library log as default setting.you can open it when init Sonic in Application.
+3. Fixed setDirPath in Application not work.
