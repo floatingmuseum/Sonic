@@ -157,7 +157,7 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     private void initMultipleThreads(long contentLength) {
-        LogUtil.i(TAG, "initSingleThread()...支持断点续传的任务:" + taskInfo.getName());
+        LogUtil.i(TAG, "initSingleThread()...Support multi-threads:" + taskInfo.getName());
         dbManager.updateTaskInfo(taskInfo);
         updateProgress();
         threadInfoList = new ArrayList<>();
@@ -193,7 +193,7 @@ public class DownloadTask implements InitListener, ThreadListener {
     SingleThread singleThread;
 
     private void initSingleThread() {
-        LogUtil.i(TAG, "initSingleThread()...不支持断点续传的任务:" + taskInfo.getName());
+        LogUtil.i(TAG, "initSingleThread()...Not support multi-threads:" + taskInfo.getName());
         isSupportRange = false;
         taskListener.onProgress(taskInfo);
         ThreadInfo info = new ThreadInfo(1, taskInfo.getDownloadUrl(), 0, taskInfo.getTotalSize(), 0, taskInfo.getTotalSize());
