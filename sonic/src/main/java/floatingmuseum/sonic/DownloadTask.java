@@ -13,6 +13,7 @@ import floatingmuseum.sonic.listener.ThreadListener;
 import floatingmuseum.sonic.threads.BaseThread;
 import floatingmuseum.sonic.threads.DownloadThread;
 import floatingmuseum.sonic.threads.InitThread;
+import floatingmuseum.sonic.threads.SingleThread;
 import floatingmuseum.sonic.utils.FileUtil;
 import floatingmuseum.sonic.utils.LogUtil;
 
@@ -38,6 +39,7 @@ public class DownloadTask implements InitListener, ThreadListener {
     private ExecutorService threadsPool;
     private DownloadException downloadException;
     private InitThread initThread;
+    private boolean isSupportRange = true;
 
     public DownloadTask(TaskInfo taskInfo, DBManager dbManager, TaskConfig taskConfig, ExecutorService threadsPool, TaskListener taskListener) {
         this.taskInfo = taskInfo;
@@ -86,6 +88,11 @@ public class DownloadTask implements InitListener, ThreadListener {
          *
          * still has some delay.
          */
+        if (singleThread != null) {
+            singleThread.stopThread();
+            return;
+        }
+
         LogUtil.i(TAG, "stop()...Stop downloading Threads:" + threads.size() + taskInfo.getName() + "..." + stopAfterInitThreadDone);
         if (threads.size() == 0) {
             stopAfterInitThreadDone = true;
@@ -150,6 +157,7 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     private void initMultipleThreads(long contentLength) {
+        LogUtil.i(TAG, "initSingleThread()...支持断点续传的任务:" + taskInfo.getName());
         dbManager.updateTaskInfo(taskInfo);
         updateProgress();
         threadInfoList = new ArrayList<>();
@@ -182,9 +190,15 @@ public class DownloadTask implements InitListener, ThreadListener {
         }
     }
 
-    private void initSingleThread() {
-        taskListener.onProgress(taskInfo);
+    SingleThread singleThread;
 
+    private void initSingleThread() {
+        LogUtil.i(TAG, "initSingleThread()...不支持断点续传的任务:" + taskInfo.getName());
+        isSupportRange = false;
+        taskListener.onProgress(taskInfo);
+        ThreadInfo info = new ThreadInfo(1, taskInfo.getDownloadUrl(), 0, taskInfo.getTotalSize(), 0, taskInfo.getTotalSize());
+        singleThread = new SingleThread(info, taskInfo.getDirPath(), taskInfo.getName(), taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
+        threadsPool.execute(singleThread);
     }
 
     private int getProgress() {
@@ -202,14 +216,28 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     private void updateProgress() {
         taskInfo.setState(Sonic.STATE_DOWNLOADING);
+
         taskInfo.setCurrentSize(getCurrentSize());
         taskInfo.setProgress(getProgress());
+
+
         LogUtil.i(TAG, "updateProgress()...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
+        taskListener.onProgress(taskInfo);
+    }
+
+    private void updateSingleThreadProgress(long currentSize) {
+        taskInfo.setState(Sonic.STATE_DOWNLOADING);
+        taskInfo.setCurrentSize(currentSize);
+        taskInfo.setProgress(getProgress());
         taskListener.onProgress(taskInfo);
     }
 
     @Override
     public void onPause(ThreadInfo threadInfo) {
+        if (!isSupportRange) {
+            handleSingleThreadTask(Sonic.STATE_PAUSE);
+            return;
+        }
         if (isAllThreadsDead()) {
             if (isCancel) {
                 cancelTask();
@@ -228,6 +256,10 @@ public class DownloadTask implements InitListener, ThreadListener {
         long nowTime = System.currentTimeMillis();
         if (taskConfig.getProgressResponseInterval() == 0 || (nowTime - lastUpdateTime) > taskConfig.getProgressResponseInterval()) {
             lastUpdateTime = nowTime;
+            if (!isSupportRange) {
+                updateSingleThreadProgress(threadInfo.getCurrentPosition());
+                return;
+            }
             updateProgress();
         }
     }
@@ -252,7 +284,7 @@ public class DownloadTask implements InitListener, ThreadListener {
      * Pause,Error,Finished,all means thread died
      */
     private synchronized boolean isAllThreadsDead() {
-        if (activeThreadsNum > 0) {
+        if (isSupportRange && activeThreadsNum > 0) {
             activeThreadsNum--;
             return activeThreadsNum == 0;
         } else {
@@ -262,6 +294,11 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onError(BaseThread errorThread, Throwable e) {
+        if (!isSupportRange) {
+            handleSingleThreadTask(Sonic.STATE_ERROR);
+            return;
+        }
+
         if (isHaveRetryTime(errorThread)) {
             return;
         }
@@ -281,6 +318,10 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onFinished(int threadId) {
+        if (!isSupportRange) {
+            handleSingleThreadTask(Sonic.STATE_FINISH);
+            return;
+        }
         if (isAllThreadsDead()) {
             if (isCancel) {
                 cancelTask();
@@ -305,7 +346,8 @@ public class DownloadTask implements InitListener, ThreadListener {
         if (retryTime != 0) {
             retryTime--;
             initThread = new InitThread(taskInfo.getDownloadUrl(), taskInfo.getName(), taskInfo.getDirPath(), taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
-            initThread.start();
+            threadsPool.execute(initThread);
+//            initThread.start();
             return;
         }
 
@@ -317,8 +359,21 @@ public class DownloadTask implements InitListener, ThreadListener {
         taskListener.onError(taskInfo, e);
     }
 
+    public void handleSingleThreadTask(int state) {
+        if (state == Sonic.STATE_FINISH) {
+            updateSingleThreadProgress(taskInfo.getTotalSize());
+            dbManager.delete(taskInfo);
+            taskInfo.setState(Sonic.STATE_FINISH);
+            taskListener.onFinish(taskInfo);
+        } else {
+            cancelTask();
+        }
+    }
+
     private void updateTaskInfo(int state) {
         taskInfo.setState(state);
-        dbManager.updateTaskInfo(taskInfo);
+        if (!isSupportRange) {
+            dbManager.updateTaskInfo(taskInfo);
+        }
     }
 }

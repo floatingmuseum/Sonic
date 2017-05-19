@@ -431,8 +431,8 @@ public class Sonic implements TaskListener {
     @Override
     public void onCancel(TaskInfo taskInfo) {
         sendMessage(taskInfo, STATE_CANCEL, null);
-        checkWaitingTasks(taskInfo);
         allTaskInfo.remove(taskInfo.getTag());
+        checkWaitingTasks(taskInfo);
     }
 
     private void checkWaitingTasks(TaskInfo taskInfo) {
