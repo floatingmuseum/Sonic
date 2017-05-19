@@ -322,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void onPause(TaskInfo taskInfo) {
             Log.i(TAG, "任务暂停...onPause:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
             updateAppInfo(taskInfo);
-            adapter.notifyDataSetChanged();
+//            adapter.notifyDataSetChanged();
         }
 
         @Override
@@ -337,15 +337,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void onFinish(TaskInfo taskInfo) {
             Log.i(TAG, "任务完成...onFinish:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
             updateAppInfo(taskInfo);
-            adapter.notifyDataSetChanged();
+//            adapter.notifyDataSetChanged();
         }
 
         @Override
         public void onError(TaskInfo taskInfo, DownloadException downloadException) {
-            Log.i(TAG, "任务异常...onError:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
+            Log.i(TAG, "任务异常...onError:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState() + "..." + downloadException.getErrorMessage());
             downloadException.printStackTrace();
             updateAppInfo(taskInfo);
-            adapter.notifyDataSetChanged();
+//            adapter.notifyDataSetChanged();
         }
 
         @Override

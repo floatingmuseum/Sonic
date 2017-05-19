@@ -43,7 +43,7 @@ public class InitThread extends Thread {
         try {
             url = new URL(downloadUrl);
         } catch (MalformedURLException e) {
-            listener.onInitError(new DownloadException("Wrong url.", e));
+            listener.onInitError(new DownloadException(DownloadException.TYPE_MALFORMED_URL, "InitThread Request failed,Wrong url.", e));
             return;
         }
 
@@ -61,14 +61,14 @@ public class InitThread extends Thread {
             } else if (responseCode == HttpURLConnection.HTTP_PARTIAL) {
                 prepare(connection, true);
             } else {
-                listener.onInitError(new DownloadException("InitThread Request failed", responseCode));
+                listener.onInitError(new DownloadException(DownloadException.TYPE_RESPONSE_CODE, "InitThread Request failed", responseCode));
             }
         } catch (ProtocolException e) {
             e.printStackTrace();
-            listener.onInitError(new DownloadException("InitThread Request failed", e));
+            listener.onInitError(new DownloadException(DownloadException.TYPE_PROTOCOL, "InitThread Request failed", e));
         } catch (IOException e) {
             e.printStackTrace();
-            listener.onInitError(new DownloadException("InitThread Request failed", e));
+            listener.onInitError(new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -79,7 +79,7 @@ public class InitThread extends Thread {
     private void prepare(HttpURLConnection connection, boolean isSupportRange) {
         long contentLength = connection.getContentLength();
         if (contentLength <= 0) {
-            listener.onInitError(new DownloadException("File length exception. length<=0."));
+            listener.onInitError(new DownloadException(DownloadException.TYPE_WRONG_LENGTH, "File length exception. length<=0."));
             return;
         }
         File dir = new File(downloadDirPath);
@@ -92,17 +92,17 @@ public class InitThread extends Thread {
             listener.onGetContentLength(contentLength, isSupportRange);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            listener.onInitError(new DownloadException("InitThread Request failed,File not found", e));
+            listener.onInitError(new DownloadException(DownloadException.TYPE_FILE_NOT_FOUND, "InitThread Request failed,File not found", e));
         } catch (IOException e) {
             e.printStackTrace();
-            listener.onInitError(new DownloadException("InitThread Request failed", e));
+            listener.onInitError(new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
         } finally {
             if (randomAccessFile != null) {
                 try {
                     randomAccessFile.close();
                 } catch (IOException e) {
                     e.printStackTrace();
-                    listener.onInitError(new DownloadException("InitThread Request failed", e));
+                    listener.onInitError(new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
                 }
             }
         }

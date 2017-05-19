@@ -88,16 +88,16 @@ public abstract class BaseThread implements Runnable {
                 isFailed = true;
                 isDownloading = false;
                 LogUtil.i(TAG, threadInfo.getId() + "Thread exception occurred" + "..." + fileName + "..." + responseCode);
-                downloadException = new DownloadException("DownloadThread failed", responseCode);
+                downloadException = new DownloadException(DownloadException.TYPE_RESPONSE_CODE, "DownloadThread failed", responseCode);
                 listener.onError(this, downloadException);
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
-            downloadException = new DownloadException("DownloadThread failed", e);
+            downloadException = new DownloadException(DownloadException.TYPE_MALFORMED_URL, "DownloadThread failed", e);
             listener.onError(this, downloadException);
         } catch (ProtocolException e) {
             e.printStackTrace();
-            downloadException = new DownloadException("DownloadThread failed", e);
+            downloadException = new DownloadException(DownloadException.TYPE_PROTOCOL, "DownloadThread failed", e);
             listener.onError(this, downloadException);
         } catch (InterruptedIOException e) {
             e.printStackTrace();
@@ -107,12 +107,12 @@ public abstract class BaseThread implements Runnable {
                 listener.onPause(threadInfo);
             } else {
                 LogUtil.i(TAG, threadInfo.getId() + "Thread stop by auto interrupted.");
-                downloadException = new DownloadException("DownloadThread failed", e);
+                downloadException = new DownloadException(DownloadException.TYPE_INTERRUPTED_IO, "DownloadThread failed", e);
                 listener.onError(this, downloadException);
             }
         } catch (IOException e) {
             e.printStackTrace();
-            downloadException = new DownloadException("DownloadThread failed", e);
+            downloadException = new DownloadException(DownloadException.TYPE_IO, "DownloadThread failed", e);
             listener.onError(this, downloadException);
         } finally {
             try {
@@ -127,7 +127,7 @@ public abstract class BaseThread implements Runnable {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                downloadException = new DownloadException("DownloadThread failed", e);
+                downloadException = new DownloadException(DownloadException.TYPE_IO, "DownloadThread failed", e);
                 listener.onError(this, downloadException);
             }
         }

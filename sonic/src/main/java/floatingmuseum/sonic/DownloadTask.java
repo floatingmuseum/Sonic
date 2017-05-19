@@ -109,13 +109,17 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     public void cancelTask() {
+        removeRelatedInfo();
+        taskInfo.setState(Sonic.STATE_CANCEL);
+        taskListener.onCancel(taskInfo);
+    }
+
+    private void removeRelatedInfo() {
         taskInfo.setProgress(0);
         taskInfo.setCurrentSize(0);
         taskInfo.setTotalSize(0);
-        taskInfo.setState(Sonic.STATE_CANCEL);
         dbManager.delete(taskInfo);
         FileUtil.deleteFile(taskInfo.getFilePath());
-        taskListener.onCancel(taskInfo);
     }
 
     private void initDownloadThread(List<ThreadInfo> threadInfoList) {
@@ -123,7 +127,7 @@ public class DownloadTask implements InitListener, ThreadListener {
         for (ThreadInfo info : threadInfoList) {
             LogUtil.i(TAG, "initDownloadThreadInfo()...ThreadID:" + info.getId() + "...StartPosition:" + info.getStartPosition() + "...CurrentPosition:" + info.getCurrentPosition() + "...EndPosition:" + info.getEndPosition() + "..." + taskInfo.getName());
             if (info.getCurrentPosition() < info.getEndPosition()) {//Only init thread which not finished.
-                LogUtil.i(TAG, "initDownloadThreadInfo()...ThreadID:" +info.getId() + "...Not Finished" + "..." + taskInfo.getName());
+                LogUtil.i(TAG, "initDownloadThreadInfo()...ThreadID:" + info.getId() + "...Not Finished" + "..." + taskInfo.getName());
                 DownloadThread thread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
                 threads.add(thread);
             }
@@ -232,7 +236,7 @@ public class DownloadTask implements InitListener, ThreadListener {
         if (retryTime != 0) {
             retryTime--;
             ThreadInfo info = errorThread.getThreadInfo();
-            LogUtil.i(TAG, "isHaveRetryTime()..."+info.getId() + "Thread exception occurred...to retry...current retryTime:" + retryTime + "...CurrentPosition:" + info.getCurrentPosition());
+            LogUtil.i(TAG, "isHaveRetryTime()..." + info.getId() + "Thread exception occurred...to retry...current retryTime:" + retryTime + "...CurrentPosition:" + info.getCurrentPosition());
             threads.remove(errorThread);
             DownloadThread retryThread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
             threads.add(retryThread);
@@ -303,6 +307,11 @@ public class DownloadTask implements InitListener, ThreadListener {
             initThread = new InitThread(taskInfo.getDownloadUrl(), taskInfo.getName(), taskInfo.getDirPath(), taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
             initThread.start();
             return;
+        }
+
+        if (DownloadException.TYPE_MALFORMED_URL == e.getExceptionType() || DownloadException.TYPE_FILE_NOT_FOUND == e.getExceptionType()) {
+            //If exception come from wrong url or file exception.remove all related info and file.
+            removeRelatedInfo();
         }
         updateTaskInfo(Sonic.STATE_ERROR);
         taskListener.onError(taskInfo, e);
