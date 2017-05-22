@@ -65,4 +65,16 @@ public class AppInfo {
     public void setState(int state) {
         this.state = state;
     }
+
+    @Override
+    public String toString() {
+        return "AppInfo{" +
+                "url='" + url + '\'' +
+                ", name='" + name + '\'' +
+                ", currentSize=" + currentSize +
+                ", TotalSize=" + TotalSize +
+                ", progress=" + progress +
+                ", state=" + state +
+                '}';
+    }
 }

@@ -1,7 +1,5 @@
 package floatingmuseum.sonic.threads;
 
-import android.util.Log;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -15,17 +13,17 @@ import java.util.Map;
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.entity.ThreadInfo;
 import floatingmuseum.sonic.listener.ThreadListener;
+import floatingmuseum.sonic.utils.LogUtil;
 
 /**
  * Created by Floatingmuseum on 2017/5/2.
  */
 
-public abstract class BaseThread extends Thread {
+public abstract class BaseThread implements Runnable {
     private static final String TAG = DownloadThread.class.getName();
 
     protected boolean stopThread = false;
 
-    //下载文件夹路径
     protected String dirPath;
     protected String fileName;
     protected int readTimeout;
@@ -41,13 +39,12 @@ public abstract class BaseThread extends Thread {
 
     @Override
     public void run() {
-        Log.i(TAG, threadInfo.getId() + "号线程开始工作" + "..." + fileName);
+        LogUtil.i(TAG, threadInfo.getId() + "Thread start work" + "..." + fileName);
         isDownloading = true;
         HttpURLConnection connection = null;
         RandomAccessFile raf = null;
         InputStream inputStream = null;
 
-        //获取文件长度
         URL url = null;
         try {
             url = new URL(threadInfo.getUrl());
@@ -66,6 +63,11 @@ public abstract class BaseThread extends Thread {
                 byte[] buffer = new byte[1024 * 4];
                 int len;
                 while ((len = inputStream.read(buffer)) != -1) {
+                    if (stopThread) {
+                        updateDB();
+                        listener.onPause(threadInfo);
+                        return;
+                    }
                     raf.write(buffer, 0, len);
                     currentPosition += len;
                     threadInfo.setCurrentPosition(currentPosition);
@@ -75,8 +77,8 @@ public abstract class BaseThread extends Thread {
                         break;
                     }
                 }
-                //当前区块下载完成
-                Log.i(TAG, threadInfo.getId() + "号线程完成工作" + "..." + fileName);
+                //This thread has finished its work.
+                LogUtil.i(TAG, threadInfo.getId() + "Thread has finished its work" + "..." + fileName);
                 updateDB();
                 isFinished = true;
                 isDownloading = false;
@@ -85,32 +87,32 @@ public abstract class BaseThread extends Thread {
             } else {
                 isFailed = true;
                 isDownloading = false;
-                Log.i(TAG, threadInfo.getId() + "号线程出现异常" + "..." + fileName + "..." + responseCode);
-                downloadException = new DownloadException("DownloadThread failed", responseCode);
+                LogUtil.i(TAG, threadInfo.getId() + "Thread exception occurred" + "..." + fileName + "..." + responseCode);
+                downloadException = new DownloadException(DownloadException.TYPE_RESPONSE_CODE, "DownloadThread failed", responseCode);
                 listener.onError(this, downloadException);
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
-            downloadException = new DownloadException("DownloadThread failed", e);
+            downloadException = new DownloadException(DownloadException.TYPE_MALFORMED_URL, "DownloadThread failed", e);
             listener.onError(this, downloadException);
         } catch (ProtocolException e) {
             e.printStackTrace();
-            downloadException = new DownloadException("DownloadThread failed", e);
+            downloadException = new DownloadException(DownloadException.TYPE_PROTOCOL, "DownloadThread failed", e);
             listener.onError(this, downloadException);
         } catch (InterruptedIOException e) {
             e.printStackTrace();
             updateDB();
             if (stopThread) {
-                Log.i(TAG, "第" + threadInfo.getId() + "线程停止 by user interrupted.");
+                LogUtil.i(TAG, threadInfo.getId() + "Thread stop by user interrupted.");
                 listener.onPause(threadInfo);
             } else {
-                Log.i(TAG, "第" + threadInfo.getId() + "线程停止 by auto interrupted.");
-                downloadException = new DownloadException("DownloadThread failed", e);
+                LogUtil.i(TAG, threadInfo.getId() + "Thread stop by auto interrupted.");
+                downloadException = new DownloadException(DownloadException.TYPE_INTERRUPTED_IO, "DownloadThread failed", e);
                 listener.onError(this, downloadException);
             }
         } catch (IOException e) {
             e.printStackTrace();
-            downloadException = new DownloadException("DownloadThread failed", e);
+            downloadException = new DownloadException(DownloadException.TYPE_IO, "DownloadThread failed", e);
             listener.onError(this, downloadException);
         } finally {
             try {
@@ -125,7 +127,7 @@ public abstract class BaseThread extends Thread {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                downloadException = new DownloadException("DownloadThread failed", e);
+                downloadException = new DownloadException(DownloadException.TYPE_IO, "DownloadThread failed", e);
                 listener.onError(this, downloadException);
             }
         }
@@ -148,7 +150,7 @@ public abstract class BaseThread extends Thread {
     }
 
     public void stopThread() {
-        Log.i(TAG, "stopThread()...interrupted:" + Thread.interrupted());
+        LogUtil.i(TAG, "stopThread()...interrupted:" + Thread.interrupted());
 //        if (!Thread.interrupted()) {
 //            interrupt();
 //        }

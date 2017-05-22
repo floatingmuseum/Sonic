@@ -1,7 +1,5 @@
 package floatingmuseum.sonic.threads;
 
-import android.util.Log;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,6 +11,7 @@ import java.net.URL;
 
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.listener.InitListener;
+import floatingmuseum.sonic.utils.LogUtil;
 
 /**
  * Created by Floatingmuseum on 2017/3/31.
@@ -44,7 +43,7 @@ public class InitThread extends Thread {
         try {
             url = new URL(downloadUrl);
         } catch (MalformedURLException e) {
-            listener.onInitError(new DownloadException("Wrong url.", e));
+            listener.onInitError(new DownloadException(DownloadException.TYPE_MALFORMED_URL, "InitThread Request failed,Wrong url.", e));
             return;
         }
 
@@ -55,21 +54,21 @@ public class InitThread extends Thread {
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Range", "bytes=" + 0 + "-");
             int responseCode = connection.getResponseCode();
-            Log.i(TAG, "InitThread...Response code:" + responseCode);
+            LogUtil.i(TAG, "InitThread...Response code:" + responseCode);
 
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 prepare(connection, false);
             } else if (responseCode == HttpURLConnection.HTTP_PARTIAL) {
                 prepare(connection, true);
             } else {
-                listener.onInitError(new DownloadException("InitThread Request failed", responseCode));
+                listener.onInitError(new DownloadException(DownloadException.TYPE_RESPONSE_CODE, "InitThread Request failed", responseCode));
             }
         } catch (ProtocolException e) {
             e.printStackTrace();
-            listener.onInitError(new DownloadException("InitThread Request failed", e));
+            listener.onInitError(new DownloadException(DownloadException.TYPE_PROTOCOL, "InitThread Request failed", e));
         } catch (IOException e) {
             e.printStackTrace();
-            listener.onInitError(new DownloadException("InitThread Request failed", e));
+            listener.onInitError(new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -80,30 +79,30 @@ public class InitThread extends Thread {
     private void prepare(HttpURLConnection connection, boolean isSupportRange) {
         long contentLength = connection.getContentLength();
         if (contentLength <= 0) {
-            listener.onInitError(new DownloadException("File length exception. length<=0."));
+            listener.onInitError(new DownloadException(DownloadException.TYPE_WRONG_LENGTH, "File length exception. length<=0."));
             return;
         }
         File dir = new File(downloadDirPath);
-        //创建文件
+        //Create file
         File file = new File(dir, fileName);
-        //操作的文件，和可操作的模式，读写删
         RandomAccessFile randomAccessFile = null;
         try {
             randomAccessFile = new RandomAccessFile(file, "rwd");
-            //设置长度
             randomAccessFile.setLength(contentLength);
             listener.onGetContentLength(contentLength, isSupportRange);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            listener.onInitError(new DownloadException(DownloadException.TYPE_FILE_NOT_FOUND, "InitThread Request failed,File not found", e));
         } catch (IOException e) {
             e.printStackTrace();
+            listener.onInitError(new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
         } finally {
             if (randomAccessFile != null) {
                 try {
                     randomAccessFile.close();
                 } catch (IOException e) {
                     e.printStackTrace();
-                    listener.onInitError(new DownloadException("InitThread Request failed", e));
+                    listener.onInitError(new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
                 }
             }
         }

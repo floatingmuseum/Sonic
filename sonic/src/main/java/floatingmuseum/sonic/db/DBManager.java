@@ -3,15 +3,14 @@ package floatingmuseum.sonic.db;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import floatingmuseum.sonic.TaskConfig;
-import floatingmuseum.sonic.db.DBHelper;
 import floatingmuseum.sonic.entity.TaskInfo;
 import floatingmuseum.sonic.entity.ThreadInfo;
+import floatingmuseum.sonic.utils.LogUtil;
 
 
 /**
@@ -45,9 +44,9 @@ public class DBManager {
     }
 
     public synchronized void insertTaskConfig(String tag, TaskConfig config) {
-        String insertSql = "insert into task_config(tag,max_threads,retry_time,progress_response_interval,connect_timeout,read_timeout) values(?,?,?,?,?,?)";
+        String insertSql = "insert into task_config(tag,max_threads,retry_time,progress_response_interval,connect_timeout,read_timeout,force_start) values(?,?,?,?,?,?,?)";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.execSQL(insertSql, new Object[]{tag, config.getMaxThreads(), config.getRetryTime(), config.getProgressResponseInterval(), config.getConnectTimeout(), config.getReadTimeout()});
+        db.execSQL(insertSql, new Object[]{tag, config.getMaxThreads(), config.getRetryTime(), config.getProgressResponseInterval(), config.getConnectTimeout(), config.getReadTimeout(),config.getForceStart()});
         db.close();
     }
 
@@ -59,7 +58,7 @@ public class DBManager {
     }
 
     public synchronized void updateTaskInfo(TaskInfo task) {
-        Log.i(TAG, "updateTaskInfo()..." + task.getCurrentSize() + "..." + task.getState() + "..." + task.getProgress() + "..." + task.getTotalSize());
+        LogUtil.i(TAG, "updateTaskInfo()..." + task.getCurrentSize() + "..." + task.getState() + "..." + task.getProgress() + "..." + task.getTotalSize());
         String updateSql = "update task_info set current_size=?,state=?,download_progress=?,total_size=? where tag=?";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL(updateSql, new Object[]{task.getCurrentSize(), task.getState(), task.getProgress(), task.getTotalSize(), task.getTag()});
@@ -134,7 +133,7 @@ public class DBManager {
             taskConfig.setProgressResponseInterval(cursor.getInt(cursor.getColumnIndex("progress_response_interval")));
             taskConfig.setConnectTimeout(cursor.getInt(cursor.getColumnIndex("connect_timeout")));
             taskConfig.setReadTimeout(cursor.getInt(cursor.getColumnIndex("read_timeout")));
-
+            taskConfig.setForceStart(cursor.getInt(cursor.getColumnIndex("force_start")));
         }
         cursor.close();
         db.close();
@@ -177,6 +176,7 @@ public class DBManager {
             task.setTotalSize(cursor.getLong(cursor.getColumnIndex("total_size")));
             task.setProgress(cursor.getInt(cursor.getColumnIndex("download_progress")));
             task.setState(cursor.getInt(cursor.getColumnIndex("state")));
+            tasks.add(task);
         }
         cursor.close();
         db.close();

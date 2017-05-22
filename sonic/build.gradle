@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'
 
 android {
     compileSdkVersion 25
@@ -28,4 +29,13 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:25.3.1'
     testCompile 'junit:junit:4.12'
+}
+
+publish{
+    userOrg = 'floatingmuseum'
+    groupId = 'com.floatingmuseum'
+    artifactId = 'sonic'
+    publishVersion = '1.0.2'
+    desc = 'Andorid download library.'
+    website = 'https://github.com/floatingmuseum/Sonic'
 }

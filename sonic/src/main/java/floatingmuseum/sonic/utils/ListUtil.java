@@ -14,7 +14,7 @@ public class ListUtil {
     }
 
     /**
-     * 当新一页没有数据时返回null
+     * Will return null when new page doesn't have data
      */
     public static List subList(List list, int page, int limit) {
         int fromIndex = (page - 1) * limit;

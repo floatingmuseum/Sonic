@@ -1,10 +1,8 @@
 package floatingmuseum.sonic;
 
-
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import floatingmuseum.sonic.db.DBManager;
 import floatingmuseum.sonic.entity.TaskInfo;
@@ -15,7 +13,9 @@ import floatingmuseum.sonic.listener.ThreadListener;
 import floatingmuseum.sonic.threads.BaseThread;
 import floatingmuseum.sonic.threads.DownloadThread;
 import floatingmuseum.sonic.threads.InitThread;
+import floatingmuseum.sonic.threads.SingleThread;
 import floatingmuseum.sonic.utils.FileUtil;
+import floatingmuseum.sonic.utils.LogUtil;
 
 /**
  * Created by Floatingmuseum on 2017/3/31.
@@ -36,19 +36,22 @@ public class DownloadTask implements InitListener, ThreadListener {
     private boolean stopAfterInitThreadDone = false;
     private boolean isCancel = false;
     private int activeThreadsNum;
+    private ExecutorService threadsPool;
     private DownloadException downloadException;
     private InitThread initThread;
+    private boolean isSupportRange = true;
 
-    public DownloadTask(TaskInfo taskInfo, DBManager dbManager, TaskConfig taskConfig, TaskListener taskListener) {
+    public DownloadTask(TaskInfo taskInfo, DBManager dbManager, TaskConfig taskConfig, ExecutorService threadsPool, TaskListener taskListener) {
         this.taskInfo = taskInfo;
         this.dbManager = dbManager;
         this.taskListener = taskListener;
         this.maxThreads = taskConfig.getMaxThreads();
         this.retryTime = taskConfig.getRetryTime();
         this.taskConfig = taskConfig;
-        Log.i(TAG, "任务详情...名称:" + taskInfo.getName() + "...最大线程数:" + taskConfig.getMaxThreads() + "...进度反馈最小时间间隔:" + taskConfig.getProgressResponseInterval() + "...文件存储路径:" + taskInfo.getFilePath());
+        LogUtil.i(TAG, "DownloadTask...name:" + taskInfo.getName() + "...MaxThreads:" + taskConfig.getMaxThreads() + "...ProgressResponseInterval:" + taskConfig.getProgressResponseInterval() + "...FilePath:" + taskInfo.getFilePath());
         threads = new ArrayList<>();
         FileUtil.initDir(taskInfo.getDirPath());
+        this.threadsPool = threadsPool;
     }
 
     public TaskInfo getTaskInfo() {
@@ -58,28 +61,39 @@ public class DownloadTask implements InitListener, ThreadListener {
     public void start() {
         taskInfo.setState(Sonic.STATE_START);
         taskListener.onStart(taskInfo);
+        taskInfo.setState(Sonic.STATE_DOWNLOADING);
         threadInfoList = dbManager.getAllThreadInfo(taskInfo.getDownloadUrl());
         if (threadInfoList.size() == 0) {//First time
-            Log.i(TAG, "start()...第一次下载此任务." + "..." + taskInfo.getName());
+            LogUtil.i(TAG, "start()...First download." + "..." + taskInfo.getName());
             initThread = new InitThread(taskInfo.getDownloadUrl(), taskInfo.getName(), taskInfo.getDirPath(), taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
-            initThread.start();
+            threadsPool.execute(initThread);
         } else {
-            Log.i(TAG, "start()...继续下载此任务" + "..." + taskInfo.getName());
+            LogUtil.i(TAG, "start()...Resume download" + "..." + taskInfo.getName());
             initDownloadThread(threadInfoList);
-            for (DownloadThread thread : threads) {
-                thread.start();
+            if (threads.size() > 0) {
+                for (DownloadThread thread : threads) {
+                    threadsPool.execute(thread);
+//                    thread.start();
+                }
+            } else {
+                taskListener.onFinish(taskInfo);
             }
         }
     }
 
     public void stop() {
-        // TODO: 2017/5/5 快速点击开始暂停,会暂停失败,进度条闪烁,并且再点击暂停无效 
-        
         /**
-         * 等于0说明，是第一次下载，且处于获取任务长度的阶段,如果此时暂停，没有效果。获取长度后会继续下载
-         * 所以设置一个变量来控制，当长度获取完毕后，检查变量，可以获知用户是否在获取长度阶段点击了暂停
+         * threads.size equals 0 means first download,at this time,stopAllThread will not working,and download will keep running.
+         * so set stopAfterInitThreadDone true.can stop this task after it get file length.
+         *
+         * still has some delay.
          */
-        Log.i(TAG, "stop()...停止下载线程:" + threads.size() + taskInfo.getName() + "..." + stopAfterInitThreadDone);
+        if (singleThread != null) {
+            singleThread.stopThread();
+            return;
+        }
+
+        LogUtil.i(TAG, "stop()...Stop downloading Threads:" + threads.size() + taskInfo.getName() + "..." + stopAfterInitThreadDone);
         if (threads.size() == 0) {
             stopAfterInitThreadDone = true;
             if (initThread != null) {
@@ -102,25 +116,29 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     public void cancelTask() {
-        taskInfo.setProgress(0);
-        taskInfo.setCurrentSize(0);
-        taskInfo.setTotalSize(0);
+        removeRelatedInfo();
         taskInfo.setState(Sonic.STATE_CANCEL);
-        dbManager.delete(taskInfo);
         taskListener.onCancel(taskInfo);
     }
 
+    private void removeRelatedInfo() {
+        taskInfo.setProgress(0);
+        taskInfo.setCurrentSize(0);
+        taskInfo.setTotalSize(0);
+        dbManager.delete(taskInfo);
+        FileUtil.deleteFile(taskInfo.getFilePath());
+    }
+
     private void initDownloadThread(List<ThreadInfo> threadInfoList) {
-        Log.i(TAG, "TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getName());
+        LogUtil.i(TAG, "initDownloadThread()...TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getName());
         for (ThreadInfo info : threadInfoList) {
-            Log.i(TAG, "initDownloadThreadInfo线程" + info.getId() + "号...初始位置:" + info.getStartPosition() + "...当前位置:" + info.getCurrentPosition() + "...末尾位置:" + info.getEndPosition() + "..." + taskInfo.getName());
-            if (info.getCurrentPosition() < info.getEndPosition()) {//只初始化还没完成的线程
-                Log.i(TAG, info.getId() + "号开始工作" + "..." + taskInfo.getName());
+            LogUtil.i(TAG, "initDownloadThreadInfo()...ThreadID:" + info.getId() + "...StartPosition:" + info.getStartPosition() + "...CurrentPosition:" + info.getCurrentPosition() + "...EndPosition:" + info.getEndPosition() + "..." + taskInfo.getName());
+            if (info.getCurrentPosition() < info.getEndPosition()) {//Only init thread which not finished.
+                LogUtil.i(TAG, "initDownloadThreadInfo()...ThreadID:" + info.getId() + "...Not Finished" + "..." + taskInfo.getName());
                 DownloadThread thread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
                 threads.add(thread);
             }
         }
-        Log.i(TAG, "TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize());
         taskInfo.setProgress(getProgress());
 
         activeThreadsNum = threads.size();
@@ -128,7 +146,7 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onGetContentLength(long contentLength, boolean isSupportRange) {
-        Log.i(TAG, "onGetContentLength总文件大小:" + contentLength + "..." + FileUtil.bytesToMb(contentLength) + "mb" + "..." + taskInfo.getName() + "...isSupportRange:" + isSupportRange);
+        LogUtil.i(TAG, "onGetContentLength()...FileLength:" + contentLength + "..." + FileUtil.bytesToMb(contentLength) + "mb" + "..." + taskInfo.getName() + "...isSupportRange:" + isSupportRange);
         taskInfo.setTotalSize(contentLength);
 
         if (isSupportRange) {
@@ -139,8 +157,9 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     private void initMultipleThreads(long contentLength) {
+        LogUtil.i(TAG, "initSingleThread()...Support multi-threads:" + taskInfo.getName());
         dbManager.updateTaskInfo(taskInfo);
-        taskListener.onProgress(taskInfo);
+        updateProgress();
         threadInfoList = new ArrayList<>();
         long blockLength = contentLength / maxThreads;
 
@@ -150,7 +169,7 @@ public class DownloadTask implements InitListener, ThreadListener {
             long current = start;
             ThreadInfo threadInfo = new ThreadInfo(x, taskInfo.getDownloadUrl(), start, end, current, contentLength);
             threadInfoList.add(threadInfo);
-            dbManager.insertThreadInfo(threadInfo);//第一次初始化，存储线程信息到数据库
+            dbManager.insertThreadInfo(threadInfo);
         }
 
         if (stopAfterInitThreadDone) {
@@ -160,19 +179,26 @@ public class DownloadTask implements InitListener, ThreadListener {
             }
             taskInfo.setState(Sonic.STATE_PAUSE);
             dbManager.updateTaskInfo(taskInfo);
-            taskListener.onProgress(taskInfo);
+            taskListener.onPause(taskInfo);
             return;
         }
 
         initDownloadThread(threadInfoList);
         for (DownloadThread thread : threads) {
-            thread.start();
+            threadsPool.execute(thread);
+//            thread.start();
         }
     }
 
-    private void initSingleThread() {
-        taskListener.onProgress(taskInfo);
+    SingleThread singleThread;
 
+    private void initSingleThread() {
+        LogUtil.i(TAG, "initSingleThread()...Not support multi-threads:" + taskInfo.getName());
+        isSupportRange = false;
+        taskListener.onProgress(taskInfo);
+        ThreadInfo info = new ThreadInfo(1, taskInfo.getDownloadUrl(), 0, taskInfo.getTotalSize(), 0, taskInfo.getTotalSize());
+        singleThread = new SingleThread(info, taskInfo.getDirPath(), taskInfo.getName(), taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
+        threadsPool.execute(singleThread);
     }
 
     private int getProgress() {
@@ -190,22 +216,36 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     private void updateProgress() {
         taskInfo.setState(Sonic.STATE_DOWNLOADING);
+
         taskInfo.setCurrentSize(getCurrentSize());
         taskInfo.setProgress(getProgress());
-        Log.i(TAG, "updateProgress...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
+
+
+        LogUtil.i(TAG, "updateProgress()...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
+        taskListener.onProgress(taskInfo);
+    }
+
+    private void updateSingleThreadProgress(long currentSize) {
+        taskInfo.setState(Sonic.STATE_DOWNLOADING);
+        taskInfo.setCurrentSize(currentSize);
+        taskInfo.setProgress(getProgress());
         taskListener.onProgress(taskInfo);
     }
 
     @Override
     public void onPause(ThreadInfo threadInfo) {
+        if (!isSupportRange) {
+            handleSingleThreadTask(Sonic.STATE_PAUSE);
+            return;
+        }
         if (isAllThreadsDead()) {
             if (isCancel) {
                 cancelTask();
                 return;
             }
-            Log.i(TAG, "onPause...暂停成功:" + taskInfo.getState());
+            LogUtil.i(TAG, "onPause()...Pause Success:" + taskInfo.getState());
             updateProgress();
-            Log.i(TAG, "onPause...暂停成功:" + taskInfo.getState());
+            LogUtil.i(TAG, "onPause()...Pause Success:" + taskInfo.getState());
             updateTaskInfo(Sonic.STATE_PAUSE);
             taskListener.onPause(taskInfo);
         }
@@ -216,6 +256,10 @@ public class DownloadTask implements InitListener, ThreadListener {
         long nowTime = System.currentTimeMillis();
         if (taskConfig.getProgressResponseInterval() == 0 || (nowTime - lastUpdateTime) > taskConfig.getProgressResponseInterval()) {
             lastUpdateTime = nowTime;
+            if (!isSupportRange) {
+                updateSingleThreadProgress(threadInfo.getCurrentPosition());
+                return;
+            }
             updateProgress();
         }
     }
@@ -224,11 +268,12 @@ public class DownloadTask implements InitListener, ThreadListener {
         if (retryTime != 0) {
             retryTime--;
             ThreadInfo info = errorThread.getThreadInfo();
-            Log.i(TAG, info.getId() + "号线程发生错误...进行重试...当前剩余重试次数:" + retryTime + "...当前位置:" + info.getCurrentPosition());
+            LogUtil.i(TAG, "isHaveRetryTime()..." + info.getId() + "Thread exception occurred...to retry...current retryTime:" + retryTime + "...CurrentPosition:" + info.getCurrentPosition());
             threads.remove(errorThread);
             DownloadThread retryThread = new DownloadThread(info, taskInfo.getDirPath(), taskInfo.getName(), dbManager, taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
             threads.add(retryThread);
-            retryThread.start();
+            threadsPool.execute(retryThread);
+//            retryThread.start();
             return true;
         } else {
             return false;
@@ -236,10 +281,10 @@ public class DownloadTask implements InitListener, ThreadListener {
     }
 
     /**
-     * 无论是暂停,异常,完成区块下载都表明线程运行完毕死亡.
+     * Pause,Error,Finished,all means thread died
      */
     private synchronized boolean isAllThreadsDead() {
-        if (activeThreadsNum > 0) {
+        if (isSupportRange && activeThreadsNum > 0) {
             activeThreadsNum--;
             return activeThreadsNum == 0;
         } else {
@@ -249,6 +294,11 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onError(BaseThread errorThread, Throwable e) {
+        if (!isSupportRange) {
+            handleSingleThreadTask(Sonic.STATE_ERROR);
+            return;
+        }
+
         if (isHaveRetryTime(errorThread)) {
             return;
         }
@@ -268,6 +318,10 @@ public class DownloadTask implements InitListener, ThreadListener {
 
     @Override
     public void onFinished(int threadId) {
+        if (!isSupportRange) {
+            handleSingleThreadTask(Sonic.STATE_FINISH);
+            return;
+        }
         if (isAllThreadsDead()) {
             if (isCancel) {
                 cancelTask();
@@ -281,7 +335,7 @@ public class DownloadTask implements InitListener, ThreadListener {
                 taskInfo.setState(Sonic.STATE_FINISH);
                 taskListener.onFinish(taskInfo);
             } else {
-                taskInfo.setState(Sonic.STATE_ERROR);
+                updateTaskInfo(Sonic.STATE_ERROR);
                 taskListener.onError(taskInfo, downloadException);
             }
         }
@@ -292,15 +346,34 @@ public class DownloadTask implements InitListener, ThreadListener {
         if (retryTime != 0) {
             retryTime--;
             initThread = new InitThread(taskInfo.getDownloadUrl(), taskInfo.getName(), taskInfo.getDirPath(), taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this);
-            initThread.start();
+            threadsPool.execute(initThread);
+//            initThread.start();
             return;
+        }
+
+        if (DownloadException.TYPE_MALFORMED_URL == e.getExceptionType() || DownloadException.TYPE_FILE_NOT_FOUND == e.getExceptionType()) {
+            //If exception come from wrong url or file exception.remove all related info and file.
+            removeRelatedInfo();
         }
         updateTaskInfo(Sonic.STATE_ERROR);
         taskListener.onError(taskInfo, e);
     }
 
+    public void handleSingleThreadTask(int state) {
+        if (state == Sonic.STATE_FINISH) {
+            updateSingleThreadProgress(taskInfo.getTotalSize());
+            dbManager.delete(taskInfo);
+            taskInfo.setState(Sonic.STATE_FINISH);
+            taskListener.onFinish(taskInfo);
+        } else {
+            cancelTask();
+        }
+    }
+
     private void updateTaskInfo(int state) {
         taskInfo.setState(state);
-        dbManager.updateTaskInfo(taskInfo);
+        if (!isSupportRange) {
+            dbManager.updateTaskInfo(taskInfo);
+        }
     }
 }

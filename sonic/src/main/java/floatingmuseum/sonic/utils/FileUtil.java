@@ -1,5 +1,7 @@
 package floatingmuseum.sonic.utils;
 
+import android.webkit.MimeTypeMap;
+
 import java.io.File;
 import java.math.BigDecimal;
 
@@ -36,6 +38,15 @@ public class FileUtil {
         return fileName;
     }
 
+    /**
+     * Returns the file extension or an empty string iff there is no
+     * extension. This method is a convenience method for obtaining the
+     * extension of a url and has undefined results for other Strings.
+     */
+    public static String getUrlSuffix(String url) {
+        return MimeTypeMap.getFileExtensionFromUrl(url);
+    }
+
     public static void initDir(String dirPath) {
         File dir = new File(dirPath);
         if (!dir.exists()) {
@@ -43,10 +54,21 @@ public class FileUtil {
         }
     }
 
-    public static void deleteFile(String filePath){
+    public static void deleteFile(String filePath) {
         File file = new File(filePath);
         if (!file.exists()) {
             file.delete();
         }
+    }
+
+    /**
+     * <p>Estimate is the file complete
+     * <p>1.Compare md5 between local file and server file.
+     * <p>2.Compare full length between local file and server file.
+     * <p>3.Named the file suffix .tmp when it start download.after download finish change suffix to original.
+     */
+    private static boolean isFileComplete(){
+        // TODO: 2017/5/10 test file is complete
+        return false;
     }
 }

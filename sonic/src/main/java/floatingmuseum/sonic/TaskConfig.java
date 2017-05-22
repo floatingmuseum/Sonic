@@ -14,6 +14,7 @@ public class TaskConfig {
     private int connectTimeout = 5000;
     private int readTimeout = 5000;
     private String dirPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+    private int forceStart = Sonic.FORCE_START_NO;
 
     public int getMaxThreads() {
         return maxThreads;
@@ -69,6 +70,17 @@ public class TaskConfig {
         return this;
     }
 
+    public int getForceStart() {
+        return forceStart;
+    }
+
+    public TaskConfig setForceStart(int forceStart) {
+        if (forceStart == Sonic.FORCE_START_NO || forceStart == Sonic.FORCE_START_YES) {
+            this.forceStart = forceStart;
+        }
+        return this;
+    }
+
     @Override
     public String toString() {
         return "TaskConfig{" +
@@ -77,7 +89,8 @@ public class TaskConfig {
                 ", progressResponseInterval=" + progressResponseInterval +
                 ", connectTimeout=" + connectTimeout +
                 ", readTimeout=" + readTimeout +
-                ", dirPath='" + dirPath + '\'' +
+                ", dirPath='" + dirPath +
+                ", forceStart='" + forceStart + '\'' +
                 '}';
     }
 }

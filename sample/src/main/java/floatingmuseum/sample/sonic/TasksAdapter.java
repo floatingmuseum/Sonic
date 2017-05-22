@@ -45,7 +45,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         AppInfo appInfo = data.get(position);
         String fileName = FileUtil.getUrlFileName(appInfo.getName());
         holder.tvName.setText(fileName);
-//        Log.i(TAG, "AppName:" + appInfo.getName() + "..." + appInfo.getCurrentSize() + "..." + appInfo.getProgress());
+//        Log.i(TAG, "onBindViewHolder()...AppInfo:" + appInfo.toString());
         if (appInfo.getTotalSize() != 0) {
             holder.tvSize.setText("Size:" + appInfo.getCurrentSize() + "/" + appInfo.getTotalSize());
             holder.pbTask.setProgress(appInfo.getProgress());
