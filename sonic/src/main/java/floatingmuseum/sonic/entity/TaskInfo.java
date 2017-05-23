@@ -1,10 +1,13 @@
 package floatingmuseum.sonic.entity;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by Floatingmuseum on 2017/3/30.
  */
 
-public class TaskInfo {
+public class TaskInfo implements Parcelable {
 
     private String downloadUrl;
     private String tag;
@@ -127,4 +130,49 @@ public class TaskInfo {
                 ", state=" + state +
                 '}';
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.downloadUrl);
+        dest.writeString(this.tag);
+        dest.writeString(this.name);
+        dest.writeString(this.dirPath);
+        dest.writeString(this.filePath);
+        dest.writeLong(this.currentSize);
+        dest.writeLong(this.totalSize);
+        dest.writeInt(this.progress);
+        dest.writeLong(this.speed);
+        dest.writeInt(this.state);
+    }
+
+    protected TaskInfo(Parcel in) {
+        this.downloadUrl = in.readString();
+        this.tag = in.readString();
+        this.name = in.readString();
+        this.dirPath = in.readString();
+        this.filePath = in.readString();
+        this.currentSize = in.readLong();
+        this.totalSize = in.readLong();
+        this.progress = in.readInt();
+        this.speed = in.readLong();
+        this.state = in.readInt();
+    }
+
+    public static final Creator<TaskInfo> CREATOR = new Creator<TaskInfo>() {
+        @Override
+        public TaskInfo createFromParcel(Parcel source) {
+            return new TaskInfo(source);
+        }
+
+        @Override
+        public TaskInfo[] newArray(int size) {
+            return new TaskInfo[size];
+        }
+    };
 }
