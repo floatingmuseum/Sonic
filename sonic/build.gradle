@@ -35,7 +35,7 @@ publish{
     userOrg = 'floatingmuseum'
     groupId = 'com.floatingmuseum'
     artifactId = 'sonic'
-    publishVersion = '1.0.2'
+    publishVersion = '1.0.3'
     desc = 'Andorid download library.'
     website = 'https://github.com/floatingmuseum/Sonic'
 }
