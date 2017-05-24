@@ -2,6 +2,8 @@ package floatingmuseum.sonic;
 
 import android.content.Context;
 import android.os.Message;
+import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
@@ -43,6 +45,9 @@ public class Sonic implements TaskListener {
     public static final int FORCE_START_NO = 0;
     public static final int FORCE_START_YES = 1;
 
+    public static final String EXTRA_DOWNLOAD_TASK_INFO = "actionDownloadTaskInfo";
+    public static final String EXTRA_DOWNLOAD_EXCEPTION = "actionDownloadException";
+
     private UIHandler uiHandler;
     private static Context context;
     private static Sonic sonic;
@@ -56,6 +61,8 @@ public class Sonic implements TaskListener {
     private DBManager dbManager;
     private TaskConfig taskConfig = new TaskConfig();
     private ExecutorService threadsPool;
+    private BroadcastManager manager;
+    private String broadcastAction;
 
     private Sonic() {
     }
@@ -64,7 +71,13 @@ public class Sonic implements TaskListener {
         context = applicationContext;
         LogUtil.i(TAG, "init()...PackageName:" + context.getPackageName());
         LogUtil.i(TAG, "init()...Download dir path:" + taskConfig.getDirPath());
+
         dbManager = new DBManager(context);
+        if (TextUtils.isEmpty(broadcastAction)) {
+            manager = new BroadcastManager(context, context.getPackageName());
+        } else {
+            manager = new BroadcastManager(context, broadcastAction);
+        }
         uiHandler = new UIHandler();
         List<TaskInfo> allTask = dbManager.getAllDownloadTask();
         allTaskInfo = new HashMap<>();
@@ -187,6 +200,14 @@ public class Sonic implements TaskListener {
     }
 
     /**
+     * Default action is your app's package name
+     */
+    public Sonic setBroadcastAction(String action) {
+        broadcastAction = action;
+        return this;
+    }
+
+    /**
      * If you want see All the log from this library.
      */
     public Sonic setLogEnabled() {
@@ -199,14 +220,13 @@ public class Sonic implements TaskListener {
         return this;
     }
 
-
-    public Sonic registerDownloadListener(DownloadListener listener) {
+    private Sonic registerDownloadListener(DownloadListener listener) {
         LogUtil.i(TAG, "DownloadListener:" + listener);
         uiHandler.setListener(listener);
         return this;
     }
 
-    public void unRegisterDownloadListener() {
+    private void unRegisterDownloadListener() {
         uiHandler.removeListener();
     }
 
@@ -283,7 +303,7 @@ public class Sonic implements TaskListener {
             LogUtil.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...into waiting queue");
             DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
             waitingTasks.add(downloadTask);
-            sendMessage(taskInfo, STATE_WAITING, null);
+            manager.sendBroadcast(STATE_WAITING, taskInfo, null);
         } else {
             LogUtil.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...into download queue");
             DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
@@ -311,7 +331,6 @@ public class Sonic implements TaskListener {
         if (activeTasks.containsKey(tag)) {
             LogUtil.i(TAG, "pauseTask()...activeTasks:" + activeTasks.size() + "..." + tag);
             activeTasks.get(tag).stop();
-            return;
         } else if (forceStartTasks.containsKey(tag)) {
             LogUtil.i(TAG, "pauseTask()...forceStartTasks:" + activeTasks.size() + "..." + tag);
             forceStartTasks.get(tag).stop();
@@ -323,7 +342,7 @@ public class Sonic implements TaskListener {
                 if (taskInfo.getTag().equals(tag)) {
                     Log.i(TAG, "pauseTask()...waitingTasks:" + taskInfo.getName());
                     taskInfo.setState(STATE_PAUSE);
-                    sendMessage(taskInfo, STATE_PAUSE, null);
+                    manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
                     waitingTasks.remove(waitingTask);
                     return;
                 }
@@ -337,7 +356,7 @@ public class Sonic implements TaskListener {
         for (DownloadTask waitingTask : waitingTasks) {
             TaskInfo taskInfo = waitingTask.getTaskInfo();
             taskInfo.setState(STATE_PAUSE);
-            sendMessage(taskInfo, STATE_PAUSE, null);
+            manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
         }
         waitingTasks.clear();
 
@@ -393,7 +412,9 @@ public class Sonic implements TaskListener {
             dbManager.delete(taskInfo);
             FileUtil.deleteFile(taskInfo.getFilePath());
             onCancel(taskInfo);
+            return;
         }
+        LogUtil.i(TAG, "Which task that you want cancel,doesn't exist.");
     }
 
     private void cancelAllTask() {
@@ -401,36 +422,43 @@ public class Sonic implements TaskListener {
 
     @Override
     public void onStart(TaskInfo taskInfo) {
-        sendMessage(taskInfo, STATE_START, null);
+        manager.sendBroadcast(STATE_START, taskInfo, null);
     }
 
     @Override
     public void onPause(TaskInfo taskInfo) {
-        sendMessage(taskInfo, STATE_PAUSE, null);
+        manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
         checkWaitingTasks(taskInfo);
     }
 
     @Override
     public void onProgress(TaskInfo taskInfo) {
-        sendMessage(taskInfo, STATE_DOWNLOADING, null);
+        manager.sendBroadcast(STATE_DOWNLOADING, taskInfo, null);
     }
 
     @Override
     public void onError(TaskInfo taskInfo, DownloadException downloadException) {
-        sendMessage(taskInfo, STATE_ERROR, downloadException);
+        handleExceptionType(taskInfo, downloadException);
+        manager.sendBroadcast(STATE_ERROR, taskInfo, downloadException);
         checkWaitingTasks(taskInfo);
+    }
+
+    private void handleExceptionType(TaskInfo taskInfo, DownloadException downloadException) {
+        if (downloadException.getExceptionType() == DownloadException.TYPE_MALFORMED_URL) {
+            allTaskInfo.remove(taskInfo.getTag());
+        }
     }
 
     @Override
     public void onFinish(TaskInfo taskInfo) {
-        sendMessage(taskInfo, STATE_FINISH, null);
+        manager.sendBroadcast(STATE_FINISH, taskInfo, null);
         allTaskInfo.remove(taskInfo.getTag());
         checkWaitingTasks(taskInfo);
     }
 
     @Override
     public void onCancel(TaskInfo taskInfo) {
-        sendMessage(taskInfo, STATE_CANCEL, null);
+        manager.sendBroadcast(STATE_CANCEL, taskInfo, null);
         allTaskInfo.remove(taskInfo.getTag());
         checkWaitingTasks(taskInfo);
     }

@@ -38,12 +38,12 @@ public class InitThread extends Thread {
 
     @Override
     public void run() {
-        URL url = null;
+        URL url;
         HttpURLConnection connection = null;
         try {
             url = new URL(downloadUrl);
         } catch (MalformedURLException e) {
-            listener.onInitError(new DownloadException(DownloadException.TYPE_MALFORMED_URL, "InitThread Request failed,Wrong url.", e));
+            listener.onInitError(new DownloadException(DownloadException.TYPE_MALFORMED_URL, "InitThread Request failed,Wrong url." + downloadUrl, e));
             return;
         }
 

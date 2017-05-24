@@ -1,12 +1,14 @@
 package floatingmuseum.sample.sonic;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Environment;
 import android.support.annotation.NonNull;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
@@ -15,12 +17,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ProgressBar;
-import android.widget.Spinner;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +26,6 @@ import java.util.Map;
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.Sonic;
 import floatingmuseum.sonic.Tails;
-import floatingmuseum.sonic.TaskConfig;
 import floatingmuseum.sonic.entity.DownloadRequest;
 import floatingmuseum.sonic.entity.TaskInfo;
 import floatingmuseum.sonic.listener.DownloadListener;
@@ -43,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LinearLayoutManager linearLayoutManager;
     private TasksAdapter adapter;
     private List<AppInfo> downloadList;
-    private String singleTaskUrl = "http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_17/17/com.xiachufang_054408.apk";
+    private DownloadReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,12 +53,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initData();
         initView();
         initPermission();
+
+        receiver = new DownloadReceiver();
+        IntentFilter filter = new IntentFilter();
+        Log.i(TAG,"下载广播...action包名:"+getPackageName());
+        filter.addAction("FloatingMuseum");
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);
+    }
+
+    private class DownloadReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            TaskInfo taskInfo = intent.getParcelableExtra(Sonic.EXTRA_DOWNLOAD_TASK_INFO);
+            DownloadException exception = intent.getParcelableExtra(Sonic.EXTRA_DOWNLOAD_EXCEPTION);
+            Log.i(TAG, "下载广播TaskInfo:" + taskInfo.toString());
+            if (exception != null) {
+                Log.i(TAG, "下载广播Exception:" + exception.getErrorMessage());
+            }
+            updateAppInfo(taskInfo);
+        }
     }
 
     private void initSonic() {
 //        sonic = Sonic.getInstance();
         sonic = Tails.getSonic();
-        sonic.registerDownloadListener(myListener);
+//        sonic.registerDownloadListener(myListener);
     }
 
     private void initData() {
@@ -88,6 +104,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         downloadList.add(appInfo9);
         AppInfo appInfo10 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_31/17/com.duokan.reader_050812.apk", "多看阅读");
         downloadList.add(appInfo10);
+        AppInfo appInfo11 = new AppInfo("http://file.foxitreader.cn/reader/ga/FoxitReader_CHS_8.3.0.14878.exe","福昕阅读器");
+        downloadList.add(appInfo11);
         checkTasks();
     }
 
@@ -297,7 +315,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // TODO: 2017/4/20 内存泄漏
         Log.i(TAG, "onDestroy");
 //        sonic.stopAllTask();
-        sonic.unRegisterDownloadListener();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+//        sonic.unRegisterDownloadListener();
         super.onDestroy();
     }
 

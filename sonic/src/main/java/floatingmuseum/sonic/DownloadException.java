@@ -1,5 +1,8 @@
 package floatingmuseum.sonic;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by Floatingmuseum on 2017/4/18.
  */
@@ -51,4 +54,35 @@ public class DownloadException extends Exception {
     public int getExceptionType() {
         return exceptionType;
     }
+
+
+//    @Override
+//    public int describeContents() {
+//        return 0;
+//    }
+//
+//    @Override
+//    public void writeToParcel(Parcel dest, int flags) {
+//        dest.writeString(this.errorMessage);
+//        dest.writeInt(this.responseCode);
+//        dest.writeInt(this.exceptionType);
+//    }
+//
+//    protected DownloadException(Parcel in) {
+//        this.errorMessage = in.readString();
+//        this.responseCode = in.readInt();
+//        this.exceptionType = in.readInt();
+//    }
+//
+//    public static final Creator<DownloadException> CREATOR = new Creator<DownloadException>() {
+//        @Override
+//        public DownloadException createFromParcel(Parcel source) {
+//            return new DownloadException(source);
+//        }
+//
+//        @Override
+//        public DownloadException[] newArray(int size) {
+//            return new DownloadException[size];
+//        }
+//    };
 }

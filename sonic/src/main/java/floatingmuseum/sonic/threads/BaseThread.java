@@ -45,7 +45,7 @@ public abstract class BaseThread implements Runnable {
         RandomAccessFile raf = null;
         InputStream inputStream = null;
 
-        URL url = null;
+        URL url;
         try {
             url = new URL(threadInfo.getUrl());
             connection = (HttpURLConnection) url.openConnection();
@@ -93,7 +93,7 @@ public abstract class BaseThread implements Runnable {
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
-            downloadException = new DownloadException(DownloadException.TYPE_MALFORMED_URL, "DownloadThread failed", e);
+            downloadException = new DownloadException(DownloadException.TYPE_MALFORMED_URL, "DownloadThread failed." + threadInfo.getUrl(), e);
             listener.onError(this, downloadException);
         } catch (ProtocolException e) {
             e.printStackTrace();

@@ -1,3 +1,10 @@
+#### Version 1.0.4
+1. Remove task from task queue when exception is MalformedURLException.
+2. Replace DownloadListener to LocalBroadcastReceiver.
+
+#### Version 1.0.3
+1. Make TaskInfo implements Parcelable
+
 #### Version 1.0.2
 1. Fixed FileNotFoundException occured,but doesn't call onError.
 2. Fixed when MalformedURLException and FileNotFoundException occured,sonic stuck on the way.
