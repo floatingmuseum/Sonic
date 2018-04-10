@@ -50,7 +50,7 @@ public class Sonic implements TaskListener {
 
     private UIHandler uiHandler;
     private static Context context;
-    private static Sonic sonic;
+//    private static Sonic sonic;
 
     private int activeTaskNumber = 3;
 
@@ -63,6 +63,10 @@ public class Sonic implements TaskListener {
     private ExecutorService threadsPool;
     private BroadcastManager manager;
     private String broadcastAction;
+
+    private static class Holder {
+        private static final Sonic INSTANCE = new Sonic();
+    }
 
     private Sonic() {
     }
@@ -78,7 +82,7 @@ public class Sonic implements TaskListener {
         } else {
             manager = new BroadcastManager(context, broadcastAction);
         }
-        uiHandler = new UIHandler();
+//        uiHandler = new UIHandler();
         List<TaskInfo> allTask = dbManager.getAllDownloadTask();
         allTaskInfo = new HashMap<>();
         activeTasks = new HashMap<>();
@@ -101,15 +105,16 @@ public class Sonic implements TaskListener {
     }
 
     public static Sonic getInstance() {
-        LogUtil.i(TAG, "getInstance()...Instance:" + sonic);
-        if (sonic == null) {
-            synchronized (Sonic.class) {
-                if (sonic == null) {
-                    sonic = new Sonic();
-                }
-            }
-        }
-        return sonic;
+//        LogUtil.i(TAG, "getInstance()...Instance:" + sonic);
+//        if (sonic == null) {
+//            synchronized (Sonic.class) {
+//                if (sonic == null) {
+//                    sonic = new Sonic();
+//                }
+//            }
+//        }
+//        return sonic;
+        return Holder.INSTANCE;
     }
 
     /**
