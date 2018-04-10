@@ -22,6 +22,7 @@ import android.widget.Button;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.Sonic;
@@ -92,9 +93,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         downloadList.add(appInfo3);
         AppInfo appInfo4 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_29/12/com.qiyi.video_124106.apk", "爱奇艺");
         downloadList.add(appInfo4);
-        AppInfo appInfo5 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_8/20/com.kugou.android_080305.apk", "酷狗");
+        AppInfo appInfo5 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_17/17/com.xiachufang_054408.apk", "下厨房");
         downloadList.add(appInfo5);
-        AppInfo appInfo6 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_17/17/com.xiachufang_054408.apk", "下厨房");
+        AppInfo appInfo6 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_8/20/com.kugou.android_080305.apk", "酷狗");
         downloadList.add(appInfo6);
         AppInfo appInfo7 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_30/17/com.netease.mail_051233.apk.apk", "网易邮箱大师");
         downloadList.add(appInfo7);
@@ -131,6 +132,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         rvTasks.setLayoutManager(linearLayoutManager);
 
         adapter = new TasksAdapter(downloadList);
+        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                Log.i(TAG,"AdapterDataObserver...onChanged()");
+            }
+
+            @Override
+            public void onItemRangeChanged(int positionStart, int itemCount) {
+                super.onItemRangeChanged(positionStart, itemCount);
+                Log.i(TAG,"AdapterDataObserver...onItemRangeChanged()...positionStart:"+positionStart+"...itemCount:"+itemCount);
+            }
+
+            @Override
+            public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
+                super.onItemRangeChanged(positionStart, itemCount, payload);
+                Log.i(TAG,"AdapterDataObserver...onItemRangeChanged()...positionStart:"+positionStart+"...itemCount:"+itemCount);
+            }
+
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                super.onItemRangeInserted(positionStart, itemCount);
+                Log.i(TAG,"AdapterDataObserver...onItemRangeInserted()...positionStart:"+positionStart+"...itemCount:"+itemCount);
+            }
+
+            @Override
+            public void onItemRangeRemoved(int positionStart, int itemCount) {
+                super.onItemRangeRemoved(positionStart, itemCount);
+                Log.i(TAG,"AdapterDataObserver...onItemRangeRemoved()...positionStart:"+positionStart+"...itemCount:"+itemCount);
+            }
+
+            @Override
+            public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+                super.onItemRangeMoved(fromPosition, toPosition, itemCount);
+                Log.i(TAG,"AdapterDataObserver...onItemRangeMoved()...fromPosition:"+fromPosition+"...toPosition:"+toPosition+"...itemCount:"+itemCount);
+            }
+        });
         rvTasks.setAdapter(adapter);
         adapter.setOnItemChildClickListener(new TasksAdapter.OnItemChildClickListener() {
             @Override
@@ -249,11 +287,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void updateAppInfo(TaskInfo taskInfo) {
-        Log.i(TAG, "刷新AppInfo...updateAppInfo():" + taskInfo.getName() + "..." + taskInfo.getCurrentSize() + "..." + taskInfo.getTotalSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
+        Log.i(TAG, "刷新AppInfo:" + taskInfo.getName() + "..." + taskInfo.getCurrentSize() + "..." + taskInfo.getTotalSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
         for (int i = 0; i < downloadList.size(); i++) {
             AppInfo appInfo = downloadList.get(i);
             if (taskInfo.getTag().equals(appInfo.getUrl())) {
-                Log.i(TAG, "刷新AppInfo:" + taskInfo.getName() + "..." + taskInfo.getCurrentSize() + "..." + taskInfo.getTotalSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
+                Log.i(TAG, "刷新AppInfo:"+taskInfo.getName()+"...更新UI" );
                 appInfo.setCurrentSize(taskInfo.getCurrentSize());
                 appInfo.setTotalSize(taskInfo.getTotalSize());
                 appInfo.setProgress(taskInfo.getProgress());
@@ -267,6 +305,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void updateUI(AppInfo appInfo, int position) {
         int firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition();
         int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
+        Log.i(TAG, "刷新UI:...itemPosition" + position + "...firstVisibleItemPosition:"+firstVisibleItemPosition+"...lastVisibleItemPosition:"+lastVisibleItemPosition);
         if (position >= firstVisibleItemPosition && position <= lastVisibleItemPosition) {
             TasksAdapter.TaskViewHolder holder = (TasksAdapter.TaskViewHolder) rvTasks.findViewHolderForAdapterPosition(position);
             Log.i(TAG, "刷新UI:" + appInfo.getName() + "...CurrentSize:" + appInfo.getCurrentSize() + "...TotalSize:" + appInfo.getTotalSize() + "...Progress:" + appInfo.getProgress() + "...State:" + appInfo.getState());
@@ -312,7 +351,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
-        // TODO: 2017/4/20 内存泄漏
         Log.i(TAG, "onDestroy");
 //        sonic.stopAllTask();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
