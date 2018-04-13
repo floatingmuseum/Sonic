@@ -45,7 +45,7 @@ public class DownloadTask implements ThreadListener {
 
     private UIHandler uiHandler;
 
-    public DownloadTask(TaskInfo taskInfo, DBManager dbManager, TaskConfig taskConfig, ExecutorService threadsPool, TaskListener taskListener) {
+    DownloadTask(TaskInfo taskInfo, DBManager dbManager, TaskConfig taskConfig, ExecutorService threadsPool, TaskListener taskListener) {
         this.taskInfo = taskInfo;
         this.dbManager = dbManager;
         this.taskListener = taskListener;

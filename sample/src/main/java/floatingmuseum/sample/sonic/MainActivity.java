@@ -22,14 +22,12 @@ import android.widget.Button;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.Sonic;
 import floatingmuseum.sonic.Tails;
 import floatingmuseum.sonic.entity.DownloadRequest;
 import floatingmuseum.sonic.entity.TaskInfo;
-import floatingmuseum.sonic.listener.DownloadListener;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -79,7 +77,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initSonic() {
         sonic = Sonic.getInstance();
 //        sonic = Tails.getSonic();
-//        sonic.registerDownloadListener(myListener);
     }
 
     private void initData() {
@@ -358,58 +355,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        sonic.unRegisterDownloadListener();
         super.onDestroy();
     }
-
-    private DownloadListener myListener = new DownloadListener() {
-
-        @Override
-        public void onStart(TaskInfo taskInfo) {
-            Log.i(TAG, "任务开始...onStart:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
-            updateAppInfo(taskInfo);
-        }
-
-        @Override
-        public void onWaiting(TaskInfo taskInfo) {
-            Log.i(TAG, "任务等待...onWaiting:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
-            updateAppInfo(taskInfo);
-            //几个回调方法不需要notifyDataSetChanged说明只需要当其处在可见范围内时刷新其状态
-            //需要notifyDataSetChanged说明可能在滑出屏幕时也会变换状态
-//        adapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onPause(TaskInfo taskInfo) {
-            Log.i(TAG, "任务暂停...onPause:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
-            updateAppInfo(taskInfo);
-//            adapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onProgress(TaskInfo taskInfo) {
-            Log.i(TAG, "任务进行中...onProgress:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
-//        tvSingleTaskSize.setText("Size:" + taskInfo.getCurrentSize() + "/" + taskInfo.getTotalSize());
-//        pbSingleTask.setProgress(taskInfo.getProgress());
-            updateAppInfo(taskInfo);
-        }
-
-        @Override
-        public void onFinish(TaskInfo taskInfo) {
-            Log.i(TAG, "任务完成...onFinish:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
-            updateAppInfo(taskInfo);
-//            adapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onError(TaskInfo taskInfo, DownloadException downloadException) {
-            Log.i(TAG, "任务异常...onError:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState() + "..." + downloadException.getErrorMessage());
-            downloadException.printStackTrace();
-            updateAppInfo(taskInfo);
-//            adapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onCancel(TaskInfo taskInfo) {
-            Log.i(TAG, "任务取消...onCancel:当前大小:" + taskInfo.getCurrentSize() + "...总大小:" + taskInfo.getTotalSize() + "..." + taskInfo.getName() + "..." + taskInfo.getState());
-            updateAppInfo(taskInfo);
-        }
-    };
 }

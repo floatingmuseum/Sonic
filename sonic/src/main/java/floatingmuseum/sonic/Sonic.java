@@ -25,7 +25,7 @@ import floatingmuseum.sonic.utils.LogUtil;
  * Created by Floatingmuseum on 2017/3/16.
  */
 
-public class Sonic implements TaskListener {
+public class Sonic {
 
     private static final String TAG = Sonic.class.getName();
 
@@ -155,6 +155,7 @@ public class Sonic implements TaskListener {
     }
 
     /**
+     * Task will retry when error happen
      * default is 5;
      */
     public Sonic setRetryTime(int retryTime) {
@@ -200,6 +201,7 @@ public class Sonic implements TaskListener {
     }
 
     /**
+     * Use LocalBroadcastManager register receiver where your want receive download info
      * Default action is your app's package name
      */
     public Sonic setBroadcastAction(String action) {
@@ -260,7 +262,7 @@ public class Sonic implements TaskListener {
         return allTaskInfo;
     }
 
-    public TaskConfig getFinalTaskConfig(TaskInfo taskInfo, DownloadRequest request) {
+    private TaskConfig getFinalTaskConfig(TaskInfo taskInfo, DownloadRequest request) {
         TaskConfig existTaskConfig = dbManager.queryTaskConfig(taskInfo.getTag());
         if (existTaskConfig != null) {
             LogUtil.i(TAG, "getFinalTaskConfig()...config exist in db:" + existTaskConfig.toString());
@@ -291,12 +293,12 @@ public class Sonic implements TaskListener {
         if (activeTasks.size() == activeTaskNumber) {
             taskInfo.setState(Sonic.STATE_WAITING);
             LogUtil.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...into waiting queue");
-            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
+            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, taskListener);
             waitingTasks.add(downloadTask);
             manager.sendBroadcast(STATE_WAITING, taskInfo, null);
         } else {
             LogUtil.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...into download queue");
-            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
+            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, taskListener);
             activeTasks.put(taskInfo.getTag(), downloadTask);
             downloadTask.start();
         }
@@ -307,7 +309,7 @@ public class Sonic implements TaskListener {
         LogUtil.i(TAG, "isForceStart:" + finalTaskConfig.toString());
         if (finalTaskConfig.getForceStart() == FORCE_START_YES) {
             LogUtil.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...force start download");
-            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, this);
+            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, taskListener);
             forceStartTasks.put(taskInfo.getTag(), downloadTask);
             downloadTask.start();
             return true;
@@ -401,7 +403,7 @@ public class Sonic implements TaskListener {
             taskInfo.setState(Sonic.STATE_CANCEL);
             dbManager.delete(taskInfo);
             FileUtil.deleteFile(taskInfo.getFilePath());
-            onCancel(taskInfo);
+            taskListener.onCancel(taskInfo);
             return;
         }
         LogUtil.i(TAG, "Which task that you want cancel,doesn't exist.");
@@ -410,47 +412,10 @@ public class Sonic implements TaskListener {
     private void cancelAllTask() {
     }
 
-    @Override
-    public void onStart(TaskInfo taskInfo) {
-        manager.sendBroadcast(STATE_START, taskInfo, null);
-    }
-
-    @Override
-    public void onPause(TaskInfo taskInfo) {
-        manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
-        checkWaitingTasks(taskInfo);
-    }
-
-    @Override
-    public void onProgress(TaskInfo taskInfo) {
-        manager.sendBroadcast(STATE_DOWNLOADING, taskInfo, null);
-    }
-
-    @Override
-    public void onError(TaskInfo taskInfo, DownloadException downloadException) {
-        handleExceptionType(taskInfo, downloadException);
-        manager.sendBroadcast(STATE_ERROR, taskInfo, downloadException);
-        checkWaitingTasks(taskInfo);
-    }
-
     private void handleExceptionType(TaskInfo taskInfo, DownloadException downloadException) {
         if (downloadException.getExceptionType() == DownloadException.TYPE_MALFORMED_URL) {
             allTaskInfo.remove(taskInfo.getTag());
         }
-    }
-
-    @Override
-    public void onFinish(TaskInfo taskInfo) {
-        manager.sendBroadcast(STATE_FINISH, taskInfo, null);
-        allTaskInfo.remove(taskInfo.getTag());
-        checkWaitingTasks(taskInfo);
-    }
-
-    @Override
-    public void onCancel(TaskInfo taskInfo) {
-        manager.sendBroadcast(STATE_CANCEL, taskInfo, null);
-        allTaskInfo.remove(taskInfo.getTag());
-        checkWaitingTasks(taskInfo);
     }
 
     private void checkWaitingTasks(TaskInfo taskInfo) {
@@ -470,15 +435,42 @@ public class Sonic implements TaskListener {
         LogUtil.i(TAG, "checkWaitingTasks()...MaxActiveTaskNumber:" + activeTaskNumber + "...CurrentDownloadTaskNumber:" + activeTasks.size() + "...CurrentWaitingTaskNumber:" + waitingTasks.size() + "...ForceDownloadTaskNumber:" + forceStartTasks.size());
     }
 
-//    private void sendMessage(TaskInfo taskInfo, int downloadState, DownloadException downloadException) {
-//        UIMessage taskMessage;
-//        if (downloadState == STATE_ERROR) {
-//            taskMessage = new UIMessage(taskInfo, downloadState, downloadException);
-//        } else {
-//            taskMessage = new UIMessage(taskInfo, downloadState, null);
-//        }
-//        Message message = uiHandler.obtainMessage();
-//        message.obj = taskMessage;
-//        uiHandler.sendMessage(message);
-//    }
+    private TaskListener taskListener = new TaskListener() {
+        @Override
+        public void onStart(TaskInfo taskInfo) {
+            manager.sendBroadcast(STATE_START, taskInfo, null);
+        }
+
+        @Override
+        public void onPause(TaskInfo taskInfo) {
+            manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
+            checkWaitingTasks(taskInfo);
+        }
+
+        @Override
+        public void onProgress(TaskInfo taskInfo) {
+            manager.sendBroadcast(STATE_DOWNLOADING, taskInfo, null);
+        }
+
+        @Override
+        public void onError(TaskInfo taskInfo, DownloadException downloadException) {
+            handleExceptionType(taskInfo, downloadException);
+            manager.sendBroadcast(STATE_ERROR, taskInfo, downloadException);
+            checkWaitingTasks(taskInfo);
+        }
+
+        @Override
+        public void onFinish(TaskInfo taskInfo) {
+            manager.sendBroadcast(STATE_FINISH, taskInfo, null);
+            allTaskInfo.remove(taskInfo.getTag());
+            checkWaitingTasks(taskInfo);
+        }
+
+        @Override
+        public void onCancel(TaskInfo taskInfo) {
+            manager.sendBroadcast(STATE_CANCEL, taskInfo, null);
+            allTaskInfo.remove(taskInfo.getTag());
+            checkWaitingTasks(taskInfo);
+        }
+    };
 }

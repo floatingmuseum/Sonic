@@ -40,7 +40,7 @@ public class App extends Application {
                 .setActiveTaskNumber(2)
                 .setMaxThreads(5)
                 .setProgressResponseInterval(100)
-                .setRetryTime(4)
+                .setRetryTime(2)
                 .setReadTimeout(3000)
                 .setConnectTimeout(3000)
                 .setDirPath(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath())
