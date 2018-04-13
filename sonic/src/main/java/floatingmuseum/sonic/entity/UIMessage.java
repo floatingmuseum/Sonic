@@ -12,11 +12,12 @@ public class UIMessage {
     public static final int THREAD_FETCH_CONTENT_LENGTH = 0;
     public static final int THREAD_INIT_THREAD_ERROR = 1;
     public static final int THREAD_INIT = 2;
-    public static final int THREAD_START = 3;
-    public static final int THREAD_PROGRESS = 4;
-    public static final int THREAD_PAUSE = 5;
-    public static final int THREAD_FINISH = 6;
-    public static final int THREAD_ERROR = 7;
+    public static final int THREAD_INIT_PAUSE = 3;
+    public static final int THREAD_START = 4;
+    public static final int THREAD_PROGRESS = 5;
+    public static final int THREAD_PAUSE = 6;
+    public static final int THREAD_FINISH = 7;
+    public static final int THREAD_ERROR = 8;
 
     private int state;
     private long contentLength;

@@ -88,12 +88,6 @@ public class DownloadTask implements ThreadListener {
     }
 
     public void stop() {
-        /**
-         * threads.size equals 0 means first download,at this time,stopAllThread will not working,and download will keep running.
-         * so set stopAfterInitThreadDone true.can stop this task after it get file length.
-         *
-         * still has some delay.
-         */
         if (singleThread != null) {
             singleThread.stopThread();
             return;
@@ -208,8 +202,7 @@ public class DownloadTask implements ThreadListener {
     }
 
     private int getProgress() {
-        int progress = (int) (((float) taskInfo.getCurrentSize() / (float) taskInfo.getTotalSize()) * 100);
-        return progress;
+        return (int) (((float) taskInfo.getCurrentSize() / (float) taskInfo.getTotalSize()) * 100);
     }
 
     private long getCurrentSize() {
@@ -236,6 +229,12 @@ public class DownloadTask implements ThreadListener {
         taskInfo.setCurrentSize(currentSize);
         taskInfo.setProgress(getProgress());
         taskListener.onProgress(taskInfo);
+    }
+
+    @Override
+    public void onInitThreadPause() {
+        updateTaskInfo(Sonic.STATE_PAUSE);
+        taskListener.onPause(taskInfo);
     }
 
     @Override

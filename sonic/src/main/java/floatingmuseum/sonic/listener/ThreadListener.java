@@ -15,6 +15,8 @@ public interface ThreadListener {
 
     void onInitThreadError(DownloadException e);
 
+    void onInitThreadPause();
+
     void onStart(ThreadInfo threadInfo);
 
     void onPause(ThreadInfo threadInfo);

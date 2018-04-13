@@ -31,6 +31,9 @@ public class InitThread extends Thread {
     private int readTimeout;
     private int connectTimeout;
     private UIHandler uiHandler;
+    private boolean stopThread = false;
+    private boolean isGetResponseCode = false;
+    private boolean isOver = false;
 
     public InitThread(UIHandler uiHandler, String downloadUrl, String fileName, String downloadDirPath, int readTimeout, int connectTimeout) {
         this.downloadUrl = downloadUrl;
@@ -48,7 +51,7 @@ public class InitThread extends Thread {
         try {
             url = new URL(downloadUrl);
         } catch (MalformedURLException e) {
-            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR,0,false,new DownloadException(DownloadException.TYPE_MALFORMED_URL, "InitThread Request failed,Wrong url." + downloadUrl, e));
+            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_MALFORMED_URL, "InitThread Request failed,Wrong url." + downloadUrl, e));
             return;
         }
 
@@ -58,7 +61,18 @@ public class InitThread extends Thread {
             connection.setReadTimeout(readTimeout);
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Range", "bytes=" + 0 + "-");
+
+
+            long getResponseCodeStart = System.currentTimeMillis();
+            if (checkStop()) {
+                return;
+            }
             int responseCode = connection.getResponseCode();
+            LogUtil.d(TAG, "时间测试...init...获取状态码:" + (System.currentTimeMillis() - getResponseCodeStart));
+            isGetResponseCode = true;
+            if (checkStop()) {
+                return;
+            }
             LogUtil.i(TAG, "InitThread...Response code:" + responseCode);
 
             if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -66,14 +80,14 @@ public class InitThread extends Thread {
             } else if (responseCode == HttpURLConnection.HTTP_PARTIAL) {
                 prepare(connection, true);
             } else {
-                sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR,0,false,new DownloadException(DownloadException.TYPE_RESPONSE_CODE, "InitThread Request failed", responseCode));
+                sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_RESPONSE_CODE, "InitThread Request failed", responseCode));
             }
         } catch (ProtocolException e) {
             e.printStackTrace();
-            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR,0,false,new DownloadException(DownloadException.TYPE_PROTOCOL, "InitThread Request failed", e));
+            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_PROTOCOL, "InitThread Request failed", e));
         } catch (IOException e) {
             e.printStackTrace();
-            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR,0,false,new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
+            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -84,7 +98,7 @@ public class InitThread extends Thread {
     private void prepare(HttpURLConnection connection, boolean isSupportRange) {
         long contentLength = connection.getContentLength();
         if (contentLength <= 0) {
-            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR,0,false,new DownloadException(DownloadException.TYPE_WRONG_LENGTH, "File length exception. length<=0."));
+            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_WRONG_LENGTH, "File length exception. length<=0."));
             return;
         }
         File dir = new File(downloadDirPath);
@@ -94,40 +108,64 @@ public class InitThread extends Thread {
         try {
             randomAccessFile = new RandomAccessFile(file, "rwd");
             randomAccessFile.setLength(contentLength);
-            sendMessage(UIMessage.THREAD_FETCH_CONTENT_LENGTH,contentLength,isSupportRange,null);
+            sendMessage(UIMessage.THREAD_FETCH_CONTENT_LENGTH, contentLength, isSupportRange, null);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR,0,false,new DownloadException(DownloadException.TYPE_FILE_NOT_FOUND, "InitThread Request failed,File not found", e));
+            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_FILE_NOT_FOUND, "InitThread Request failed,File not found", e));
         } catch (IOException e) {
             e.printStackTrace();
-            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR,0,false,new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
+            sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
         } finally {
             if (randomAccessFile != null) {
                 try {
                     randomAccessFile.close();
                 } catch (IOException e) {
                     e.printStackTrace();
-                    sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR,0,false,new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
+                    sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
                 }
             }
         }
     }
 
     private void sendMessage(int state, long contentLength, boolean isSupportRange, DownloadException e) {
-        UIMessage uiMessage = new UIMessage(state).setContentLength(contentLength)
-                .setSupportRange(isSupportRange)
-                .setDownloadException(e);
+        UIMessage uiMessage = new UIMessage(state);
+        if (UIMessage.THREAD_INIT_PAUSE != state) {
+            uiMessage.setContentLength(contentLength)
+                    .setSupportRange(isSupportRange)
+                    .setDownloadException(e);
+        }
 
         Message message = uiHandler.obtainMessage();
         message.obj = uiMessage;
         uiHandler.sendMessage(message);
     }
 
+    private boolean checkStop() {
+        LogUtil.i(TAG, "checkStop()...ThreadName:" + Thread.currentThread() + "...stopThread:" + stopThread);
+        if (stopThread) {
+            if (!isOver) {
+                sendMessage(UIMessage.THREAD_INIT_PAUSE, -1, false, null);
+            }
+            return true;
+        }
+        return false;
+    }
+
     public void stopThread() {
-        if (!Thread.interrupted()) {
-            interrupt();
+        stopThread = true;
+        if (!isGetResponseCode) {
+            isOver = true;
+            sendMessage(UIMessage.THREAD_INIT_PAUSE, -1, false, null);
         }
     }
+
+//    private boolean checkStop() {
+//        if (stopThread) {
+//            sendMessage(UIMessage.THREAD_PAUSE, threadInfo, null);
+//            return true;
+//        }
+//        return false;
+//    }
 }
 
 

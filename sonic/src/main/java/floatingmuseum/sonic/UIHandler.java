@@ -31,6 +31,9 @@ public class UIHandler extends Handler {
                     break;
                 case UIMessage.THREAD_INIT:
                     break;
+                case UIMessage.THREAD_INIT_PAUSE:
+                    task.onInitThreadPause();
+                    break;
                 case UIMessage.THREAD_START:
                     task.onProgress(message.getThreadInfo());
                     break;
