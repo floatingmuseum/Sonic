@@ -4,8 +4,7 @@ import android.os.Handler;
 import android.os.Message;
 
 import floatingmuseum.sonic.entity.TaskInfo;
-import floatingmuseum.sonic.entity.UIListenerMessage;
-import floatingmuseum.sonic.listener.DownloadListener;
+import floatingmuseum.sonic.entity.UIMessage;
 
 /**
  * Created by Floatingmuseum on 2017/4/1.
@@ -13,48 +12,42 @@ import floatingmuseum.sonic.listener.DownloadListener;
 
 public class UIHandler extends Handler {
 
-    private DownloadListener listener;
+    private DownloadTask task;
+
+    public UIHandler(DownloadTask task) {
+        this.task = task;
+    }
 
     @Override
     public void handleMessage(Message msg) {
-        if (listener != null) {
-            UIListenerMessage message = (UIListenerMessage) msg.obj;
-            TaskInfo taskInfo = message.getTaskInfo();
+        if (task != null) {
+            UIMessage message = (UIMessage) msg.obj;
             switch (message.getState()) {
-                case Sonic.STATE_START:
-                    listener.onStart(taskInfo);
+                case UIMessage.THREAD_FETCH_CONTENT_LENGTH:
+                    task.onFetchContentLength(message.getContentLength(),message.isSupportRange());
                     break;
-                case Sonic.STATE_NONE:
+                case UIMessage.THREAD_INIT_THREAD_ERROR:
+                    task.onInitThreadError(message.getDownloadException());
                     break;
-                case Sonic.STATE_DOWNLOADING:
-                    listener.onProgress(taskInfo);
+                case UIMessage.THREAD_INIT:
                     break;
-                case Sonic.STATE_PAUSE:
-                    listener.onPause(taskInfo);
+                case UIMessage.THREAD_START:
+                    task.onProgress(message.getThreadInfo());
                     break;
-                case Sonic.STATE_WAITING:
-                    listener.onWaiting(taskInfo);
+                case UIMessage.THREAD_PROGRESS:
+                    task.onProgress(message.getThreadInfo());
                     break;
-                case Sonic.STATE_ERROR:
-                    listener.onError(taskInfo, message.getDownloadException());
+                case UIMessage.THREAD_PAUSE:
+                    task.onPause(message.getThreadInfo());
                     break;
-                case Sonic.STATE_FINISH:
-                    listener.onFinish(taskInfo);
+                case UIMessage.THREAD_FINISH:
+                    task.onFinished(message.getThreadInfo());
                     break;
-                case Sonic.STATE_CANCEL:
-                    listener.onCancel(taskInfo);
+                case UIMessage.THREAD_ERROR:
+                    task.onError(message.getThreadInfo(),message.getDownloadException());
+//                    listener.onError(taskInfo, message.getDownloadException());
                     break;
             }
-        }
-    }
-
-    public void setListener(DownloadListener listener) {
-        this.listener = listener;
-    }
-
-    public void removeListener() {
-        if (listener != null) {
-            listener = null;
         }
     }
 }

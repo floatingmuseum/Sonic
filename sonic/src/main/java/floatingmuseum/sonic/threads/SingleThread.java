@@ -7,6 +7,7 @@ import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.util.Map;
 
+import floatingmuseum.sonic.UIHandler;
 import floatingmuseum.sonic.entity.ThreadInfo;
 import floatingmuseum.sonic.listener.ThreadListener;
 
@@ -16,13 +17,13 @@ import floatingmuseum.sonic.listener.ThreadListener;
 
 public class SingleThread extends BaseThread {
 
-    public SingleThread(ThreadInfo threadInfo, String dirPath, String fileName, int readTimeout, int connectTimeout, ThreadListener listener) {
+    public SingleThread(UIHandler uiHandler,ThreadInfo threadInfo, String dirPath, String fileName, int readTimeout, int connectTimeout) {
         this.threadInfo = threadInfo;
         this.dirPath = dirPath;
         this.fileName = fileName;
         this.connectTimeout = connectTimeout;
         this.readTimeout = readTimeout;
-        this.listener = listener;
+        this.uiHandler = uiHandler;
     }
 
     @Override

@@ -1,8 +1,6 @@
 package floatingmuseum.sonic;
 
 import android.content.Context;
-import android.os.Message;
-import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -17,8 +15,6 @@ import java.util.concurrent.Executors;
 import floatingmuseum.sonic.db.DBManager;
 import floatingmuseum.sonic.entity.DownloadRequest;
 import floatingmuseum.sonic.entity.TaskInfo;
-import floatingmuseum.sonic.entity.UIListenerMessage;
-import floatingmuseum.sonic.listener.DownloadListener;
 import floatingmuseum.sonic.listener.TaskListener;
 import floatingmuseum.sonic.utils.FileUtil;
 import floatingmuseum.sonic.utils.ListUtil;
@@ -48,7 +44,6 @@ public class Sonic implements TaskListener {
     public static final String EXTRA_DOWNLOAD_TASK_INFO = "actionDownloadTaskInfo";
     public static final String EXTRA_DOWNLOAD_EXCEPTION = "actionDownloadException";
 
-    private UIHandler uiHandler;
     private static Context context;
 //    private static Sonic sonic;
 
@@ -82,7 +77,7 @@ public class Sonic implements TaskListener {
         } else {
             manager = new BroadcastManager(context, broadcastAction);
         }
-//        uiHandler = new UIHandler();
+
         List<TaskInfo> allTask = dbManager.getAllDownloadTask();
         allTaskInfo = new HashMap<>();
         activeTasks = new HashMap<>();
@@ -223,16 +218,6 @@ public class Sonic implements TaskListener {
     private Sonic setStopServiceAfterAllTaskFinished(boolean stopServiceAfterAllTaskFinished) {
 //        this.stopServiceAfterAllTaskFinished = stopServiceAfterAllTaskFinished;
         return this;
-    }
-
-    private Sonic registerDownloadListener(DownloadListener listener) {
-        LogUtil.i(TAG, "DownloadListener:" + listener);
-        uiHandler.setListener(listener);
-        return this;
-    }
-
-    private void unRegisterDownloadListener() {
-        uiHandler.removeListener();
     }
 
     /**
@@ -485,15 +470,15 @@ public class Sonic implements TaskListener {
         LogUtil.i(TAG, "checkWaitingTasks()...MaxActiveTaskNumber:" + activeTaskNumber + "...CurrentDownloadTaskNumber:" + activeTasks.size() + "...CurrentWaitingTaskNumber:" + waitingTasks.size() + "...ForceDownloadTaskNumber:" + forceStartTasks.size());
     }
 
-    private void sendMessage(TaskInfo taskInfo, int downloadState, DownloadException downloadException) {
-        UIListenerMessage taskMessage;
-        if (downloadState == STATE_ERROR) {
-            taskMessage = new UIListenerMessage(taskInfo, downloadState, downloadException);
-        } else {
-            taskMessage = new UIListenerMessage(taskInfo, downloadState, null);
-        }
-        Message message = uiHandler.obtainMessage();
-        message.obj = taskMessage;
-        uiHandler.sendMessage(message);
-    }
+//    private void sendMessage(TaskInfo taskInfo, int downloadState, DownloadException downloadException) {
+//        UIMessage taskMessage;
+//        if (downloadState == STATE_ERROR) {
+//            taskMessage = new UIMessage(taskInfo, downloadState, downloadException);
+//        } else {
+//            taskMessage = new UIMessage(taskInfo, downloadState, null);
+//        }
+//        Message message = uiHandler.obtainMessage();
+//        message.obj = taskMessage;
+//        uiHandler.sendMessage(message);
+//    }
 }

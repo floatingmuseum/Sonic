@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onReceive(Context context, Intent intent) {
             TaskInfo taskInfo = intent.getParcelableExtra(Sonic.EXTRA_DOWNLOAD_TASK_INFO);
-            DownloadException exception = intent.getParcelableExtra(Sonic.EXTRA_DOWNLOAD_EXCEPTION);
+            DownloadException exception = (DownloadException) intent.getSerializableExtra(Sonic.EXTRA_DOWNLOAD_EXCEPTION);
             Log.i(TAG, "下载广播TaskInfo:" + taskInfo.toString());
             if (exception != null) {
                 Log.i(TAG, "下载广播Exception:" + exception.getErrorMessage());
@@ -77,8 +77,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initSonic() {
-//        sonic = Sonic.getInstance();
-        sonic = Tails.getSonic();
+        sonic = Sonic.getInstance();
+//        sonic = Tails.getSonic();
 //        sonic.registerDownloadListener(myListener);
     }
 
@@ -353,6 +353,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         Log.i(TAG, "onDestroy");
 //        sonic.stopAllTask();
+        sonic.pauseAllTask();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
 //        sonic.unRegisterDownloadListener();
         super.onDestroy();

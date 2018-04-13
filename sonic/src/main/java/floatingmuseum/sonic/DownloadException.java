@@ -1,13 +1,11 @@
 package floatingmuseum.sonic;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 
 /**
  * Created by Floatingmuseum on 2017/4/18.
  */
 
-public class DownloadException extends Exception {
+public class DownloadException extends Exception{
     public static int TYPE_IO = 0;
     public static int TYPE_MALFORMED_URL = 1;
     public static int TYPE_FILE_NOT_FOUND = 2;

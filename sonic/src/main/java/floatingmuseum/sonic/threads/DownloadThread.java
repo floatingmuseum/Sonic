@@ -1,5 +1,7 @@
 package floatingmuseum.sonic.threads;
 
+import android.os.Handler;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -7,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
 
+import floatingmuseum.sonic.UIHandler;
 import floatingmuseum.sonic.db.DBManager;
 import floatingmuseum.sonic.entity.ThreadInfo;
 import floatingmuseum.sonic.listener.ThreadListener;
@@ -21,13 +24,13 @@ public class DownloadThread extends BaseThread {
 
     private DBManager dbManager;
 
-    public DownloadThread(ThreadInfo threadInfo, String dirPath, String fileName, DBManager dbManager, int readTimeout, int connectTimeout, ThreadListener listener) {
+    public DownloadThread(UIHandler uiHandler, ThreadInfo threadInfo, String dirPath, String fileName, DBManager dbManager, int readTimeout, int connectTimeout) {
         this.threadInfo = threadInfo;
         this.dirPath = dirPath;
         this.fileName = fileName;
         this.connectTimeout = connectTimeout;
         this.readTimeout = readTimeout;
-        this.listener = listener;
+        this.uiHandler = uiHandler;
         this.dbManager = dbManager;
     }
 
