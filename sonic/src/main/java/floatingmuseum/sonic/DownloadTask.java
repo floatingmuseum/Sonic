@@ -9,10 +9,8 @@ import java.util.concurrent.ExecutorService;
 import floatingmuseum.sonic.db.DBManager;
 import floatingmuseum.sonic.entity.TaskInfo;
 import floatingmuseum.sonic.entity.ThreadInfo;
-import floatingmuseum.sonic.listener.InitListener;
 import floatingmuseum.sonic.listener.TaskListener;
 import floatingmuseum.sonic.listener.ThreadListener;
-import floatingmuseum.sonic.threads.BaseThread;
 import floatingmuseum.sonic.threads.DownloadThread;
 import floatingmuseum.sonic.threads.InitThread;
 import floatingmuseum.sonic.threads.SingleThread;
@@ -35,7 +33,7 @@ public class DownloadTask implements ThreadListener {
     private List<DownloadThread> threads;
     private List<ThreadInfo> threadInfoList;
     private long lastUpdateTime = System.currentTimeMillis();
-    private boolean stopAfterInitThreadDone = false;
+    private boolean stopDownloading = false;
     private boolean isCancel = false;
     private int activeThreadsNum;
     private ExecutorService threadsPool;
@@ -93,9 +91,9 @@ public class DownloadTask implements ThreadListener {
             return;
         }
 
-        LogUtil.i(TAG, "stop()...Stop downloading Threads:" + threads.size() + taskInfo.getName() + "..." + stopAfterInitThreadDone);
+        LogUtil.i(TAG, "stop()...Stop downloading Threads:" + threads.size() + taskInfo.getName() + "..." + stopDownloading);
         if (threads.size() == 0) {
-            stopAfterInitThreadDone = true;
+            stopDownloading = true;
             if (initThread != null) {
                 initThread.stopThread();
             }
@@ -172,7 +170,7 @@ public class DownloadTask implements ThreadListener {
             dbManager.insertThreadInfo(threadInfo);
         }
 
-        if (stopAfterInitThreadDone) {
+        if (stopDownloading) {
             if (isCancel) {
                 cancelTask();
                 return;
@@ -281,7 +279,6 @@ public class DownloadTask implements ThreadListener {
             retryTime--;
             LogUtil.i(TAG, "isHaveRetryTime()..." + info.getId() + "Thread exception occurred...to retry...current retryTime:" + retryTime + "...CurrentPosition:" + info.getCurrentPosition());
 
-            // TODO: 2018/4/12 未测试
             Iterator<DownloadThread> it = threads.iterator();
             while (it.hasNext()) {
                 if (it.next().getThreadInfo().getId() == info.getId()) {
@@ -314,16 +311,15 @@ public class DownloadTask implements ThreadListener {
 
     @Override
     public void onError(ThreadInfo info, DownloadException e) {
+        if (!stopDownloading && isHaveRetryTime(info)) {
+            return;
+        }
+
         if (!isSupportRange) {
             handleSingleThreadTask(Sonic.STATE_ERROR);
             return;
         }
 
-        if (isHaveRetryTime(info)) {
-            return;
-        }
-
-//        downloadException = errorThread.getException();
         downloadException = e;
 
         if (isAllThreadsDead()) {
@@ -365,7 +361,7 @@ public class DownloadTask implements ThreadListener {
     @Override
     public void onInitThreadError(DownloadException e) {
         LogUtil.d(TAG, "onInitError()..." + e.getMessage() + "..." + e.getExceptionType() + "..." + retryTime);
-        if (retryTime != 0) {
+        if (!stopDownloading && retryTime != 0) {
             retryTime--;
             initThread = new InitThread(uiHandler, taskInfo.getDownloadUrl(), taskInfo.getName(), taskInfo.getDirPath(), taskConfig.getReadTimeout(), taskConfig.getConnectTimeout());
             threadsPool.execute(initThread);

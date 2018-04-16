@@ -1,3 +1,7 @@
+#### Version 1.0.5
+1. Fixed ConcurrentModificationException between DownloadTask and DownloadThread.
+2. Improve download info response speed.
+
 #### Version 1.0.4
 1. Remove task from task queue when exception is MalformedURLException.
 2. Replace DownloadListener to LocalBroadcastReceiver.

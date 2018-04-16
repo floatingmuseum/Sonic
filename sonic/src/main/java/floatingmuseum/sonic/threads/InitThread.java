@@ -84,9 +84,11 @@ public class InitThread extends Thread {
             }
         } catch (ProtocolException e) {
             e.printStackTrace();
+            LogUtil.d(TAG,"InitThread...onError...ProtocolException");
             sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_PROTOCOL, "InitThread Request failed", e));
         } catch (IOException e) {
             e.printStackTrace();
+            LogUtil.d(TAG,"InitThread...onError...IOException");
             sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
         } finally {
             if (connection != null) {
@@ -111,9 +113,11 @@ public class InitThread extends Thread {
             sendMessage(UIMessage.THREAD_FETCH_CONTENT_LENGTH, contentLength, isSupportRange, null);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            LogUtil.d(TAG,"InitThread...onError...FileNotFoundException");
             sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_FILE_NOT_FOUND, "InitThread Request failed,File not found", e));
         } catch (IOException e) {
             e.printStackTrace();
+            LogUtil.d(TAG,"InitThread...onError...IOException...prepare");
             sendMessage(UIMessage.THREAD_INIT_THREAD_ERROR, 0, false, new DownloadException(DownloadException.TYPE_IO, "InitThread Request failed", e));
         } finally {
             if (randomAccessFile != null) {
@@ -158,14 +162,6 @@ public class InitThread extends Thread {
             sendMessage(UIMessage.THREAD_INIT_PAUSE, -1, false, null);
         }
     }
-
-//    private boolean checkStop() {
-//        if (stopThread) {
-//            sendMessage(UIMessage.THREAD_PAUSE, threadInfo, null);
-//            return true;
-//        }
-//        return false;
-//    }
 }
 
 

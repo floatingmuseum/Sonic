@@ -17,7 +17,7 @@ Sonic is a android download library.
 Add dependency to your build.gradle.
 ```groovy
 dependencies{
-	compile 'com.floatingmuseum:sonic:1.0.2'
+	compile 'com.floatingmuseum:sonic:1.0.5'
 }
 ```
 Add permission to your AndroidManifest.xml.
@@ -40,43 +40,43 @@ Sonic.getInstance()
       .setRetryTime(4)//Default is 5.
       .setReadTimeout(3000)//Default is 5000.
       .setConnectTimeout(3000)//Default is 5000.
+      .setBroadcastAction("Floatingmuseum")//default is your packagname.
       .setDirPath(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath())//Default is sdcard/Download
       .init(getApplicationContext());
 ```
 #### Step3
 Start use.
 ```java
-Sonic sonic = Sonic.getInstance().registerDownloadListener(new DownloadListener(){
-                    @Override
-                    public void onStart(TaskInfo taskInfo) {
-                        
-                    }
-
-                    @Override
-                    public void onWaiting(TaskInfo taskInfo) {
-
-                    }
-
-                    @Override
-                    public void onPause(TaskInfo taskInfo) {
-
-                    }
-
-                    @Override
-                    public void onProgress(TaskInfo taskInfo) {
-
-                    }
-
-                    @Override
-                    public void onFinish(TaskInfo taskInfo) {
-
-                    }
-
-                    @Override
-                    public void onError(TaskInfo taskInfo, DownloadException downloadException) {
-
-                    }
-		});
+BroadcastReceiver downloadReceiver = new BroadcastReceiver(){
+	@Override
+	public void onReceive(Context context,Intent intent){
+    	TaskInfo taskInfo = intent.getParcelableExtra(Sonic.EXTRA_DOWNLOAD_TASK_INFO);
+        switch(taskInfo.getState()){
+        	case Sonic.STATE_NONE:
+            	break;
+            case Sonic.STATE_START:
+            	break;
+            case Sonic.STATE_START:
+            	break;
+            case Sonic.STATE_WAITING:
+            	break;
+            case Sonic.STATE_PAUSE:
+            	break;
+            case Sonic.STATE_DOWNLOADING:
+            	DownloadException exception = (DownloadException) intent.getSerializableExtra(Sonic.EXTRA_DOWNLOAD_EXCEPTION);
+            	break;
+            case Sonic.STATE_ERROR:
+            	break;
+            case Sonic.STATE_FINISH:
+            	break;
+            case Sonic.STATE_CANCEL:
+            	break;
+        }
+    }
+}
+IntentFilter filter = new IntentFilter();
+filter.addAction("FloatingMuseum");
+LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);
                 
 //start a simple download,3 ways
 sonic.addTask(url);
@@ -105,16 +105,3 @@ sonic.pauseAllTask();
 //cancel task
 sonic.cancelTask(tag);
 ```
-### Other
-
-for more detail,you can see sample project.
-Some memory leak found by using leakcanary.i'm working on it,if you have any solution.please tell me by issue or send email to me.
-### To do
-
-1. Custom http headers.
-2. Custom http params.
-3. Improve DownloadException by http response code.
-
-### About me
-
-Email:[floatingmuseumyan@gmail.com](floatingmuseumyan@gmail.com)
