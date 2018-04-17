@@ -17,7 +17,7 @@ Sonic is a android download library.
 Add dependency to your build.gradle.
 ```groovy
 dependencies{
-	compile 'com.floatingmuseum:sonic:1.0.5'
+	compile 'com.floatingmuseum:sonic:1.0.6'
 }
 ```
 Add permission to your AndroidManifest.xml.
@@ -29,7 +29,7 @@ Request permission at runtime if your android version higher than or equal 6.0.
 #### Step2
 Init sonic at your application class.
 ```java
-Sonic.getInstance.init(getApplicationContext()).
+Sonic.getInstance.init(getApplicationContext());
 ```
 custom config if you want.
 ```java
@@ -40,13 +40,14 @@ Sonic.getInstance()
       .setRetryTime(4)//Default is 5.
       .setReadTimeout(3000)//Default is 5000.
       .setConnectTimeout(3000)//Default is 5000.
-      .setBroadcastAction("Floatingmuseum")//default is your packagname.
+      .setBroadcastAction("Floatingmuseum")//Default is your packagname.
       .setDirPath(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath())//Default is sdcard/Download
       .init(getApplicationContext());
 ```
 #### Step3
 Start use.
 ```java
+//Create a BroadcastReceiver to receive download info.
 BroadcastReceiver downloadReceiver = new BroadcastReceiver(){
 	@Override
 	public void onReceive(Context context,Intent intent){
@@ -74,11 +75,12 @@ BroadcastReceiver downloadReceiver = new BroadcastReceiver(){
         }
     }
 }
+//Use LocalBroadcastManager register your receiver.If you made custom BroadcastAction at step2,add action in filter.
 IntentFilter filter = new IntentFilter();
 filter.addAction("FloatingMuseum");
 LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);
                 
-//start a simple download,3 ways
+//Start a simple download,3 ways
 sonic.addTask(url);
 sonic.addTask(url,tag);
 sonic.addTask(url,tag,fileName);
@@ -96,12 +98,12 @@ DownloadRequest request = new DownloadRequest().setUrl(url)
                             .setForceStart(Sonic.FORCE_START_YES);
 sonic.addTask(request);
 
-//stop download
+//pause download
 sonic.pauseTask(tag);
 
-//stop all task
+//pause all task
 sonic.pauseAllTask();
 
-//cancel task
+//cancel task,remove all infomation about task,include database and loca file.
 sonic.cancelTask(tag);
 ```
