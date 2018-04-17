@@ -57,8 +57,6 @@ BroadcastReceiver downloadReceiver = new BroadcastReceiver(){
             	break;
             case Sonic.STATE_START:
             	break;
-            case Sonic.STATE_START:
-            	break;
             case Sonic.STATE_WAITING:
             	break;
             case Sonic.STATE_PAUSE:
@@ -98,12 +96,12 @@ DownloadRequest request = new DownloadRequest().setUrl(url)
                             .setForceStart(Sonic.FORCE_START_YES);
 sonic.addTask(request);
 
-//pause download
+//Pause download.
 sonic.pauseTask(tag);
 
-//pause all task
+//Pause all task.
 sonic.pauseAllTask();
 
-//cancel task,remove all infomation about task,include database and loca file.
+//Cancel task,remove all infomation about task,include database and loca file.
 sonic.cancelTask(tag);
 ```
