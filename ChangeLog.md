@@ -1,3 +1,6 @@
+#### Version 1.0.6
+1. Fixed wrong state callback when some download task has finished.
+
 #### Version 1.0.5
 1. Fixed ConcurrentModificationException between DownloadTask and DownloadThread.
 2. Improve download info response speed.
