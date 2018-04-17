@@ -320,10 +320,13 @@ public class Sonic {
 
     public void pauseTask(String tag) {
         // TODO: 2017/5/10 pause has delay
+        LogUtil.i(TAG, "暂停DownloadTask...activeTasks:" + activeTasks.size() + "..." + forceStartTasks.size()+"..."+waitingTasks.size());
         if (activeTasks.containsKey(tag)) {
+            LogUtil.i(TAG, "暂停DownloadTask...activeTasks:" + activeTasks.size() + "..." + activeTasks.get(tag).hashCode());
             LogUtil.i(TAG, "pauseTask()...activeTasks:" + activeTasks.size() + "..." + tag);
             activeTasks.get(tag).stop();
         } else if (forceStartTasks.containsKey(tag)) {
+            LogUtil.i(TAG, "暂停DownloadTask...forceTasks:" + activeTasks.size() + "..." + forceStartTasks.get(tag).hashCode());
             LogUtil.i(TAG, "pauseTask()...forceStartTasks:" + activeTasks.size() + "..." + tag);
             forceStartTasks.get(tag).stop();
         } else {
@@ -332,6 +335,7 @@ public class Sonic {
                 TaskInfo taskInfo = waitingTask.getTaskInfo();
                 LogUtil.i(TAG, "pauseTask()...waitingTasks:" + taskInfo.getName());
                 if (taskInfo.getTag().equals(tag)) {
+                    LogUtil.i(TAG, "暂停DownloadTask...waitingTasks:" + waitingTask.hashCode());
                     Log.i(TAG, "pauseTask()...waitingTasks:" + taskInfo.getName());
                     taskInfo.setState(STATE_PAUSE);
                     manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
@@ -339,6 +343,7 @@ public class Sonic {
                     return;
                 }
             }
+            LogUtil.i(TAG, "暂停DownloadTask...未找到:");
             LogUtil.i(TAG, "Which task that you want stop,doesn't exist.");
         }
     }
@@ -403,7 +408,7 @@ public class Sonic {
             taskInfo.setState(Sonic.STATE_CANCEL);
             dbManager.delete(taskInfo);
             FileUtil.deleteFile(taskInfo.getFilePath());
-            taskListener.onCancel(taskInfo);
+            taskListener.onCancel(taskInfo,-1);
             return;
         }
         LogUtil.i(TAG, "Which task that you want cancel,doesn't exist.");
@@ -421,14 +426,22 @@ public class Sonic {
     private void checkWaitingTasks(TaskInfo taskInfo) {
         String tag = taskInfo.getTag();
         if (activeTasks.containsKey(tag)) {
-            activeTasks.remove(taskInfo.getTag());
+            DownloadTask removeTask = activeTasks.get(tag);
+            LogUtil.d(TAG,"移除DownloadTask...从Active:"+removeTask.hashCode()+"...taskHashCode:"+taskInfo.getTaskHashcode());
+//            if (removeTask.hashCode()==taskInfo.getTaskHashcode()){
+                activeTasks.remove(tag);
+//            }
             if (waitingTasks.size() > 0) {
                 DownloadTask downloadTask = waitingTasks.get(0);
+                LogUtil.d(TAG,"移除DownloadTask...从Waiting:"+downloadTask.hashCode()+"...taskHashCode:"+taskInfo.getTaskHashcode());
+
                 waitingTasks.remove(0);
                 activeTasks.put(downloadTask.getTaskInfo().getTag(), downloadTask);
                 downloadTask.start();
             }
         } else if (forceStartTasks.containsKey(tag)) {
+            DownloadTask task = forceStartTasks.get(tag);
+            LogUtil.d(TAG,"移除DownloadTask...从Force:"+task.hashCode()+"...taskHashCode:"+taskInfo.getTaskHashcode());
             forceStartTasks.remove(tag);
         }
 
@@ -442,9 +455,13 @@ public class Sonic {
         }
 
         @Override
-        public void onPause(TaskInfo taskInfo) {
-            manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
+        public void onPause(TaskInfo taskInfo,int hashcode) {
+//            DownloadTask task = activeTasks.get(taskInfo.getTag());
+//            if (task!=null) {
+//            }
+            LogUtil.d(TAG,"移除DownloadTask...TaskListener...onPause:"+hashcode+"...taskInfoCode"+taskInfo.getTaskHashcode());
             checkWaitingTasks(taskInfo);
+            manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
         }
 
         @Override
@@ -453,23 +470,26 @@ public class Sonic {
         }
 
         @Override
-        public void onError(TaskInfo taskInfo, DownloadException downloadException) {
+        public void onError(TaskInfo taskInfo, DownloadException downloadException,int hashcode) {
             handleExceptionType(taskInfo, downloadException);
-            manager.sendBroadcast(STATE_ERROR, taskInfo, downloadException);
+            LogUtil.d(TAG,"移除DownloadTask...TaskListener...onError:"+hashcode+"...taskInfoCode"+taskInfo.getTaskHashcode());
             checkWaitingTasks(taskInfo);
+            manager.sendBroadcast(STATE_ERROR, taskInfo, downloadException);
         }
 
         @Override
-        public void onFinish(TaskInfo taskInfo) {
+        public void onFinish(TaskInfo taskInfo,int hashcode) {
             manager.sendBroadcast(STATE_FINISH, taskInfo, null);
             allTaskInfo.remove(taskInfo.getTag());
+            LogUtil.d(TAG,"移除DownloadTask...TaskListener...onFinish:"+hashcode+"...taskInfoCode"+taskInfo.getTaskHashcode());
             checkWaitingTasks(taskInfo);
         }
 
         @Override
-        public void onCancel(TaskInfo taskInfo) {
+        public void onCancel(TaskInfo taskInfo,int hashcode) {
             manager.sendBroadcast(STATE_CANCEL, taskInfo, null);
             allTaskInfo.remove(taskInfo.getTag());
+            LogUtil.d(TAG,"移除DownloadTask...TaskListener...onCancel:"+hashcode+"...taskInfoCode"+taskInfo.getTaskHashcode());
             checkWaitingTasks(taskInfo);
         }
     };

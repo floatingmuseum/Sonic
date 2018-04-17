@@ -24,6 +24,7 @@ public class UIMessage {
     private boolean isSupportRange;
     private ThreadInfo threadInfo;
     private DownloadException downloadException;
+    private int hashCode;
 
     public UIMessage(int state) {
         this.state = state;
@@ -74,4 +75,11 @@ public class UIMessage {
         return this;
     }
 
+    public int getHashCode() {
+        return hashCode;
+    }
+
+    public void setHashCode(int hashCode) {
+        this.hashCode = hashCode;
+    }
 }

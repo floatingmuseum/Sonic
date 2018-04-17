@@ -43,7 +43,7 @@ public class App extends Application {
                 .setRetryTime(2)
                 .setReadTimeout(3000)
                 .setConnectTimeout(3000)
-                .setDirPath(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath())
+                .setDirPath(Environment.getExternalStorageDirectory().getAbsolutePath()+"/SonicDownloads")
                 .setLogEnabled()
                 .setBroadcastAction("FloatingMuseum")
                 .init(this);

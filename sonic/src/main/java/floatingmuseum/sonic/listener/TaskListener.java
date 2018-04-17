@@ -11,13 +11,13 @@ public interface TaskListener {
 
     void onStart(TaskInfo taskInfo);
 
-    void onPause(TaskInfo taskInfo);
+    void onPause(TaskInfo taskInfo,int hashcode);
 
     void onProgress(TaskInfo taskInfo);
 
-    void onError(TaskInfo taskInfo, DownloadException downloadException);
+    void onError(TaskInfo taskInfo, DownloadException downloadException,int hashcode);
 
-    void onFinish(TaskInfo taskInfo);
+    void onFinish(TaskInfo taskInfo,int hashcode);
 
-    void onCancel(TaskInfo taskInfo);
+    void onCancel(TaskInfo taskInfo,int hashcode);
 }

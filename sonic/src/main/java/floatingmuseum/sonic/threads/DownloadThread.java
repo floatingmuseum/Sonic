@@ -1,6 +1,5 @@
 package floatingmuseum.sonic.threads;
 
-import android.os.Handler;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.util.Map;
 import floatingmuseum.sonic.UIHandler;
 import floatingmuseum.sonic.db.DBManager;
 import floatingmuseum.sonic.entity.ThreadInfo;
-import floatingmuseum.sonic.listener.ThreadListener;
 
 /**
  * Created by Floatingmuseum on 2017/3/31.
@@ -24,7 +22,7 @@ public class DownloadThread extends BaseThread {
 
     private DBManager dbManager;
 
-    public DownloadThread(UIHandler uiHandler, ThreadInfo threadInfo, String dirPath, String fileName, DBManager dbManager, int readTimeout, int connectTimeout) {
+    public DownloadThread(UIHandler uiHandler, ThreadInfo threadInfo, String dirPath, String fileName, DBManager dbManager, int readTimeout, int connectTimeout,int hashCode) {
         this.threadInfo = threadInfo;
         this.dirPath = dirPath;
         this.fileName = fileName;
@@ -32,6 +30,7 @@ public class DownloadThread extends BaseThread {
         this.readTimeout = readTimeout;
         this.uiHandler = uiHandler;
         this.dbManager = dbManager;
+        this.hashCode = hashCode;
     }
 
 

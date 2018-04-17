@@ -34,14 +34,16 @@ public class InitThread extends Thread {
     private boolean stopThread = false;
     private boolean isGetResponseCode = false;
     private boolean isOver = false;
+    private int hashCode;
 
-    public InitThread(UIHandler uiHandler, String downloadUrl, String fileName, String downloadDirPath, int readTimeout, int connectTimeout) {
+    public InitThread(UIHandler uiHandler, String downloadUrl, String fileName, String downloadDirPath, int readTimeout, int connectTimeout,int hashCode) {
         this.downloadUrl = downloadUrl;
         this.fileName = fileName;
         this.downloadDirPath = downloadDirPath;
         this.readTimeout = readTimeout;
         this.connectTimeout = connectTimeout;
         this.uiHandler = uiHandler;
+        this.hashCode = hashCode;
     }
 
     @Override
@@ -68,7 +70,7 @@ public class InitThread extends Thread {
                 return;
             }
             int responseCode = connection.getResponseCode();
-            LogUtil.d(TAG, "时间测试...init...获取状态码:" + (System.currentTimeMillis() - getResponseCodeStart));
+            LogUtil.d(TAG, "时间测试...init...获取状态码耗时:" + (System.currentTimeMillis() - getResponseCodeStart));
             isGetResponseCode = true;
             if (checkStop()) {
                 return;
@@ -138,7 +140,7 @@ public class InitThread extends Thread {
                     .setSupportRange(isSupportRange)
                     .setDownloadException(e);
         }
-
+        uiMessage.setHashCode(hashCode);
         Message message = uiHandler.obtainMessage();
         message.obj = uiMessage;
         uiHandler.sendMessage(message);

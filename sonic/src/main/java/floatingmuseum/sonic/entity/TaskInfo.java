@@ -19,6 +19,7 @@ public class TaskInfo implements Parcelable {
     private int progress;
     private long speed;
     private int state;
+    private int taskHashcode;
 
     public TaskInfo(){}
 
@@ -99,7 +100,15 @@ public class TaskInfo implements Parcelable {
         this.progress = progress;
     }
 
-//    public long getSpeed() {
+    public int getTaskHashcode() {
+        return taskHashcode;
+    }
+
+    public void setTaskHashcode(int taskHashcode) {
+        this.taskHashcode = taskHashcode;
+    }
+
+    //    public long getSpeed() {
 //        return speed;
 //    }
 
@@ -128,6 +137,7 @@ public class TaskInfo implements Parcelable {
                 ", progress=" + progress +
                 ", speed=" + speed +
                 ", state=" + state +
+                ", taskHashcode=" + taskHashcode +
                 '}';
     }
 
@@ -149,6 +159,7 @@ public class TaskInfo implements Parcelable {
         dest.writeInt(this.progress);
         dest.writeLong(this.speed);
         dest.writeInt(this.state);
+        dest.writeInt(this.taskHashcode);
     }
 
     protected TaskInfo(Parcel in) {
@@ -162,6 +173,7 @@ public class TaskInfo implements Parcelable {
         this.progress = in.readInt();
         this.speed = in.readLong();
         this.state = in.readInt();
+        this.taskHashcode = in.readInt();
     }
 
     public static final Creator<TaskInfo> CREATOR = new Creator<TaskInfo>() {

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         receiver = new DownloadReceiver();
         IntentFilter filter = new IntentFilter();
-        Log.i(TAG,"下载广播...action包名:"+getPackageName());
+        Log.i(TAG, "下载广播...action包名:" + getPackageName());
         filter.addAction("FloatingMuseum");
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);
     }
@@ -102,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         downloadList.add(appInfo9);
         AppInfo appInfo10 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_31/17/com.duokan.reader_050812.apk", "多看阅读");
         downloadList.add(appInfo10);
-        AppInfo appInfo11 = new AppInfo("http://file.foxitreader.cn/reader/ga/FoxitReader_CHS_8.3.0.14878.exe","福昕阅读器");
+        AppInfo appInfo11 = new AppInfo("http://file.foxitreader.cn/reader/ga/FoxitReader_CHS_8.3.0.14878.exe", "福昕阅读器");
         downloadList.add(appInfo11);
         checkTasks();
     }
@@ -133,37 +134,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onChanged() {
                 super.onChanged();
-                Log.i(TAG,"AdapterDataObserver...onChanged()");
+                Log.i(TAG, "AdapterDataObserver...onChanged()");
             }
 
             @Override
             public void onItemRangeChanged(int positionStart, int itemCount) {
                 super.onItemRangeChanged(positionStart, itemCount);
-                Log.i(TAG,"AdapterDataObserver...onItemRangeChanged()...positionStart:"+positionStart+"...itemCount:"+itemCount);
+                Log.i(TAG, "AdapterDataObserver...onItemRangeChanged()...positionStart:" + positionStart + "...itemCount:" + itemCount);
             }
 
             @Override
             public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
                 super.onItemRangeChanged(positionStart, itemCount, payload);
-                Log.i(TAG,"AdapterDataObserver...onItemRangeChanged()...positionStart:"+positionStart+"...itemCount:"+itemCount);
+                Log.i(TAG, "AdapterDataObserver...onItemRangeChanged()...positionStart:" + positionStart + "...itemCount:" + itemCount);
             }
 
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
                 super.onItemRangeInserted(positionStart, itemCount);
-                Log.i(TAG,"AdapterDataObserver...onItemRangeInserted()...positionStart:"+positionStart+"...itemCount:"+itemCount);
+                Log.i(TAG, "AdapterDataObserver...onItemRangeInserted()...positionStart:" + positionStart + "...itemCount:" + itemCount);
             }
 
             @Override
             public void onItemRangeRemoved(int positionStart, int itemCount) {
                 super.onItemRangeRemoved(positionStart, itemCount);
-                Log.i(TAG,"AdapterDataObserver...onItemRangeRemoved()...positionStart:"+positionStart+"...itemCount:"+itemCount);
+                Log.i(TAG, "AdapterDataObserver...onItemRangeRemoved()...positionStart:" + positionStart + "...itemCount:" + itemCount);
             }
 
             @Override
             public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
                 super.onItemRangeMoved(fromPosition, toPosition, itemCount);
-                Log.i(TAG,"AdapterDataObserver...onItemRangeMoved()...fromPosition:"+fromPosition+"...toPosition:"+toPosition+"...itemCount:"+itemCount);
+                Log.i(TAG, "AdapterDataObserver...onItemRangeMoved()...fromPosition:" + fromPosition + "...toPosition:" + toPosition + "...itemCount:" + itemCount);
             }
         });
         rvTasks.setAdapter(adapter);
@@ -236,7 +237,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case Sonic.STATE_CANCEL:
                 if (appInfo.getName().equals("QQ同步助手")) {
                     DownloadRequest request = new DownloadRequest()
-                            .setUrl(appInfo.getUrl()).setForceStart(Sonic.FORCE_START_YES);
+                            .setUrl(appInfo.getUrl())
+                            .setDirPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SonicDownloads/forceDownloads")
+                            .setForceStart(Sonic.FORCE_START_YES);
                     sonic.addTask(request);
                 } else {
                     sonic.addTask(appInfo.getUrl());
@@ -288,7 +291,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for (int i = 0; i < downloadList.size(); i++) {
             AppInfo appInfo = downloadList.get(i);
             if (taskInfo.getTag().equals(appInfo.getUrl())) {
-                Log.i(TAG, "刷新AppInfo:"+taskInfo.getName()+"...更新UI" );
+                Log.i(TAG, "刷新AppInfo:" + taskInfo.getName() + "...更新UI");
                 appInfo.setCurrentSize(taskInfo.getCurrentSize());
                 appInfo.setTotalSize(taskInfo.getTotalSize());
                 appInfo.setProgress(taskInfo.getProgress());
@@ -302,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void updateUI(AppInfo appInfo, int position) {
         int firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition();
         int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
-        Log.i(TAG, "刷新UI:...itemPosition" + position + "...firstVisibleItemPosition:"+firstVisibleItemPosition+"...lastVisibleItemPosition:"+lastVisibleItemPosition);
+        Log.i(TAG, "刷新UI:...itemPosition" + position + "...firstVisibleItemPosition:" + firstVisibleItemPosition + "...lastVisibleItemPosition:" + lastVisibleItemPosition);
         if (position >= firstVisibleItemPosition && position <= lastVisibleItemPosition) {
             TasksAdapter.TaskViewHolder holder = (TasksAdapter.TaskViewHolder) rvTasks.findViewHolderForAdapterPosition(position);
             Log.i(TAG, "刷新UI:" + appInfo.getName() + "...CurrentSize:" + appInfo.getCurrentSize() + "...TotalSize:" + appInfo.getTotalSize() + "...Progress:" + appInfo.getProgress() + "...State:" + appInfo.getState());

@@ -11,19 +11,19 @@ import floatingmuseum.sonic.threads.DownloadThread;
 
 public interface ThreadListener {
 
-    void onFetchContentLength(long contentLength,boolean isSupportRange);
+    void onFetchContentLength(long contentLength,boolean isSupportRange,int hashCode);
 
-    void onInitThreadError(DownloadException e);
+    void onInitThreadError(DownloadException e,int hashCode);
 
-    void onInitThreadPause();
+    void onInitThreadPause(int hashCode);
 
-    void onStart(ThreadInfo threadInfo);
+    void onStart(ThreadInfo threadInfo,int hashCode);
 
-    void onPause(ThreadInfo threadInfo);
+    void onPause(ThreadInfo threadInfo,int hashCode);
 
-    void onProgress(ThreadInfo threadInfo);
+    void onProgress(ThreadInfo threadInfo,int hashCode);
 
-    void onError(ThreadInfo info, DownloadException e);
+    void onError(ThreadInfo info, DownloadException e,int hashCode);
 
-    void onFinished(ThreadInfo info);
+    void onFinished(ThreadInfo info,int hashCode);
 }
