@@ -6,7 +6,7 @@ import android.nfc.Tag;
 import android.os.Environment;
 import android.util.Log;
 
-import com.squareup.leakcanary.LeakCanary;
+//import com.squareup.leakcanary.LeakCanary;
 
 import floatingmuseum.sonic.Sonic;
 
@@ -24,13 +24,13 @@ public class App extends Application {
         super.onCreate();
         context = this;
         Log.i(TAG, "Sonic...App...onCreate()");
-        if (LeakCanary.isInAnalyzerProcess(this)) {
-            Log.i(TAG, "LeakCanary.isInAnalyzerProcess");
-            // This process is dedicated to LeakCanary for heap analysis.
-            // You should not init your app in this process.
-            return;
-        }
-        LeakCanary.install(this);
+//        if (LeakCanary.isInAnalyzerProcess(this)) {
+//            Log.i(TAG, "LeakCanary.isInAnalyzerProcess");
+//            // This process is dedicated to LeakCanary for heap analysis.
+//            // You should not init your app in this process.
+//            return;
+//        }
+//        LeakCanary.install(this);
 
         initSonic();
     }

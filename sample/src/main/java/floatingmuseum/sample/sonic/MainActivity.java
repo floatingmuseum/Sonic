@@ -20,6 +20,8 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 
+import com.crashlytics.android.Crashlytics;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +31,7 @@ import floatingmuseum.sonic.Sonic;
 import floatingmuseum.sonic.Tails;
 import floatingmuseum.sonic.entity.DownloadRequest;
 import floatingmuseum.sonic.entity.TaskInfo;
+import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -45,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        Fabric.with(this, new Crashlytics());
         String extensionFromUrl = MimeTypeMap.getFileExtensionFromUrl("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_16/20/com.sina.weibog3_080004.apk");
         Log.i(TAG, "ExtensionFromUrl:" + extensionFromUrl);
 
@@ -266,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == request_permission_code) {
+        if (requestCode == request_permission_code && grantResults.length != 0) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 ToastUtil.show("You have WRITE_EXTERNAL_STORAGE permission now.");
             } else {
