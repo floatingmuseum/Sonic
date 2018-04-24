@@ -1,3 +1,6 @@
+#### Version 1.0.7
+1. Fixed several bugs.
+
 #### Version 1.0.6
 1. Fixed wrong state callback when some download task has finished.
 
