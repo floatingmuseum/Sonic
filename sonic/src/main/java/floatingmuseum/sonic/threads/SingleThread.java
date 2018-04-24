@@ -28,7 +28,8 @@ public class SingleThread extends BaseThread {
 
     @Override
     protected RandomAccessFile getRandomAccessFile() throws IOException {
-        File file = new File(dirPath, fileName);
+//        File file = new File(dirPath, fileName);
+        File file = new File(filePath);
         RandomAccessFile raf = new RandomAccessFile(file, "rwd");
         raf.seek(0);
         return raf;

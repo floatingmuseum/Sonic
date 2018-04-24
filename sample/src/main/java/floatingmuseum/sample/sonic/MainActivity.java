@@ -70,20 +70,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void onReceive(Context context, Intent intent) {
             TaskInfo taskInfo = intent.getParcelableExtra(Sonic.EXTRA_DOWNLOAD_TASK_INFO);
             DownloadException exception = (DownloadException) intent.getSerializableExtra(Sonic.EXTRA_DOWNLOAD_EXCEPTION);
-            Log.i(TAG, "下载广播TaskInfo:" + taskInfo.toString());
+//            Log.i(TAG, "下载广播TaskInfo:" + taskInfo.toString());
             if (exception != null) {
-                Log.i(TAG, "下载广播Exception:" + exception.getErrorMessage());
-            }
-            updateAppInfo(taskInfo);
-        }
+        Log.i(TAG, "下载广播Exception:" + exception.getErrorMessage());
+    }
+    updateAppInfo(taskInfo);
+}
     }
 
-    private void initSonic() {
+private void initSonic() {
         sonic = Sonic.getInstance();
 //        sonic = Tails.getSonic();
-    }
+        }
 
-    private void initData() {
+private void initData() {
         downloadList = new ArrayList<>();
         new DividerItemDecoration(this, DividerItemDecoration.HORIZONTAL);
         AppInfo appInfo1 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_24/12/com.tencent.qqpim_121006.apk", "QQ同步助手");
@@ -239,12 +239,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case Sonic.STATE_ERROR:
             case Sonic.STATE_CANCEL:
                 if (appInfo.getName().equals("QQ同步助手")) {
+                    Log.d(TAG,"executeCommand()...forceStart:"+appInfo.getUrl());
                     DownloadRequest request = new DownloadRequest()
                             .setUrl(appInfo.getUrl())
+                            .setFileName("QQ同步助手.apk")
                             .setDirPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SonicDownloads/forceDownloads")
                             .setForceStart(Sonic.FORCE_START_YES);
                     sonic.addTask(request);
                 } else {
+                    Log.d(TAG,"executeCommand()...normalStart:"+appInfo.getUrl());
                     sonic.addTask(appInfo.getUrl());
                 }
                 break;
@@ -294,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for (int i = 0; i < downloadList.size(); i++) {
             AppInfo appInfo = downloadList.get(i);
             if (taskInfo.getTag().equals(appInfo.getUrl())) {
-                Log.i(TAG, "刷新AppInfo:" + taskInfo.getName() + "...更新UI");
+//                Log.i(TAG, "刷新AppInfo:" + taskInfo.getName() + "...更新UI");
                 appInfo.setCurrentSize(taskInfo.getCurrentSize());
                 appInfo.setTotalSize(taskInfo.getTotalSize());
                 appInfo.setProgress(taskInfo.getProgress());
@@ -308,10 +311,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void updateUI(AppInfo appInfo, int position) {
         int firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition();
         int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
-        Log.i(TAG, "刷新UI:...itemPosition" + position + "...firstVisibleItemPosition:" + firstVisibleItemPosition + "...lastVisibleItemPosition:" + lastVisibleItemPosition);
+//        Log.i(TAG, "刷新UI:...itemPosition" + position + "...firstVisibleItemPosition:" + firstVisibleItemPosition + "...lastVisibleItemPosition:" + lastVisibleItemPosition);
         if (position >= firstVisibleItemPosition && position <= lastVisibleItemPosition) {
             TasksAdapter.TaskViewHolder holder = (TasksAdapter.TaskViewHolder) rvTasks.findViewHolderForAdapterPosition(position);
-            Log.i(TAG, "刷新UI:" + appInfo.getName() + "...CurrentSize:" + appInfo.getCurrentSize() + "...TotalSize:" + appInfo.getTotalSize() + "...Progress:" + appInfo.getProgress() + "...State:" + appInfo.getState());
+//            Log.i(TAG, "刷新UI:" + appInfo.getName() + "...CurrentSize:" + appInfo.getCurrentSize() + "...TotalSize:" + appInfo.getTotalSize() + "...Progress:" + appInfo.getProgress() + "...State:" + appInfo.getState());
             if (holder == null) {
                 /**
                  * if notifyDataSetChanged() has been called but the new layout has not been calculated yet,

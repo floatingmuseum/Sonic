@@ -29,6 +29,7 @@ public abstract class BaseThread implements Runnable {
 
     protected String dirPath;
     protected String fileName;
+    protected String filePath;
     protected int readTimeout;
     protected int connectTimeout;
     protected ThreadInfo threadInfo;
@@ -45,7 +46,7 @@ public abstract class BaseThread implements Runnable {
 
     @Override
     public void run() {
-        LogUtil.i(TAG, threadInfo.getId() + "Thread start work" + "..." + fileName);
+        LogUtil.i(TAG, threadInfo.getId() + "Thread start work" + "..." + fileName+"...hashcode:"+hashCode);
         HttpURLConnection connection = null;
         RandomAccessFile raf = null;
         InputStream inputStream = null;
@@ -71,7 +72,7 @@ public abstract class BaseThread implements Runnable {
                 return;
             }
 
-            LogUtil.d(TAG, "时间测试...download...+" + Thread.currentThread() + "...获取状态码耗时:" + (System.currentTimeMillis() - getResponseCodeStart));
+            LogUtil.d(TAG, "时间测试...download...+" + Thread.currentThread() + "...获取状态码耗时:" + (System.currentTimeMillis() - getResponseCodeStart) + "...hashCode:" + hashCode);
             if (responseCode == getResponseCode()) {
 
                 raf = getRandomAccessFile();
@@ -84,49 +85,49 @@ public abstract class BaseThread implements Runnable {
                     if (checkStop()) {
                         return;
                     }
-//                    LogUtil.d(TAG, "速度测试...:" + buffer.length);
+//                    LogUtil.d(TAG, "速度测试...:" + buffer.length + "...hashCode:" + hashCode);
                     raf.write(buffer, 0, len);
                     currentPosition += len;
                     threadInfo.setCurrentPosition(currentPosition);
-                    sendMessage(UIMessage.THREAD_PROGRESS, threadInfo, null,false);
+                    sendMessage(UIMessage.THREAD_PROGRESS, threadInfo, null, false);
                     if (currentPosition > threadInfo.getEndPosition()) {
                         break;
                     }
                 }
                 //This thread has finished its work.
-                LogUtil.i(TAG, threadInfo.getId() + "Thread has finished its work" + "..." + fileName);
+                LogUtil.i(TAG, "Thread "+threadInfo.getId() + " has finished its work" + "..." + fileName + "...hashCode:" + hashCode);
                 updateDB();
                 isFinished = true;
                 isDownloading = false;
-                sendMessage(UIMessage.THREAD_FINISH, threadInfo, null,false);
+                sendMessage(UIMessage.THREAD_FINISH, threadInfo, null, false);
             } else {
                 isFailed = true;
                 isDownloading = false;
-                LogUtil.i(TAG, threadInfo.getId() + "Thread exception occurred" + "..." + fileName + "..." + responseCode);
+                LogUtil.i(TAG, threadInfo.getId() + "Thread exception occurred" + "..." + fileName + "..." + responseCode + "...hashCode:" + hashCode);
                 downloadException = new DownloadException(DownloadException.TYPE_RESPONSE_CODE, "DownloadThread failed", responseCode);
-                sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException,false);
+                sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
             updateDB();
             downloadException = new DownloadException(DownloadException.TYPE_MALFORMED_URL, "DownloadThread failed." + threadInfo.getUrl(), e);
-            sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException,false);
+            sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
         } catch (ProtocolException e) {
             e.printStackTrace();
             updateDB();
             downloadException = new DownloadException(DownloadException.TYPE_PROTOCOL, "DownloadThread failed", e);
-            sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException,false);
+            sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
         } catch (InterruptedIOException e) {
             e.printStackTrace();
             updateDB();
-            LogUtil.i(TAG, threadInfo.getId() + "Thread stop by auto interrupted.");
+            LogUtil.i(TAG, threadInfo.getId() + "Thread stop by auto interrupted." + "...hashCode:" + hashCode);
             downloadException = new DownloadException(DownloadException.TYPE_INTERRUPTED_IO, "DownloadThread failed", e);
-            sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException,false);
+            sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
         } catch (IOException e) {
             e.printStackTrace();
             updateDB();
             downloadException = new DownloadException(DownloadException.TYPE_IO, "DownloadThread failed", e);
-            sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException,false);
+            sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
         } finally {
             try {
                 if (connection != null) {
@@ -142,7 +143,7 @@ public abstract class BaseThread implements Runnable {
                 e.printStackTrace();
                 updateDB();
                 downloadException = new DownloadException(DownloadException.TYPE_IO, "DownloadThread failed", e);
-                sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException,false);
+                sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
             }
         }
     }
@@ -157,9 +158,10 @@ public abstract class BaseThread implements Runnable {
 
     protected void sendMessage(int state, ThreadInfo info, DownloadException e, boolean forceSend) {
         if (state != UIMessage.THREAD_PROGRESS) {
-            LogUtil.d(TAG, "DownloadTask...threadID:" + info.getId() + "..." + state + "...isOver:" + isOver);
+            LogUtil.d(TAG, "sendMessage()...progress...threadID:" + info.getId() + "..." + state + "...isOver:" + isOver + "...hashCode:" + hashCode);
         }
         if (forceSend || !isOver) {
+            LogUtil.d(TAG, "sendMessage()...threadID:" + info.getId() + "..." + state + "...isOver:" + isOver + "...hashCode:" + hashCode);
             UIMessage uiMessage = new UIMessage(state)
                     .setThreadInfo(info)
                     .setDownloadException(e);
@@ -181,11 +183,11 @@ public abstract class BaseThread implements Runnable {
     private boolean checkStop() {
 //        LogUtil.i(TAG, "checkStop()...ThreadName:" + Thread.currentThread() + "...stopThread:" + stopThread);
         if (stopThread) {
-            LogUtil.d(TAG, "checkStop()...ThreadName:" + Thread.currentThread() + "...停止线程...isOver:" + isOver);
+            LogUtil.d(TAG, "checkStop()...ThreadName:" + Thread.currentThread() + "...停止线程...isOver:" + isOver + "...hashCode:" + hashCode);
             if (!isOver) {
                 isOver = true;
                 updateDB();
-                sendMessage(UIMessage.THREAD_PAUSE, threadInfo, null,true);
+                sendMessage(UIMessage.THREAD_PAUSE, threadInfo, null, true);
                 isOver = true;
             }
             return true;
@@ -194,12 +196,12 @@ public abstract class BaseThread implements Runnable {
     }
 
     public void stopThread() {
-        LogUtil.i(TAG, "stopThread()...ThreadName:" + Thread.currentThread() + "..." + threadInfo.getId());
+        LogUtil.i(TAG, "stopThread()...ThreadName:" + Thread.currentThread() + "..." + threadInfo.getId() + "...isDownloading:" + isDownloading + "...isOver:" + isOver + "...hashCode:" + hashCode);
         stopThread = true;
         if (!isDownloading) {//isDownloading will be true after get response code.
             isOver = true;
             updateDB();
-            sendMessage(UIMessage.THREAD_PAUSE, threadInfo, null,true);
+            sendMessage(UIMessage.THREAD_PAUSE, threadInfo, null, true);
         }
     }
 

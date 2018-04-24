@@ -22,10 +22,11 @@ public class DownloadThread extends BaseThread {
 
     private DBManager dbManager;
 
-    public DownloadThread(UIHandler uiHandler, ThreadInfo threadInfo, String dirPath, String fileName, DBManager dbManager, int readTimeout, int connectTimeout,int hashCode) {
+    public DownloadThread(UIHandler uiHandler, ThreadInfo threadInfo, String dirPath, String fileName,String filePath, DBManager dbManager, int readTimeout, int connectTimeout,int hashCode) {
         this.threadInfo = threadInfo;
         this.dirPath = dirPath;
         this.fileName = fileName;
+        this.filePath = filePath;
         this.connectTimeout = connectTimeout;
         this.readTimeout = readTimeout;
         this.uiHandler = uiHandler;
@@ -36,7 +37,8 @@ public class DownloadThread extends BaseThread {
 
     @Override
     protected RandomAccessFile getRandomAccessFile() throws IOException {
-        File file = new File(dirPath, fileName);
+//        File file = new File(dirPath, fileName);
+        File file = new File(filePath);
         RandomAccessFile raf = new RandomAccessFile(file, "rwd");
         raf.seek(threadInfo.getCurrentPosition());
         return raf;
