@@ -66,6 +66,10 @@ public class DownloadTask implements ThreadListener {
         return taskInfo;
     }
 
+    public TaskConfig getConfit(){
+        return taskConfig;
+    }
+
     public void start() {
         LogUtil.i(TAG, "start()...call..." + this.hashCode());
         LogUtil.i(TAG, "start()......hashID:" + this.hashCode() + "...ThreadName:" + Thread.currentThread().getName());

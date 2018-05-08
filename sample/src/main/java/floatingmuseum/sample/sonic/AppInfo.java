@@ -12,6 +12,7 @@ public class AppInfo {
     private long TotalSize;
     private int progress;
     private int state;
+    private boolean isForceTask;
 
     public AppInfo(String url, String name) {
         this.url = url;
@@ -66,6 +67,14 @@ public class AppInfo {
         this.state = state;
     }
 
+    public boolean isForceTask() {
+        return isForceTask;
+    }
+
+    public void setForceTask(boolean forceTask) {
+        isForceTask = forceTask;
+    }
+
     @Override
     public String toString() {
         return "AppInfo{" +
@@ -75,6 +84,7 @@ public class AppInfo {
                 ", TotalSize=" + TotalSize +
                 ", progress=" + progress +
                 ", state=" + state +
+                ", isForceTask=" + isForceTask +
                 '}';
     }
 }

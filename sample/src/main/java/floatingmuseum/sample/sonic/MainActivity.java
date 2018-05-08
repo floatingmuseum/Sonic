@@ -28,7 +28,6 @@ import java.util.Map;
 
 import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.Sonic;
-import floatingmuseum.sonic.Tails;
 import floatingmuseum.sonic.entity.DownloadRequest;
 import floatingmuseum.sonic.entity.TaskInfo;
 import io.fabric.sdk.android.Fabric;
@@ -72,21 +71,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             DownloadException exception = (DownloadException) intent.getSerializableExtra(Sonic.EXTRA_DOWNLOAD_EXCEPTION);
 //            Log.i(TAG, "下载广播TaskInfo:" + taskInfo.toString());
             if (exception != null) {
-        Log.i(TAG, "下载广播Exception:" + exception.getErrorMessage());
-    }
-    updateAppInfo(taskInfo);
-}
+                Log.i(TAG, "下载广播Exception:" + exception.getErrorMessage());
+            }
+            updateAppInfo(taskInfo);
+        }
     }
 
-private void initSonic() {
+    private void initSonic() {
         sonic = Sonic.getInstance();
 //        sonic = Tails.getSonic();
-        }
+    }
 
-private void initData() {
+    private void initData() {
         downloadList = new ArrayList<>();
         new DividerItemDecoration(this, DividerItemDecoration.HORIZONTAL);
         AppInfo appInfo1 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_24/12/com.tencent.qqpim_121006.apk", "QQ同步助手");
+        appInfo1.setForceTask(true);
         downloadList.add(appInfo1);
         AppInfo appInfo2 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_23/10/com.tencent.mtt_105815.apk", "QQ浏览器");
         downloadList.add(appInfo2);
@@ -108,6 +108,12 @@ private void initData() {
         downloadList.add(appInfo10);
         AppInfo appInfo11 = new AppInfo("http://file.foxitreader.cn/reader/ga/FoxitReader_CHS_8.3.0.14878.exe", "福昕阅读器");
         downloadList.add(appInfo11);
+        AppInfo appInfo12 = new AppInfo("http://dl.hdslb.com/mobile/latest/iBiliPlayer-bilibili51.apk", "哔哩哔哩");
+        appInfo12.setForceTask(true);
+        downloadList.add(appInfo12);
+        AppInfo appInfo13 = new AppInfo("http://yapkwww.cdn.anzhi.com/data1/apk/201804/24/com.google.android.inputmethod.pinyin_22939500.apk", "谷歌输入法");
+        appInfo13.setForceTask(true);
+        downloadList.add(appInfo13);
         checkTasks();
     }
 
@@ -121,12 +127,15 @@ private void initData() {
                 appInfo.setTotalSize(taskInfo.getTotalSize());
                 appInfo.setProgress(taskInfo.getProgress());
                 appInfo.setState(taskInfo.getState());
+                appInfo.setForceTask(taskInfo.getTaskConfig().getForceStart() == Sonic.FORCE_START_YES);
             }
         }
     }
 
     private void initView() {
         Button btPauseAll = (Button) findViewById(R.id.bt_pause_all);
+        Button btPauseAllNormal = (Button) findViewById(R.id.bt_pause_all_normal);
+        Button btPauseAllForce = (Button) findViewById(R.id.bt_pause_all_force);
 
         rvTasks = (RecyclerView) findViewById(R.id.rv_tasks);
         linearLayoutManager = new LinearLayoutManager(this);
@@ -191,7 +200,10 @@ private void initData() {
             }
         });
 
+
         btPauseAll.setOnClickListener(this);
+        btPauseAllForce.setOnClickListener(this);
+        btPauseAllNormal.setOnClickListener(this);
     }
 
     private String[] generateStringArray(int size) {
@@ -238,16 +250,16 @@ private void initData() {
             case Sonic.STATE_PAUSE:
             case Sonic.STATE_ERROR:
             case Sonic.STATE_CANCEL:
-                if (appInfo.getName().equals("QQ同步助手")) {
-                    Log.d(TAG,"executeCommand()...forceStart:"+appInfo.getUrl());
+                if ("QQ同步助手".equals(appInfo.getName()) || "哔哩哔哩".equals(appInfo.getName()) || "谷歌输入法".equals(appInfo.getName())) {
+                    Log.d(TAG, "executeCommand()...forceStart:" + appInfo.getName() + "..." + appInfo.getUrl());
                     DownloadRequest request = new DownloadRequest()
                             .setUrl(appInfo.getUrl())
-                            .setFileName("QQ同步助手.apk")
+                            .setFileName(appInfo.getName() + ".apk")
                             .setDirPath(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SonicDownloads/forceDownloads")
                             .setForceStart(Sonic.FORCE_START_YES);
                     sonic.addTask(request);
                 } else {
-                    Log.d(TAG,"executeCommand()...normalStart:"+appInfo.getUrl());
+                    Log.d(TAG, "executeCommand()...normalStart:" + appInfo.getName() + "..." + appInfo.getUrl());
                     sonic.addTask(appInfo.getUrl());
                 }
                 break;
@@ -288,6 +300,12 @@ private void initData() {
         switch (v.getId()) {
             case R.id.bt_pause_all:
                 sonic.pauseAllTask();
+                break;
+            case R.id.bt_pause_all_force:
+                sonic.pauseAllForceTask();
+                break;
+            case R.id.bt_pause_all_normal:
+                sonic.pauseAllNormalTask();
                 break;
         }
     }

@@ -176,6 +176,8 @@ public class DBManager {
             task.setTotalSize(cursor.getLong(cursor.getColumnIndex("total_size")));
             task.setProgress(cursor.getInt(cursor.getColumnIndex("download_progress")));
             task.setState(cursor.getInt(cursor.getColumnIndex("state")));
+            TaskConfig config = queryTaskConfig(task.getTag());
+            task.setTaskConfig(config);
             tasks.add(task);
         }
         cursor.close();

@@ -51,7 +51,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     public void onViewAttachedToWindow(TaskViewHolder holder) {
         super.onViewAttachedToWindow(holder);
         Log.d("onViewAttached", "holder:" + holder.toString() + "..." + holder.getLayoutPosition());
-        updateView(holder,data.get(holder.getLayoutPosition()));
+        updateView(holder, data.get(holder.getLayoutPosition()));
     }
 
     @Override
@@ -102,7 +102,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
     private void updateView(TaskViewHolder holder, AppInfo appInfo) {
         String fileName = FileUtil.getUrlFileName(appInfo.getName());
-        holder.tvName.setText( fileName);
+        holder.tvName.setText(fileName);
+        holder.tvForceTask.setText("ForceTask:" + appInfo.isForceTask());
 //        Log.i(TAG, "onBindViewHolder()...AppInfo:" + appInfo.toString());
         if (appInfo.getTotalSize() != 0) {
             holder.tvSize.setText("Size:" + appInfo.getCurrentSize() + "/" + appInfo.getTotalSize());
@@ -141,6 +142,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         TextView tvName;
         TextView tvSize;
         TextView tvProgress;
+        TextView tvForceTask;
         ProgressBar pbTask;
         Button btTaskState;
         Button btTaskCancel;
@@ -153,6 +155,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
             pbTask = (ProgressBar) itemView.findViewById(R.id.pb_task);
             btTaskState = (Button) itemView.findViewById(R.id.bt_task_state);
             btTaskCancel = (Button) itemView.findViewById(R.id.bt_task_cancel);
+            tvForceTask = (TextView) itemView.findViewById(R.id.tv_force_task);
 
             btTaskState.setOnClickListener(this);
             btTaskCancel.setOnClickListener(this);

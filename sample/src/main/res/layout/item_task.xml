@@ -25,6 +25,13 @@
         android:text="Progress:"
         tools:text="Progress:85%" />
 
+    <TextView
+        android:id="@+id/tv_force_task"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ForceTask:"
+        tools:text="ForceTask:true" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

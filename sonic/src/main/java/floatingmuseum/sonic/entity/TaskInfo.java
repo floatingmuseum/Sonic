@@ -3,6 +3,8 @@ package floatingmuseum.sonic.entity;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import floatingmuseum.sonic.TaskConfig;
+
 /**
  * Created by Floatingmuseum on 2017/3/30.
  */
@@ -14,6 +16,7 @@ public class TaskInfo implements Parcelable {
     private String name;
     private String dirPath;
     private String filePath;
+    private TaskConfig taskConfig;
     private long currentSize;
     private long totalSize;
     private int progress;
@@ -23,7 +26,7 @@ public class TaskInfo implements Parcelable {
 
     public TaskInfo(){}
 
-    public TaskInfo(String downloadUrl, String tag, String name, String dirPath, String filePath, long currentSize, long totalSize, int progress, long speed, int state) {
+    public TaskInfo(String downloadUrl, String tag, String name, String dirPath, String filePath, long currentSize, long totalSize, int progress, long speed, int state, TaskConfig taskConfig) {
         this.downloadUrl = downloadUrl;
         this.tag = tag;
         this.name = name;
@@ -34,6 +37,7 @@ public class TaskInfo implements Parcelable {
         this.progress = progress;
         this.speed = speed;
         this.state = state;
+        this.taskConfig = taskConfig;
     }
 
     public String getDownloadUrl() {
@@ -124,6 +128,14 @@ public class TaskInfo implements Parcelable {
         this.state = state;
     }
 
+    public TaskConfig getTaskConfig() {
+        return taskConfig;
+    }
+
+    public void setTaskConfig(TaskConfig taskConfig) {
+        this.taskConfig = taskConfig;
+    }
+
     @Override
     public String toString() {
         return "TaskInfo{" +
@@ -138,6 +150,7 @@ public class TaskInfo implements Parcelable {
                 ", speed=" + speed +
                 ", state=" + state +
                 ", taskHashcode=" + taskHashcode +
+                ", taskConfig=" + taskConfig +
                 '}';
     }
 
@@ -154,6 +167,7 @@ public class TaskInfo implements Parcelable {
         dest.writeString(this.name);
         dest.writeString(this.dirPath);
         dest.writeString(this.filePath);
+        dest.writeParcelable(this.taskConfig, flags);
         dest.writeLong(this.currentSize);
         dest.writeLong(this.totalSize);
         dest.writeInt(this.progress);
@@ -168,6 +182,7 @@ public class TaskInfo implements Parcelable {
         this.name = in.readString();
         this.dirPath = in.readString();
         this.filePath = in.readString();
+        this.taskConfig = in.readParcelable(TaskConfig.class.getClassLoader());
         this.currentSize = in.readLong();
         this.totalSize = in.readLong();
         this.progress = in.readInt();

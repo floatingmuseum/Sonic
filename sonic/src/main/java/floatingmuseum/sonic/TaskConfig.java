@@ -1,12 +1,14 @@
 package floatingmuseum.sonic;
 
 import android.os.Environment;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Created by Floatingmuseum on 2017/4/20.
  */
 
-public class TaskConfig {
+public class TaskConfig implements Parcelable{
 
     private int maxThreads = 3;
     private int retryTime = 5;
@@ -93,4 +95,46 @@ public class TaskConfig {
                 ", forceStart='" + forceStart + '\'' +
                 '}';
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(this.maxThreads);
+        dest.writeInt(this.retryTime);
+        dest.writeInt(this.progressResponseInterval);
+        dest.writeInt(this.connectTimeout);
+        dest.writeInt(this.readTimeout);
+        dest.writeString(this.dirPath);
+        dest.writeInt(this.forceStart);
+    }
+
+    public TaskConfig() {
+    }
+
+    protected TaskConfig(Parcel in) {
+        this.maxThreads = in.readInt();
+        this.retryTime = in.readInt();
+        this.progressResponseInterval = in.readInt();
+        this.connectTimeout = in.readInt();
+        this.readTimeout = in.readInt();
+        this.dirPath = in.readString();
+        this.forceStart = in.readInt();
+    }
+
+    public static final Creator<TaskConfig> CREATOR = new Creator<TaskConfig>() {
+        @Override
+        public TaskConfig createFromParcel(Parcel source) {
+            return new TaskConfig(source);
+        }
+
+        @Override
+        public TaskConfig[] newArray(int size) {
+            return new TaskConfig[size];
+        }
+    };
 }

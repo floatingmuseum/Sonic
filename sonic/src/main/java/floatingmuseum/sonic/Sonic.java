@@ -190,7 +190,7 @@ public class Sonic {
      * <p>default is sdcard/downloads
      */
     public Sonic setDirPath(String dirPath) {
-        if (dirPath != null && dirPath != "") {
+        if (dirPath != null && !"".equals(dirPath)) {
             File dir = new File(dirPath);
             if (!dir.exists()) {
                 dir.mkdir();
@@ -246,8 +246,9 @@ public class Sonic {
             TaskInfo taskInfo = allTaskInfo.get(request.getTag());
             initDownload(taskInfo, true, request);
         } else {
+            TaskConfig config = getFinalTaskConfig(request.getTag(), request);
             //a downloading file has .sonic-downloading extension，it will rename to original after download finished，
-            TaskInfo taskInfo = new TaskInfo(request.getUrl(), request.getTag(), request.getFileName(), request.getDirPath(), request.getDirPath() + "/" + request.getFileName() + ".sonic-downloading", 0, 0, 0, 0, 0);
+            TaskInfo taskInfo = new TaskInfo(request.getUrl(), request.getTag(), request.getFileName(), request.getDirPath(), request.getDirPath() + "/" + request.getFileName() + ".sonic-downloading", 0, 0, 0, 0, 0, config);
             initDownload(taskInfo, false, request);
         }
     }
@@ -263,14 +264,14 @@ public class Sonic {
         return allTaskInfo;
     }
 
-    private TaskConfig getFinalTaskConfig(TaskInfo taskInfo, DownloadRequest request) {
-        TaskConfig existTaskConfig = dbManager.queryTaskConfig(taskInfo.getTag());
+    private TaskConfig getFinalTaskConfig(String tag, DownloadRequest request) {
+        TaskConfig existTaskConfig = dbManager.queryTaskConfig(tag);
         if (existTaskConfig != null) {
             LogUtil.i(TAG, "getFinalTaskConfig()...config exist in db:" + existTaskConfig.toString());
             return existTaskConfig;
         } else if (request.isCustomTaskConfig()) {
             TaskConfig singleTaskConfig = request.getTaskConfig();
-            dbManager.insertTaskConfig(taskInfo.getTag(), singleTaskConfig);
+            dbManager.insertTaskConfig(tag, singleTaskConfig);
             LogUtil.i(TAG, "getFinalTaskConfig()...save config:" + singleTaskConfig.toString() + "..." + existTaskConfig);
             return singleTaskConfig;
         } else {
@@ -281,7 +282,7 @@ public class Sonic {
 
     private void initDownload(TaskInfo taskInfo, boolean isExist, DownloadRequest request) {
         LogUtil.i(TAG, "initDownload()...TaskInfo:" + taskInfo.toString() + "...forceStart:" + request.getForceStart() + "...isExist:" + isExist);
-        TaskConfig finalTaskConfig = getFinalTaskConfig(taskInfo, request);
+        TaskConfig finalTaskConfig = taskInfo.getTaskConfig();
         if (!isExist) {
             dbManager.insertTaskInfo(taskInfo);
             allTaskInfo.put(taskInfo.getTag(), taskInfo);
@@ -361,27 +362,58 @@ public class Sonic {
     }
 
     public void pauseAllTask() {
-        //remove all task from waitingTask
-        for (DownloadTask waitingTask : waitingTasks) {
-            TaskInfo taskInfo = waitingTask.getTaskInfo();
-            taskInfo.setState(STATE_PAUSE);
-            manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
+//        //remove all task from waitingTask
+//        for (DownloadTask waitingTask : waitingTasks) {
+//            TaskInfo taskInfo = waitingTask.getTaskInfo();
+//            taskInfo.setState(STATE_PAUSE);
+//            manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
+//        }
+//        waitingTasks.clear();
+//
+//        //stop all download task
+//        for (String key : activeTasks.keySet()) {
+//            DownloadTask downloadTask = activeTasks.get(key);
+//            downloadTask.stop();
+//        }
+//
+//        // stop all force download task
+//        for (String key : forceStartTasks.keySet()) {
+//            DownloadTask downloadTask = forceStartTasks.get(key);
+//            downloadTask.stop();
+//        }
+
+        LogUtil.d(TAG, "pauseAllTask()");
+
+        pauseAllNormalTask();
+        pauseAllForceTask();
+    }
+
+    public void pauseAllNormalTask() {
+        LogUtil.d(TAG, "pauseAllNormalTask()");
+        for (DownloadTask task : waitingTasks) {
+            if (task.getConfit().getForceStart() == FORCE_START_NO) {
+                LogUtil.d(TAG, "pauseAllNormalTask()...pause waiting normal "+task.getTaskInfo().getName());
+                task.getTaskInfo().setState(STATE_PAUSE);
+                manager.sendBroadcast(STATE_PAUSE, task.getTaskInfo(), null);
+            }
         }
+
         waitingTasks.clear();
 
-        //stop all download task
         for (String key : activeTasks.keySet()) {
             DownloadTask downloadTask = activeTasks.get(key);
+            LogUtil.d(TAG, "pauseAllNormalTask()...pause downloading normal "+downloadTask.getTaskInfo().getName());
             downloadTask.stop();
         }
-//        activeTasks.clear();
+    }
 
-        // stop all force download task
+    public void pauseAllForceTask() {
+        LogUtil.d(TAG, "pauseAllForceTask()");
         for (String key : forceStartTasks.keySet()) {
             DownloadTask downloadTask = forceStartTasks.get(key);
+            LogUtil.d(TAG, "pauseAllForceTask()...pause downloading force "+downloadTask.getTaskInfo().getName());
             downloadTask.stop();
         }
-//        cancelTask("");
     }
 
     /**

@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="10dp"
     tools:context="floatingmuseum.sample.sonic.MainActivity">
 
     <TextView
@@ -19,7 +18,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/ll_execute_button"
-        android:layout_below="@+id/tv_multi_task_title" />
+        android:layout_below="@+id/tv_multi_task_title"
+        android:padding="10dp" />
 
     <LinearLayout
         android:id="@+id/ll_execute_button"
@@ -29,10 +29,27 @@
         android:orientation="horizontal">
 
         <Button
+            android:id="@+id/bt_pause_all_force"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Pause All Force"
+            android:textSize="10sp" />
+
+        <Button
+            android:id="@+id/bt_pause_all_normal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Pause All Normal"
+            android:textSize="10sp" />
+
+        <Button
             android:id="@+id/bt_pause_all"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Pause All" />
+            android:text="Pause All"
+            android:textSize="10sp" />
     </LinearLayout>
 </RelativeLayout>
