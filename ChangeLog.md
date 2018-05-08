@@ -1,3 +1,6 @@
+#### Version 1.0.8
+1.Separated pauseAllForceTask() and pauseAllNormalTask() from pauseAllTask().
+
 #### Version 1.0.7
 1. Fixed several bugs.
 
@@ -16,8 +19,8 @@
 1. Make TaskInfo implements Parcelable
 
 #### Version 1.0.2
-1. Fixed FileNotFoundException occured,but doesn't call onError.
-2. Fixed when MalformedURLException and FileNotFoundException occured,sonic stuck on the way.
+1. Fixed FileNotFoundException occurred,but doesn't call onError.
+2. Fixed when MalformedURLException and FileNotFoundException occurred,sonic stuck on the way.
 3. Support download non-support multi-threads task.
 
 #### Version 1.0.1

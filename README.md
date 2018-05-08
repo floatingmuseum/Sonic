@@ -17,7 +17,7 @@ Sonic is a android download library.
 Add dependency to your build.gradle.
 ```groovy
 dependencies{
-	compile 'com.floatingmuseum:sonic:1.0.7'
+	compile 'com.floatingmuseum:sonic:1.0.8'
 }
 ```
 Add permission to your AndroidManifest.xml.
@@ -40,7 +40,7 @@ Sonic.getInstance()
       .setRetryTime(4)//Default is 5.
       .setReadTimeout(3000)//Default is 5000.
       .setConnectTimeout(3000)//Default is 5000.
-      .setBroadcastAction("Floatingmuseum")//Default is your packagname.
+      .setBroadcastAction("Floatingmuseum")//Default is your packagename.
       .setDirPath(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath())//Default is sdcard/Download
       .init(getApplicationContext());
 ```
@@ -52,6 +52,10 @@ BroadcastReceiver downloadReceiver = new BroadcastReceiver(){
 	@Override
 	public void onReceive(Context context,Intent intent){
     	TaskInfo taskInfo = intent.getParcelableExtra(Sonic.EXTRA_DOWNLOAD_TASK_INFO);
+    	DownloadException exception = (DownloadException) intent.getSerializableExtra(Sonic.EXTRA_DOWNLOAD_EXCEPTION);
+            if(exception!=null){
+                exception.getErrorMessage();
+            }
         switch(taskInfo.getState()){
         	case Sonic.STATE_NONE:
             	break;
@@ -62,7 +66,6 @@ BroadcastReceiver downloadReceiver = new BroadcastReceiver(){
             case Sonic.STATE_PAUSE:
             	break;
             case Sonic.STATE_DOWNLOADING:
-            	DownloadException exception = (DownloadException) intent.getSerializableExtra(Sonic.EXTRA_DOWNLOAD_EXCEPTION);
             	break;
             case Sonic.STATE_ERROR:
             	break;
@@ -99,9 +102,15 @@ sonic.addTask(request);
 //Pause download.
 sonic.pauseTask(tag);
 
+//Pause all force start task.
+sonic.pauseAllForceTask();
+
+//Pause all normal start task.
+sonic.pauseAllNormalTask();
+
 //Pause all task.
 sonic.pauseAllTask();
 
-//Cancel task,remove all information about task,include database and loca file.
+//Cancel task,remove all information about task,include database and local file.
 sonic.cancelTask(tag);
 ```
