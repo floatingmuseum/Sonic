@@ -133,6 +133,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initView() {
+        findViewById(R.id.tv_multi_task_title).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int x = 1/0;
+            }
+        });
         Button btPauseAll = (Button) findViewById(R.id.bt_pause_all);
         Button btPauseAllNormal = (Button) findViewById(R.id.bt_pause_all_normal);
         Button btPauseAllForce = (Button) findViewById(R.id.bt_pause_all_force);

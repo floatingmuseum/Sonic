@@ -66,7 +66,7 @@ public class DownloadTask implements ThreadListener {
         return taskInfo;
     }
 
-    public TaskConfig getConfit(){
+    public TaskConfig getConfig(){
         return taskConfig;
     }
 
@@ -86,10 +86,17 @@ public class DownloadTask implements ThreadListener {
             initDownloadThread(threadInfoList, "start");
             if (threads.size() > 0) {
                 for (DownloadThread thread : threads) {
+                    LogUtil.i(TAG, "start()...hashID:" + this.hashCode() + "...Resume download" + "..." + taskInfo.getTag()+"...execute");
                     threadsPool.execute(thread);
 //                    thread.start();
                 }
             } else {
+//                taskInfo.setState(Sonic.STATE_FINISH);
+//                taskListener.onFinish(taskInfo, this.hashCode());
+
+                LogUtil.i(TAG, "start()...hashID:" + this.hashCode() + "...finish download" + "..." + taskInfo.getTag());
+                dbManager.delete(taskInfo);
+                taskInfo.setState(Sonic.STATE_FINISH);
                 taskListener.onFinish(taskInfo, this.hashCode());
             }
         }
@@ -115,6 +122,7 @@ public class DownloadTask implements ThreadListener {
 
     private void stopAllThreads() {
         for (DownloadThread thread : threads) {
+//            threadsPool.
             thread.stopThread();
         }
     }
@@ -195,13 +203,14 @@ public class DownloadTask implements ThreadListener {
             }
             taskInfo.setState(Sonic.STATE_PAUSE);
             dbManager.updateTaskInfo(taskInfo);
-            LogUtil.i(TAG, "initSingleThread():" + this.hashCode());
+            LogUtil.i(TAG, "initMultipleThreads():" + this.hashCode());
             taskListener.onPause(taskInfo, this.hashCode());
             return;
         }
 
         initDownloadThread(threadInfoList, "initMultipleThreads");
         for (DownloadThread thread : threads) {
+            LogUtil.i(TAG, "initMultipleThreads():" + this.hashCode()+"...threadID:"+thread.getThreadInfo().getId()+"...execute");
             threadsPool.execute(thread);
 //            thread.start();
         }
@@ -238,7 +247,7 @@ public class DownloadTask implements ThreadListener {
 
         taskInfo.setCurrentSize(getCurrentSize());
         taskInfo.setProgress(getProgress());
-
+updateTaskInfo(Sonic.STATE_DOWNLOADING);
 
         LogUtil.i(TAG, "updateProgress()...hashID:" + this.hashCode() + "...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
         taskListener.onProgress(taskInfo);
@@ -294,6 +303,8 @@ public class DownloadTask implements ThreadListener {
                 return;
             }
             updateProgress();
+            LogUtil.i(TAG, "执行这里");
+            updateTaskInfo(Sonic.STATE_DOWNLOADING);
         }
     }
 
@@ -457,7 +468,8 @@ public class DownloadTask implements ThreadListener {
 
     private void updateTaskInfo(int state) {
         taskInfo.setState(state);
-        if (!isSupportRange) {
+        if (isSupportRange) {
+            LogUtil.i(TAG, "updateTaskInfo()..." + taskInfo.getCurrentSize() + "..." + taskInfo.getState() + "..." + taskInfo.getProgress() + "..." + taskInfo.getTotalSize());
             dbManager.updateTaskInfo(taskInfo);
         }
     }

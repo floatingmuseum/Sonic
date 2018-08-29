@@ -29,6 +29,17 @@ public class Sonic {
 
     private static final String TAG = Sonic.class.getName();
 
+//    public enum State{
+//        NONE,
+//        START,
+//        WAITING,
+//        PAUSE,
+//        DOWNLOADING,
+//        ERROR,
+//        FINISH,
+//        CANCEL
+//    }
+
     public static final int STATE_NONE = 0;
     public static final int STATE_START = 6;
     public static final int STATE_WAITING = 1;
@@ -68,6 +79,7 @@ public class Sonic {
 
     public void init(Context applicationContext) {
         context = applicationContext;
+
         LogUtil.i(TAG, "init()...PackageName:" + context.getPackageName());
         LogUtil.i(TAG, "init()...Download dir path:" + taskConfig.getDirPath());
 
@@ -87,6 +99,21 @@ public class Sonic {
         if (!ListUtil.isEmpty(allTask)) {
             for (TaskInfo taskInfo : allTask) {
                 LogUtil.i(TAG, "init()...tasks exist in db:" + taskInfo.toString());
+                if (taskInfo.getState()==STATE_DOWNLOADING) {//if task state is downloading，this may cause app crashed or device rebooted when task downloading。
+                    taskInfo.setState(STATE_PAUSE);
+                }
+                allTaskInfo.put(taskInfo.getTag(), taskInfo);
+            }
+        }
+    }
+
+    private void initAllTasks(List<TaskInfo> tasks){
+        if (!ListUtil.isEmpty(tasks)) {
+            for (TaskInfo taskInfo : tasks) {
+                LogUtil.i(TAG, "init()...tasks exist in db:" + taskInfo.toString());
+                if (taskInfo.getState()==STATE_DOWNLOADING) {//if task state is downloading，this may cause app crashed or device rebooted when task downloading。
+                    taskInfo.setState(STATE_PAUSE);
+                }
                 allTaskInfo.put(taskInfo.getTag(), taskInfo);
             }
         }
@@ -355,7 +382,16 @@ public class Sonic {
                     return;
                 }
             }
-            // TODO: 2018/4/20 monkey测试后，有的应用按钮处于暂停状态，点击后，执行暂停，却找不到task
+            // TODO: 2018/4/20 monkey测试后，有的应用按钮处于暂停状态，点击后，执行暂停，却无法在下载队列中找到task，可能因程序崩溃等原因发生
+
+            TaskInfo taskInfo = allTaskInfo.get(tag);
+            if (taskInfo!=null) {
+                LogUtil.i(TAG, "pauseTask()...from allTaskInfo:" + waitingTasks.size() + "..." + tag);
+                taskInfo.setState(STATE_PAUSE);
+                manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
+                return;
+            }
+
             LogUtil.i(TAG, "暂停DownloadTask...未找到:");
             LogUtil.i(TAG, "Which task that you want stop,doesn't exist.");
         }
@@ -391,7 +427,7 @@ public class Sonic {
     public void pauseAllNormalTask() {
         LogUtil.d(TAG, "pauseAllNormalTask()");
         for (DownloadTask task : waitingTasks) {
-            if (task.getConfit().getForceStart() == FORCE_START_NO) {
+            if (task.getConfig().getForceStart() == FORCE_START_NO) {
                 LogUtil.d(TAG, "pauseAllNormalTask()...pause waiting normal "+task.getTaskInfo().getName());
                 task.getTaskInfo().setState(STATE_PAUSE);
                 manager.sendBroadcast(STATE_PAUSE, task.getTaskInfo(), null);
@@ -472,6 +508,9 @@ public class Sonic {
         }
     }
 
+    /**
+     * remove task from activeTasks and forceTasks,execute waitingTask
+     */
     private void checkWaitingTasks(TaskInfo taskInfo) {
         String tag = taskInfo.getTag();
         if (activeTasks.containsKey(tag)) {

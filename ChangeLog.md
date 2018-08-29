@@ -1,5 +1,8 @@
+#### Version 1.0.9
+1. Upgrade database.
+
 #### Version 1.0.8
-1.Separated pauseAllForceTask() and pauseAllNormalTask() from pauseAllTask().
+1. Separated pauseAllForceTask() and pauseAllNormalTask() from pauseAllTask().
 
 #### Version 1.0.7
 1. Fixed several bugs.

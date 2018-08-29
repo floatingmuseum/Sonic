@@ -139,17 +139,17 @@ public class TaskInfo implements Parcelable {
     @Override
     public String toString() {
         return "TaskInfo{" +
-                "downloadUrl='" + downloadUrl + '\'' +
                 ", tag='" + tag + '\'' +
                 ", name='" + name + '\'' +
                 ", dirPath='" + dirPath + '\'' +
                 ", filePath='" + filePath + '\'' +
-                ", currentSize=" + currentSize +
-                ", totalSize=" + totalSize +
-                ", progress=" + progress +
-                ", speed=" + speed +
-                ", state=" + state +
-                ", taskHashcode=" + taskHashcode +
+                ", currentSize=" + currentSize + '\'' +
+                ", totalSize=" + totalSize + '\'' +
+                ", progress=" + progress + '\'' +
+                ", speed=" + speed + '\'' +
+                ", state=" + state + '\'' +
+                ", taskHashcode=" + taskHashcode + '\'' +
+                ", downloadUrl='" + downloadUrl + '\'' +
                 ", taskConfig=" + taskConfig +
                 '}';
     }

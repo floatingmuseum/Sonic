@@ -1,5 +1,7 @@
 package floatingmuseum.sonic.threads;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 
 import java.io.IOException;
@@ -83,6 +85,7 @@ public abstract class BaseThread implements Runnable {
                 int len;
                 while ((len = inputStream.read(buffer)) != -1) {
                     if (checkStop()) {
+                        isDownloading = false;
                         return;
                     }
 //                    LogUtil.d(TAG, "速度测试...:" + buffer.length + "...hashCode:" + hashCode);
@@ -109,22 +112,25 @@ public abstract class BaseThread implements Runnable {
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
+            LogUtil.i(TAG, threadInfo.getId() + "Thread MalformedURLException occurred" + "..." + fileName  + "...hashCode:" + hashCode);
             updateDB();
             downloadException = new DownloadException(DownloadException.TYPE_MALFORMED_URL, "DownloadThread failed." + threadInfo.getUrl(), e);
             sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
         } catch (ProtocolException e) {
             e.printStackTrace();
+            LogUtil.i(TAG, threadInfo.getId() + "Thread ProtocolException occurred" + "..." + fileName  + "...hashCode:" + hashCode);
             updateDB();
             downloadException = new DownloadException(DownloadException.TYPE_PROTOCOL, "DownloadThread failed", e);
             sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
         } catch (InterruptedIOException e) {
             e.printStackTrace();
+            LogUtil.i(TAG, threadInfo.getId() + "Thread InterruptedIOException occurred" + "..." + fileName  + "...hashCode:" + hashCode);
             updateDB();
-            LogUtil.i(TAG, threadInfo.getId() + "Thread stop by auto interrupted." + "...hashCode:" + hashCode);
             downloadException = new DownloadException(DownloadException.TYPE_INTERRUPTED_IO, "DownloadThread failed", e);
             sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
         } catch (IOException e) {
             e.printStackTrace();
+            LogUtil.i(TAG, threadInfo.getId() + "Thread IOException1 occurred" + "..." + fileName  + "...hashCode:" + hashCode);
             updateDB();
             downloadException = new DownloadException(DownloadException.TYPE_IO, "DownloadThread failed", e);
             sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
@@ -141,6 +147,7 @@ public abstract class BaseThread implements Runnable {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                LogUtil.i(TAG, threadInfo.getId() + "Thread IOException2 occurred" + "..." + fileName  + "...hashCode:" + hashCode);
                 updateDB();
                 downloadException = new DownloadException(DownloadException.TYPE_IO, "DownloadThread failed", e);
                 sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);

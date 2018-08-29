@@ -17,7 +17,7 @@ Sonic is a android download library.
 Add dependency to your build.gradle.
 ```groovy
 dependencies{
-	compile 'com.floatingmuseum:sonic:1.0.8'
+	compile 'com.floatingmuseum:sonic:1.0.9'
 }
 ```
 Add permission to your AndroidManifest.xml.

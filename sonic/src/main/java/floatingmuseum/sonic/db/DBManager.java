@@ -2,6 +2,7 @@ package floatingmuseum.sonic.db;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
@@ -39,8 +40,14 @@ public class DBManager {
     public synchronized void insertTaskInfo(TaskInfo task) {
         String insertSql = "insert into task_info(url,tag,dir_path,file_path,name,current_size,total_size,state) values(?,?,?,?,?,?,?,?)";
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.execSQL(insertSql, new Object[]{task.getDownloadUrl(), task.getTag(), task.getDirPath(), task.getFilePath(), task.getName(), task.getCurrentSize(), task.getTotalSize(), task.getState()});
-        db.close();
+        try {
+            db.execSQL(insertSql, new Object[]{task.getDownloadUrl(), task.getTag(), task.getDirPath(), task.getFilePath(), task.getName(), task.getCurrentSize(), task.getTotalSize(), task.getState()});
+        }catch (SQLiteConstraintException e){
+            LogUtil.d(TAG,"insertTaskInfo()...task exists...task:"+task.toString());
+            e.printStackTrace();
+        }finally {
+            db.close();
+        }
     }
 
     public synchronized void insertTaskConfig(String tag, TaskConfig config) {
