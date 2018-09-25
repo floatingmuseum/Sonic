@@ -1,6 +1,5 @@
 package floatingmuseum.sonic.entity;
 
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
@@ -14,17 +13,23 @@ import floatingmuseum.sonic.utils.FileUtil;
 
 public class DownloadRequest {
 
+    private TaskConfig selfTaskConfig;
     private String url;
     private String tag;
     private String fileName;
-    private String dirPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-    private int maxThreads = 3;
-    private int retryTime = 5;
-    private int progressResponseInterval = 500;
-    private int connectTimeout = 5000;
-    private int readTimeout = 5000;
-    private int forceStart = Sonic.FORCE_START_NO;
     private boolean isCustomTaskConfig = false;
+
+    public DownloadRequest() {
+        TaskConfig defaultTaskConfig = Sonic.getInstance().getTaskConfig();
+        selfTaskConfig = new TaskConfig();
+        selfTaskConfig.setDirPath(defaultTaskConfig.getDirPath())
+                .setMaxThreads(defaultTaskConfig.getMaxThreads())
+                .setRetryTime(defaultTaskConfig.getRetryTime())
+                .setConnectTimeout(defaultTaskConfig.getConnectTimeout())
+                .setReadTimeout(defaultTaskConfig.getReadTimeout())
+                .setProgressResponseInterval(defaultTaskConfig.getProgressResponseInterval())
+                .setForceStart(defaultTaskConfig.getForceStart());
+    }
 
     public String getUrl() {
         return url;
@@ -60,17 +65,17 @@ public class DownloadRequest {
     }
 
     public String getDirPath() {
-        return dirPath;
+        return selfTaskConfig.getDirPath();
     }
 
     public DownloadRequest setDirPath(String dirPath) {
-        this.dirPath = dirPath;
+        selfTaskConfig.setDirPath(dirPath);
         isCustomTaskConfig = true;
         return this;
     }
 
     public int getMaxThreads() {
-        return maxThreads;
+        return selfTaskConfig.getMaxThreads();
     }
 
     /**
@@ -79,16 +84,16 @@ public class DownloadRequest {
      */
     public DownloadRequest setMaxThreads(int maxThreads) {
         if (maxThreads < 1) {
-            this.maxThreads = 1;
+            selfTaskConfig.setMaxThreads(1);
         } else {
-            this.maxThreads = maxThreads;
+            selfTaskConfig.setMaxThreads(maxThreads);
         }
         isCustomTaskConfig = true;
         return this;
     }
 
     public int getRetryTime() {
-        return retryTime;
+        return selfTaskConfig.getRetryTime();
     }
 
     /**
@@ -96,16 +101,16 @@ public class DownloadRequest {
      */
     public DownloadRequest setRetryTime(int retryTime) {
         if (retryTime < 0) {
-            retryTime = 0;
+            selfTaskConfig.setRetryTime(0);
         } else {
-            this.retryTime = retryTime;
+            selfTaskConfig.setRetryTime(retryTime);
         }
         isCustomTaskConfig = true;
         return this;
     }
 
     public int getProgressResponseInterval() {
-        return progressResponseInterval;
+        return selfTaskConfig.getProgressResponseInterval();
     }
 
     /**
@@ -115,30 +120,30 @@ public class DownloadRequest {
      */
     public DownloadRequest setProgressResponseInterval(int progressResponseInterval) {
         if (progressResponseInterval < 0) {
-            this.progressResponseInterval = 0;
+            selfTaskConfig.setProgressResponseInterval(0);
         } else if (progressResponseInterval > 1000) {
-            this.progressResponseInterval = 1000;
+            selfTaskConfig.setProgressResponseInterval(1000);
         } else {
-            this.progressResponseInterval = progressResponseInterval;
+            selfTaskConfig.setProgressResponseInterval(progressResponseInterval);
         }
         isCustomTaskConfig = true;
         return this;
     }
 
     public int getConnectTimeout() {
-        return connectTimeout;
+        return selfTaskConfig.getConnectTimeout();
     }
 
     public DownloadRequest setConnectTimeout(int connectTimeout) {
         if (connectTimeout > 0) {
-            this.connectTimeout = connectTimeout;
+            selfTaskConfig.setConnectTimeout(connectTimeout);
             isCustomTaskConfig = true;
         }
         return this;
     }
 
     public int getReadTimeout() {
-        return readTimeout;
+        return selfTaskConfig.getReadTimeout();
     }
 
     /**
@@ -146,14 +151,14 @@ public class DownloadRequest {
      */
     public DownloadRequest setReadTimeout(int readTimeout) {
         if (readTimeout > 0) {
-            this.readTimeout = readTimeout;
+            selfTaskConfig.setReadTimeout(readTimeout);
             isCustomTaskConfig = true;
         }
         return this;
     }
 
     public int getForceStart() {
-        return forceStart;
+        return selfTaskConfig.getForceStart();
     }
 
     /**
@@ -161,7 +166,7 @@ public class DownloadRequest {
      */
     public DownloadRequest setForceStart(int forceStart) {
         if (forceStart == Sonic.FORCE_START_NO || forceStart == Sonic.FORCE_START_YES) {
-            this.forceStart = forceStart;
+            selfTaskConfig.setForceStart(forceStart);
             isCustomTaskConfig = true;
         }
         return this;
@@ -172,12 +177,6 @@ public class DownloadRequest {
     }
 
     public TaskConfig getTaskConfig() {
-        return new TaskConfig().setDirPath(dirPath)
-                .setRetryTime(retryTime)
-                .setMaxThreads(maxThreads)
-                .setConnectTimeout(connectTimeout)
-                .setReadTimeout(readTimeout)
-                .setProgressResponseInterval(progressResponseInterval)
-                .setForceStart(forceStart);
+        return selfTaskConfig;
     }
 }
