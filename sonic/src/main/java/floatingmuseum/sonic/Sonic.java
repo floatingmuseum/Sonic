@@ -139,6 +139,10 @@ public class Sonic {
         return Holder.INSTANCE;
     }
 
+    public TaskConfig getTaskConfig() {
+        return taskConfig;
+    }
+
     /**
      * <p>How many tasks can running at the same time.
      * <p>default is 3.
@@ -297,10 +301,10 @@ public class Sonic {
             LogUtil.i(TAG, "getFinalTaskConfig()...config exist in db:" + existTaskConfig.toString());
             return existTaskConfig;
         } else if (request.isCustomTaskConfig()) {
-            TaskConfig singleTaskConfig = request.getTaskConfig();
-            dbManager.insertTaskConfig(tag, singleTaskConfig);
-            LogUtil.i(TAG, "getFinalTaskConfig()...save config:" + singleTaskConfig.toString() + "..." + existTaskConfig);
-            return singleTaskConfig;
+            TaskConfig customTaskConfig = request.getTaskConfig();
+            dbManager.insertTaskConfig(tag, customTaskConfig);
+            LogUtil.i(TAG, "getFinalTaskConfig()...save config:" + customTaskConfig.toString() + "..." + existTaskConfig);
+            return customTaskConfig;
         } else {
             LogUtil.i(TAG, "getFinalTaskConfig()...use default config:" + taskConfig.toString() + "..." + existTaskConfig);
             return taskConfig;
