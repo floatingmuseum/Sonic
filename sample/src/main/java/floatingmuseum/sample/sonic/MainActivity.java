@@ -85,26 +85,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initData() {
         downloadList = new ArrayList<>();
         new DividerItemDecoration(this, DividerItemDecoration.HORIZONTAL);
-        AppInfo appInfo1 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_24/12/com.tencent.qqpim_121006.apk", "QQ同步助手");
+        AppInfo appInfo1 = new AppInfo("http://yapkwww.cdn.anzhi.com/data4/apk/201809/12/2de1c04cc5a19679cbc100c809fc2865_36134700.apk", "QQ同步助手");
         appInfo1.setForceTask(true);
         downloadList.add(appInfo1);
-        AppInfo appInfo2 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_23/10/com.tencent.mtt_105815.apk", "QQ浏览器");
+        AppInfo appInfo2 = new AppInfo("http://yapkwww.cdn.anzhi.com/data4/apk/201809/19/d5e161b2a3f92a3ef5a75ea0ed013355_05003200.apk", "QQ浏览器");
         downloadList.add(appInfo2);
-        AppInfo appInfo3 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2016/12_2/15/com.lbe.security_035225.apk", "LBE安全大师");
+        AppInfo appInfo3 = new AppInfo("http://yapkwww.cdn.anzhi.com/data1/apk/201712/22/com.lbe.security_97248300.apk", "LBE安全大师");
         downloadList.add(appInfo3);
-        AppInfo appInfo4 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_29/12/com.qiyi.video_124106.apk", "爱奇艺");
+        AppInfo appInfo4 = new AppInfo("http://yapkwww.cdn.anzhi.com/data4/apk/201809/20/5f8358a3cd0c4be0e333a9c5dc0545cc_29958000.apk", "爱奇艺");
         downloadList.add(appInfo4);
-        AppInfo appInfo5 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_17/17/com.xiachufang_054408.apk", "下厨房");
+        AppInfo appInfo5 = new AppInfo("http://yapkwww.cdn.anzhi.com/data4/apk/201809/12/33e5555c84505b83db3595e00cdc0989_13399500.apk", "下厨房");
         downloadList.add(appInfo5);
-        AppInfo appInfo6 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_8/20/com.kugou.android_080305.apk", "酷狗");
+        AppInfo appInfo6 = new AppInfo("http://yapkwww.cdn.anzhi.com/data4/apk/201809/14/d206c9d336a3ec76378a3450f224b803_05301400.apk", "酷狗");
         downloadList.add(appInfo6);
-        AppInfo appInfo7 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_30/17/com.netease.mail_051233.apk.apk", "网易邮箱大师");
+        AppInfo appInfo7 = new AppInfo("http://yapkwww.cdn.anzhi.com/data4/apk/201809/14/com.netease.mail_89102700.apk", "网易邮箱大师");
         downloadList.add(appInfo7);
-        AppInfo appInfo8 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_24/14/com.ss.android.article.news_024007.apk", "今日头条");
+        AppInfo appInfo8 = new AppInfo("http://yapkwww.cdn.anzhi.com/data4/apk/201809/17/2f510c9a33dcbe0d3da5fbc4a04266b1_97271700.apk", "今日头条");
         downloadList.add(appInfo8);
-        AppInfo appInfo9 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_16/20/com.sina.weibog3_080004.apk", "微博");
+        AppInfo appInfo9 = new AppInfo("http://yapkwww.cdn.anzhi.com/data4/apk/201809/19/113a197853af24a5efebdc6c490244df_76079800.apk", "微博");
         downloadList.add(appInfo9);
-        AppInfo appInfo10 = new AppInfo("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_31/17/com.duokan.reader_050812.apk", "多看阅读");
+        AppInfo appInfo10 = new AppInfo("http://yapkwww.cdn.anzhi.com/data4/apk/201809/12/806baa431d935f47563d152655a86d7f_50330200.apk", "多看阅读");
         downloadList.add(appInfo10);
         AppInfo appInfo11 = new AppInfo("http://file.foxitreader.cn/reader/ga/FoxitReader_CHS_8.3.0.14878.exe", "福昕阅读器");
         downloadList.add(appInfo11);
@@ -136,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.tv_multi_task_title).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int x = 1/0;
+//                int x = 1/0;
             }
         });
         Button btPauseAll = (Button) findViewById(R.id.bt_pause_all);
