@@ -1,3 +1,7 @@
+#### Version 1.0.10
+1. Fix wrong download state.
+2. Fix TaskConfig not work error.
+
 #### Version 1.0.9
 1. Upgrade database.
 

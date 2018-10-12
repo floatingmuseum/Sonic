@@ -66,7 +66,7 @@ public class DownloadTask implements ThreadListener {
         return taskInfo;
     }
 
-    public TaskConfig getConfig(){
+    public TaskConfig getConfig() {
         return taskConfig;
     }
 
@@ -86,7 +86,7 @@ public class DownloadTask implements ThreadListener {
             initDownloadThread(threadInfoList, "start");
             if (threads.size() > 0) {
                 for (DownloadThread thread : threads) {
-                    LogUtil.i(TAG, "start()...hashID:" + this.hashCode() + "...Resume download" + "..." + taskInfo.getTag()+"...execute");
+                    LogUtil.i(TAG, "start()...hashID:" + this.hashCode() + "...Resume download" + "..." + taskInfo.getTag() + "...execute");
                     threadsPool.execute(thread);
 //                    thread.start();
                 }
@@ -109,7 +109,7 @@ public class DownloadTask implements ThreadListener {
             return;
         }
 
-        LogUtil.i(TAG, "stop()...hashID:" + this.hashCode() + "...Stop downloading Threads:" + threads.size() + "..." + taskInfo.getTag() + "..." + stopDownloading+"...initThread:"+initThread);
+        LogUtil.i(TAG, "stop()...hashID:" + this.hashCode() + "...Stop downloading Threads:" + threads.size() + "..." + taskInfo.getTag() + "..." + stopDownloading + "...initThread:" + initThread);
         stopDownloading = true;
         if (threads.size() == 0) {
             if (initThread != null) {
@@ -150,21 +150,19 @@ public class DownloadTask implements ThreadListener {
     }
 
     private void initDownloadThread(List<ThreadInfo> threadInfoList, String where) {
-        LogUtil.i(TAG, "initDownloadThread()...call...hashID:" + this.hashCode() + "...where:" + where+"...threadInfoSize:"+threadInfoList.size() + "...TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getTag());
+        LogUtil.i(TAG, "initDownloadThread()...call...hashID:" + this.hashCode() + "...where:" + where + "...threadInfoSize:" + threadInfoList.size() + "...TaskInfo...TotalSize:" + taskInfo.getTotalSize() + "...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getTag());
         for (ThreadInfo info : threadInfoList) {
             LogUtil.i(TAG, "initDownloadThread()...startFor...hashID:" + this.hashCode() + "...ThreadID:" + info.getId() + "...StartPosition:" + info.getStartPosition() + "...CurrentPosition:" + info.getCurrentPosition() + "...EndPosition:" + info.getEndPosition() + "..." + taskInfo.getTag());
             if (info.getCurrentPosition() < info.getEndPosition()) {//Only init thread which not finished.
                 LogUtil.i(TAG, "initDownloadThread()...init...hashID:" + this.hashCode() + "...ThreadID:" + info.getId() + "...Not Finished" + "..." + taskInfo.getTag());
                 DownloadThread thread = new DownloadThread(uiHandler, info, taskInfo.getDirPath(), taskInfo.getName(), taskInfo.getFilePath(), dbManager, taskConfig.getReadTimeout(), taskConfig.getConnectTimeout(), this.hashCode());
                 threads.add(thread);
+                activeMap.put(info.getId(), true);
             }
         }
         taskInfo.setProgress(getProgress());
 
         activeThreadsNum = threads.size();
-        for (int i = 0; i < threads.size(); i++) {
-            activeMap.put(i + 1, true);
-        }
     }
 
     @Override
@@ -210,7 +208,7 @@ public class DownloadTask implements ThreadListener {
 
         initDownloadThread(threadInfoList, "initMultipleThreads");
         for (DownloadThread thread : threads) {
-            LogUtil.i(TAG, "initMultipleThreads():" + this.hashCode()+"...threadID:"+thread.getThreadInfo().getId()+"...execute");
+            LogUtil.i(TAG, "initMultipleThreads():" + this.hashCode() + "...threadID:" + thread.getThreadInfo().getId() + "...execute");
             threadsPool.execute(thread);
 //            thread.start();
         }
@@ -247,7 +245,7 @@ public class DownloadTask implements ThreadListener {
 
         taskInfo.setCurrentSize(getCurrentSize());
         taskInfo.setProgress(getProgress());
-updateTaskInfo(Sonic.STATE_DOWNLOADING);
+        updateTaskInfo(Sonic.STATE_DOWNLOADING);
 
         LogUtil.i(TAG, "updateProgress()...hashID:" + this.hashCode() + "...CurrentSize:" + taskInfo.getCurrentSize() + "..." + taskInfo.getProgress() + "..." + taskInfo.getState());
         taskListener.onProgress(taskInfo);
@@ -262,7 +260,7 @@ updateTaskInfo(Sonic.STATE_DOWNLOADING);
 
     @Override
     public void onInitThreadPause(int hashCode) {
-        LogUtil.i(TAG, "onInitThreadPause()...call..." + this.hashCode() + "...threadTask:" + hashCode+"...tag:"+taskInfo.getTag());
+        LogUtil.i(TAG, "onInitThreadPause()...call..." + this.hashCode() + "...threadTask:" + hashCode + "...tag:" + taskInfo.getTag());
         updateTaskInfo(Sonic.STATE_PAUSE);
         taskListener.onPause(taskInfo, this.hashCode());
     }
@@ -274,7 +272,7 @@ updateTaskInfo(Sonic.STATE_DOWNLOADING);
 
     @Override
     public void onPause(ThreadInfo threadInfo, int hashCode) {
-        LogUtil.i(TAG, "onPause()...call..." + this.hashCode() + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId()+"...tag:"+taskInfo.getTag());
+        LogUtil.i(TAG, "onPause()...call..." + this.hashCode() + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId() + "...tag:" + taskInfo.getTag());
         if (!isSupportRange) {
             handleSingleThreadTask(Sonic.STATE_PAUSE);
             return;
@@ -284,9 +282,9 @@ updateTaskInfo(Sonic.STATE_DOWNLOADING);
                 cancelTask();
                 return;
             }
-            LogUtil.i(TAG, "onPause()...Pause Success:" + taskInfo.getState() + "..." + this.hashCode() + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId()+"...tag:"+taskInfo.getTag());
+            LogUtil.i(TAG, "onPause()...Pause Success:" + taskInfo.getState() + "..." + this.hashCode() + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId() + "...tag:" + taskInfo.getTag());
             updateProgress();
-            LogUtil.i(TAG, "onPause()...Pause Success:" + taskInfo.getState() + "..." + this.hashCode() + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId()+"...tag:"+taskInfo.getTag());
+            LogUtil.i(TAG, "onPause()...Pause Success:" + taskInfo.getState() + "..." + this.hashCode() + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId() + "...tag:" + taskInfo.getTag());
             updateTaskInfo(Sonic.STATE_PAUSE);
             taskListener.onPause(taskInfo, this.hashCode());
         }
@@ -367,7 +365,7 @@ updateTaskInfo(Sonic.STATE_DOWNLOADING);
 
     @Override
     public void onError(ThreadInfo threadInfo, DownloadException e, int hashCode) {
-        LogUtil.i(TAG, "onError()...call..." + this.hashCode() + "...stopDownloading:" + stopDownloading + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId() + "..." + e.getMessage() + "..." + e.getExceptionType()+"...tag:"+taskInfo.getTag());
+        LogUtil.i(TAG, "onError()...call..." + this.hashCode() + "...stopDownloading:" + stopDownloading + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId() + "..." + e.getMessage() + "..." + e.getExceptionType() + "...tag:" + taskInfo.getTag());
         if (!stopDownloading && isHaveRetryTime(threadInfo)) {
             return;
         }
@@ -386,7 +384,7 @@ updateTaskInfo(Sonic.STATE_DOWNLOADING);
             }
             updateProgress();
             updateTaskInfo(Sonic.STATE_ERROR);
-            LogUtil.i(TAG, "onError()...call..." + this.hashCode() + "...stopDownloading:" + stopDownloading + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId() + "..." + e.getMessage() + "..." + e.getExceptionType()+"...tag:"+taskInfo.getTag());
+            LogUtil.i(TAG, "onError()...call..." + this.hashCode() + "...stopDownloading:" + stopDownloading + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId() + "..." + e.getMessage() + "..." + e.getExceptionType() + "...tag:" + taskInfo.getTag());
             taskListener.onError(taskInfo, e, this.hashCode());
         }
     }
@@ -410,11 +408,11 @@ updateTaskInfo(Sonic.STATE_DOWNLOADING);
                 dbManager.delete(taskInfo);
                 renameFile();
                 taskInfo.setState(Sonic.STATE_FINISH);
-                LogUtil.i(TAG, "onFinished()...call..." + this.hashCode() + "...stopDownloading:" + stopDownloading + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId() +"...tag:"+taskInfo.getTag());
+                LogUtil.i(TAG, "onFinished()...call..." + this.hashCode() + "...stopDownloading:" + stopDownloading + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId() + "...tag:" + taskInfo.getTag());
                 taskListener.onFinish(taskInfo, this.hashCode());
             } else {
                 updateTaskInfo(Sonic.STATE_ERROR);
-                LogUtil.i(TAG, "onError()...call in onFinished..." + this.hashCode() + "...stopDownloading:" + stopDownloading + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId()+"...tag:"+taskInfo.getTag());
+                LogUtil.i(TAG, "onError()...call in onFinished..." + this.hashCode() + "...stopDownloading:" + stopDownloading + "...threadTask:" + hashCode + "...threadID:" + threadInfo.getId() + "...tag:" + taskInfo.getTag());
                 taskListener.onError(taskInfo, downloadException, this.hashCode());
             }
         }
@@ -451,7 +449,7 @@ updateTaskInfo(Sonic.STATE_DOWNLOADING);
             removeRelatedInfo();
         }
         updateTaskInfo(Sonic.STATE_ERROR);
-        LogUtil.i(TAG, "onInitError()...call..." + this.hashCode() + "...threadTask:" + hashCode+"...tag:"+taskInfo.getTag());
+        LogUtil.i(TAG, "onInitError()...call..." + this.hashCode() + "...threadTask:" + hashCode + "...tag:" + taskInfo.getTag());
         taskListener.onError(taskInfo, e, this.hashCode());
     }
 
