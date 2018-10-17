@@ -11,6 +11,7 @@ import java.util.Map;
 import floatingmuseum.sonic.UIHandler;
 import floatingmuseum.sonic.db.DBManager;
 import floatingmuseum.sonic.entity.ThreadInfo;
+import floatingmuseum.sonic.utils.LogUtil;
 
 /**
  * Created by Floatingmuseum on 2017/3/31.
@@ -22,7 +23,7 @@ public class DownloadThread extends BaseThread {
 
     private DBManager dbManager;
 
-    public DownloadThread(UIHandler uiHandler, ThreadInfo threadInfo, String dirPath, String fileName,String filePath, DBManager dbManager, int readTimeout, int connectTimeout,int hashCode) {
+    public DownloadThread(UIHandler uiHandler, ThreadInfo threadInfo, String dirPath, String fileName, String filePath, DBManager dbManager, int readTimeout, int connectTimeout, int hashCode) {
         this.threadInfo = threadInfo;
         this.dirPath = dirPath;
         this.fileName = fileName;
@@ -52,7 +53,13 @@ public class DownloadThread extends BaseThread {
     @Override
     protected Map<String, String> getHttpHeaders() {
         Map<String, String> headers = new HashMap<>();
-        headers.put("Range", "bytes=" + threadInfo.getCurrentPosition() + "-" + threadInfo.getEndPosition());
+        if (threadInfo.getFileSize() == threadInfo.getEndPosition()) {
+            LogUtil.d(TAG, "getHttpHeaders()...last thread...threadID:" + threadInfo.getId() + "...omit endPosition");
+            headers.put("Range", "bytes=" + threadInfo.getCurrentPosition() + "-");
+        } else {
+            LogUtil.d(TAG, "getHttpHeaders()...not last thread...threadID:" + threadInfo.getId() + "...add endPosition");
+            headers.put("Range", "bytes=" + threadInfo.getCurrentPosition() + "-" + threadInfo.getEndPosition());
+        }
         return headers;
     }
 

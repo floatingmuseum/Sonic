@@ -1,3 +1,6 @@
+#### Version 1.0.11
+1.Fix last thread request 400 error.
+
 #### Version 1.0.10
 1. Fix wrong download state.
 2. Fix TaskConfig not work error.
