@@ -1,3 +1,6 @@
+#### Version 1.0.12(Working)
+1.Now DownloadException contains throwable.
+
 #### Version 1.0.11
 1.Fix last thread request 400 error.
 
