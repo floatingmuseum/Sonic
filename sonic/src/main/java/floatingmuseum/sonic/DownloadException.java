@@ -1,6 +1,8 @@
 package floatingmuseum.sonic;
 
 
+import android.support.annotation.Nullable;
+
 /**
  * Created by Floatingmuseum on 2017/4/18.
  */
@@ -18,11 +20,13 @@ public class DownloadException extends Exception{
     private String errorMessage;
     private int responseCode = -1;
     private int exceptionType;
+    private Throwable throwable;
 
     public DownloadException(int exceptionType,String errorMessage, Throwable throwable) {
         super(errorMessage, throwable);
         this.errorMessage = errorMessage;
         this.exceptionType = exceptionType;
+        this.throwable = throwable;
     }
 
     public DownloadException(int exceptionType,String errorMessage, int responseCode) {
@@ -51,6 +55,11 @@ public class DownloadException extends Exception{
 
     public int getExceptionType() {
         return exceptionType;
+    }
+
+    @Nullable
+    public Throwable getThrowable(){
+        return throwable;
     }
 
 

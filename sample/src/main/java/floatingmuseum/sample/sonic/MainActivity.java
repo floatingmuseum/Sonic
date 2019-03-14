@@ -71,7 +71,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             DownloadException exception = (DownloadException) intent.getSerializableExtra(Sonic.EXTRA_DOWNLOAD_EXCEPTION);
 //            Log.i(TAG, "下载广播TaskInfo:" + taskInfo.toString());
             if (exception != null) {
-                Log.i(TAG, "下载广播Exception:" + exception.getErrorMessage());
+                Log.i(TAG, "下载广播Exception...message:" + exception.getErrorMessage());
+                Log.i(TAG, "下载广播Exception...type:" + exception.getExceptionType());
+                Log.i(TAG, "下载广播Exception...responseCode:" + exception.getResponseCode());
+                if (exception.getThrowable()!=null) {
+                    Log.i(TAG, "下载广播Exception...throwable:" + exception.getThrowable().toString());
+                }
             }
             updateAppInfo(taskInfo);
         }
