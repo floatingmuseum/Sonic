@@ -7,7 +7,7 @@ import android.support.annotation.Nullable;
  * Created by Floatingmuseum on 2017/4/18.
  */
 
-public class DownloadException extends Exception{
+public class DownloadException extends Exception {
     public static int TYPE_IO = 0;
     public static int TYPE_MALFORMED_URL = 1;
     public static int TYPE_FILE_NOT_FOUND = 2;
@@ -15,6 +15,7 @@ public class DownloadException extends Exception{
     public static int TYPE_INTERRUPTED_IO = 4;
     public static int TYPE_WRONG_LENGTH = 5;
     public static int TYPE_RESPONSE_CODE = 6;
+    public static int TYPE_OTHER = 7;
 
 
     private String errorMessage;
@@ -22,21 +23,21 @@ public class DownloadException extends Exception{
     private int exceptionType;
     private Throwable throwable;
 
-    public DownloadException(int exceptionType,String errorMessage, Throwable throwable) {
+    public DownloadException(int exceptionType, String errorMessage, Throwable throwable) {
         super(errorMessage, throwable);
         this.errorMessage = errorMessage;
         this.exceptionType = exceptionType;
         this.throwable = throwable;
     }
 
-    public DownloadException(int exceptionType,String errorMessage, int responseCode) {
+    public DownloadException(int exceptionType, String errorMessage, int responseCode) {
         super(errorMessage);
         this.errorMessage = errorMessage;
         this.responseCode = responseCode;
         this.exceptionType = exceptionType;
     }
 
-    public DownloadException(int exceptionType,String errorMessage) {
+    public DownloadException(int exceptionType, String errorMessage) {
         super(errorMessage);
         this.errorMessage = errorMessage;
         this.exceptionType = exceptionType;
@@ -58,38 +59,17 @@ public class DownloadException extends Exception{
     }
 
     @Nullable
-    public Throwable getThrowable(){
+    public Throwable getThrowable() {
         return throwable;
     }
 
-
-//    @Override
-//    public int describeContents() {
-//        return 0;
-//    }
-//
-//    @Override
-//    public void writeToParcel(Parcel dest, int flags) {
-//        dest.writeString(this.errorMessage);
-//        dest.writeInt(this.responseCode);
-//        dest.writeInt(this.exceptionType);
-//    }
-//
-//    protected DownloadException(Parcel in) {
-//        this.errorMessage = in.readString();
-//        this.responseCode = in.readInt();
-//        this.exceptionType = in.readInt();
-//    }
-//
-//    public static final Creator<DownloadException> CREATOR = new Creator<DownloadException>() {
-//        @Override
-//        public DownloadException createFromParcel(Parcel source) {
-//            return new DownloadException(source);
-//        }
-//
-//        @Override
-//        public DownloadException[] newArray(int size) {
-//            return new DownloadException[size];
-//        }
-//    };
+    @Override
+    public String toString() {
+        return "DownloadException{" +
+                "errorMessage='" + errorMessage + '\'' +
+                ", responseCode=" + responseCode +
+                ", exceptionType=" + exceptionType +
+                ", throwable=" + throwable +
+                '}';
+    }
 }

@@ -17,7 +17,7 @@ import floatingmuseum.sonic.listener.ThreadListener;
 
 public class SingleThread extends BaseThread {
 
-    public SingleThread(UIHandler uiHandler,ThreadInfo threadInfo, String dirPath, String fileName, int readTimeout, int connectTimeout) {
+    public SingleThread(UIHandler uiHandler, ThreadInfo threadInfo, String dirPath, String fileName, int readTimeout, int connectTimeout) {
         this.threadInfo = threadInfo;
         this.dirPath = dirPath;
         this.fileName = fileName;

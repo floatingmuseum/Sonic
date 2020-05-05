@@ -48,7 +48,7 @@ public abstract class BaseThread implements Runnable {
 
     @Override
     public void run() {
-        LogUtil.i(TAG, threadInfo.getId() + "Thread start work" + "..." + fileName+"...hashcode:"+hashCode);
+        LogUtil.i(TAG, threadInfo.getId() + "Thread start work" + "..." + fileName + "...hashcode:" + hashCode);
         HttpURLConnection connection = null;
         RandomAccessFile raf = null;
         InputStream inputStream = null;
@@ -98,7 +98,7 @@ public abstract class BaseThread implements Runnable {
                     }
                 }
                 //This thread has finished its work.
-                LogUtil.i(TAG, "Thread "+threadInfo.getId() + " has finished its work" + "..." + fileName + "...hashCode:" + hashCode);
+                LogUtil.i(TAG, "Thread " + threadInfo.getId() + " has finished its work" + "..." + fileName + "...hashCode:" + hashCode);
                 updateDB();
                 isFinished = true;
                 isDownloading = false;
@@ -112,27 +112,33 @@ public abstract class BaseThread implements Runnable {
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
-            LogUtil.i(TAG, threadInfo.getId() + "Thread MalformedURLException occurred" + "..." + fileName  + "...hashCode:" + hashCode);
+            LogUtil.i(TAG, threadInfo.getId() + "Thread MalformedURLException occurred" + "..." + fileName + "...hashCode:" + hashCode);
             updateDB();
             downloadException = new DownloadException(DownloadException.TYPE_MALFORMED_URL, "DownloadThread failed." + threadInfo.getUrl(), e);
             sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
         } catch (ProtocolException e) {
             e.printStackTrace();
-            LogUtil.i(TAG, threadInfo.getId() + "Thread ProtocolException occurred" + "..." + fileName  + "...hashCode:" + hashCode);
+            LogUtil.i(TAG, threadInfo.getId() + "Thread ProtocolException occurred" + "..." + fileName + "...hashCode:" + hashCode);
             updateDB();
             downloadException = new DownloadException(DownloadException.TYPE_PROTOCOL, "DownloadThread failed", e);
             sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
         } catch (InterruptedIOException e) {
             e.printStackTrace();
-            LogUtil.i(TAG, threadInfo.getId() + "Thread InterruptedIOException occurred" + "..." + fileName  + "...hashCode:" + hashCode);
+            LogUtil.i(TAG, threadInfo.getId() + "Thread InterruptedIOException occurred" + "..." + fileName + "...hashCode:" + hashCode);
             updateDB();
             downloadException = new DownloadException(DownloadException.TYPE_INTERRUPTED_IO, "DownloadThread failed", e);
             sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
         } catch (IOException e) {
             e.printStackTrace();
-            LogUtil.i(TAG, threadInfo.getId() + "Thread IOException1 occurred" + "..." + fileName  + "...hashCode:" + hashCode);
+            LogUtil.i(TAG, threadInfo.getId() + "Thread IOException1 occurred" + "..." + fileName + "...hashCode:" + hashCode);
             updateDB();
             downloadException = new DownloadException(DownloadException.TYPE_IO, "DownloadThread failed", e);
+            sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
+        } catch (Exception e) {
+            e.printStackTrace();
+            LogUtil.i(TAG, threadInfo.getId() + "Thread Exception1 occurred" + "..." + fileName + "...hashCode:" + hashCode);
+            updateDB();
+            downloadException = new DownloadException(DownloadException.TYPE_OTHER, "DownloadThread failed", e);
             sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
         } finally {
             try {
@@ -145,9 +151,9 @@ public abstract class BaseThread implements Runnable {
                 if (raf != null) {
                     raf.close();
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                LogUtil.i(TAG, threadInfo.getId() + "Thread IOException2 occurred" + "..." + fileName  + "...hashCode:" + hashCode);
+                LogUtil.i(TAG, threadInfo.getId() + "Thread IOException2 occurred" + "..." + fileName + "...hashCode:" + hashCode);
                 updateDB();
                 downloadException = new DownloadException(DownloadException.TYPE_IO, "DownloadThread failed", e);
                 sendMessage(UIMessage.THREAD_ERROR, threadInfo, downloadException, false);
