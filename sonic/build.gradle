@@ -7,8 +7,8 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
+        versionCode 14
+        versionName "1.0.13"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -33,7 +33,7 @@ publish{
     userOrg = 'floatingmuseum'
     groupId = 'com.floatingmuseum'
     artifactId = 'sonic'
-    publishVersion = '1.0.12'
+    publishVersion = '1.0.13'
     desc = 'Andorid download library.'
     website = 'https://github.com/floatingmuseum/Sonic'
 }

@@ -78,6 +78,7 @@ public class Sonic {
     }
 
     public void init(Context applicationContext) {
+        Log.d("SonicVersion", "ver=" + BuildConfig.VERSION_NAME);
         context = applicationContext;
 
         LogUtil.i(TAG, "init()...PackageName:" + context.getPackageName());
@@ -96,22 +97,14 @@ public class Sonic {
         waitingTasks = new ArrayList<>();
         forceStartTasks = new HashMap<>();
         threadsPool = Executors.newCachedThreadPool();
-        if (!ListUtil.isEmpty(allTask)) {
-            for (TaskInfo taskInfo : allTask) {
-                LogUtil.i(TAG, "init()...tasks exist in db:" + taskInfo.toString());
-                if (taskInfo.getState()==STATE_DOWNLOADING) {//if task state is downloading，this may cause app crashed or device rebooted when task downloading。
-                    taskInfo.setState(STATE_PAUSE);
-                }
-                allTaskInfo.put(taskInfo.getTag(), taskInfo);
-            }
-        }
+        initAllTasks(allTask);
     }
 
-    private void initAllTasks(List<TaskInfo> tasks){
+    private void initAllTasks(List<TaskInfo> tasks) {
         if (!ListUtil.isEmpty(tasks)) {
             for (TaskInfo taskInfo : tasks) {
                 LogUtil.i(TAG, "init()...tasks exist in db:" + taskInfo.toString());
-                if (taskInfo.getState()==STATE_DOWNLOADING) {//if task state is downloading，this may cause app crashed or device rebooted when task downloading。
+                if (taskInfo.getState() == STATE_DOWNLOADING) {//if task state is downloading，this may cause app crashed or device rebooted when task downloading。
                     taskInfo.setState(STATE_PAUSE);
                 }
                 allTaskInfo.put(taskInfo.getTag(), taskInfo);
@@ -322,25 +315,40 @@ public class Sonic {
         if (isForceStart(taskInfo, finalTaskConfig)) {
             return;
         }
-
+        //已处于普通下载列表中的应用，忽略掉此次添加
         if (activeTasks.containsKey(taskInfo.getTag())) {
-            LogUtil.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...重复添加" + "...tag:" + taskInfo.getTag());
+            LogUtil.e(TAG, "initDownload()...found same task in activeTasks,ignore init:" + taskInfo);
+            return;
+        }
+        //已处于等待下载列表中的应用，忽略掉此次添加
+        for (DownloadTask waitingTask : waitingTasks) {
+            if (taskInfo.getTag().equals(waitingTask.getTaskInfo().getTag())) {
+                LogUtil.e(TAG, "initDownload()...found same task in waitingTasks,ignore init:" + taskInfo);
+                return;
+            }
+        }
+        //已处于强制下载列表中的应用，忽略掉此次添加
+        if (forceStartTasks.containsKey(taskInfo.getTag())) {
+            LogUtil.e(TAG, "initDownload()...found same task in forceStartTasks,ignore init:" + taskInfo);
             return;
         }
 
-        if (activeTasks.size() == activeTaskNumber) {
-            taskInfo.setState(Sonic.STATE_WAITING);
-            LogUtil.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...into waiting queue" + "...tag:" + taskInfo.getTag());
+        //可下载列表还有空位
+        if (activeTasks.size() < activeTaskNumber) {
             DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, taskListener);
-            waitingTasks.add(downloadTask);
-            manager.sendBroadcast(STATE_WAITING, taskInfo, null);
-        } else {
-            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, taskListener);
-            DownloadTask existTask = activeTasks.get(taskInfo.getTag());
-            LogUtil.i(TAG, "initDownload()...Name:" + taskInfo.getName() + "...into download queue...contains:" + (existTask == null ? null : existTask.hashCode()) + "...hashcodeID:" + downloadTask.hashCode() + "...tag:" + taskInfo.getTag());
+            LogUtil.i(TAG, "initDownload()...into active queue...task:" + taskInfo);
             activeTasks.put(taskInfo.getTag(), downloadTask);
             downloadTask.start();
         }
+        //可下载列表已满，进入等待页面
+        else {
+            taskInfo.setState(Sonic.STATE_WAITING);
+            LogUtil.i(TAG, "initDownload()...into waiting queue...task:" + taskInfo);
+            DownloadTask downloadTask = new DownloadTask(taskInfo, dbManager, finalTaskConfig, threadsPool, taskListener);
+            waitingTasks.add(downloadTask);
+            manager.sendBroadcast(STATE_WAITING, taskInfo, null);
+        }
+
         LogUtil.i(TAG, "initDownload()...MaxActiveTaskNumber:" + activeTaskNumber + "...CurrentDownloadTaskNumber:" + activeTasks.size() + "...CurrentWaitingTaskNumber:" + waitingTasks.size() + "...ForceDownloadTaskNumber:" + forceStartTasks.size());
     }
 
@@ -389,7 +397,7 @@ public class Sonic {
             // TODO: 2018/4/20 monkey测试后，有的应用按钮处于暂停状态，点击后，执行暂停，却无法在下载队列中找到task，可能因程序崩溃等原因发生
 
             TaskInfo taskInfo = allTaskInfo.get(tag);
-            if (taskInfo!=null) {
+            if (taskInfo != null) {
                 LogUtil.i(TAG, "pauseTask()...from allTaskInfo:" + waitingTasks.size() + "..." + tag);
                 taskInfo.setState(STATE_PAUSE);
                 manager.sendBroadcast(STATE_PAUSE, taskInfo, null);
@@ -432,7 +440,7 @@ public class Sonic {
         LogUtil.d(TAG, "pauseAllNormalTask()");
         for (DownloadTask task : waitingTasks) {
             if (task.getConfig().getForceStart() == FORCE_START_NO) {
-                LogUtil.d(TAG, "pauseAllNormalTask()...pause waiting normal "+task.getTaskInfo().getName());
+                LogUtil.d(TAG, "pauseAllNormalTask()...pause waiting normal " + task.getTaskInfo().getName());
                 task.getTaskInfo().setState(STATE_PAUSE);
                 manager.sendBroadcast(STATE_PAUSE, task.getTaskInfo(), null);
             }
@@ -442,7 +450,7 @@ public class Sonic {
 
         for (String key : activeTasks.keySet()) {
             DownloadTask downloadTask = activeTasks.get(key);
-            LogUtil.d(TAG, "pauseAllNormalTask()...pause downloading normal "+downloadTask.getTaskInfo().getName());
+            LogUtil.d(TAG, "pauseAllNormalTask()...pause downloading normal " + downloadTask.getTaskInfo().getName());
             downloadTask.stop();
         }
     }
@@ -451,7 +459,7 @@ public class Sonic {
         LogUtil.d(TAG, "pauseAllForceTask()");
         for (String key : forceStartTasks.keySet()) {
             DownloadTask downloadTask = forceStartTasks.get(key);
-            LogUtil.d(TAG, "pauseAllForceTask()...pause downloading force "+downloadTask.getTaskInfo().getName());
+            LogUtil.d(TAG, "pauseAllForceTask()...pause downloading force " + downloadTask.getTaskInfo().getName());
             downloadTask.stop();
         }
     }

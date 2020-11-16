@@ -20,8 +20,6 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 
-import com.crashlytics.android.Crashlytics;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +28,6 @@ import floatingmuseum.sonic.DownloadException;
 import floatingmuseum.sonic.Sonic;
 import floatingmuseum.sonic.entity.DownloadRequest;
 import floatingmuseum.sonic.entity.TaskInfo;
-import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -47,7 +44,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Fabric.with(this, new Crashlytics());
         String extensionFromUrl = MimeTypeMap.getFileExtensionFromUrl("http://apk.r1.market.hiapk.com/data/upload/apkres/2017/3_16/20/com.sina.weibog3_080004.apk");
         Log.i(TAG, "ExtensionFromUrl:" + extensionFromUrl);
 
